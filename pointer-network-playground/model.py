@@ -59,7 +59,6 @@ class Model(nn.Module):
     default_batch_size = 1 
     return self.embedding(t.LongTensor(nums)).reshape(seq_len, default_batch_size, self.input_size)
 
-
   # 每一步
   # dh, dc是loss的计算节点，联系着decoder + encoder
   # inpt不是计算节点，detached
@@ -74,12 +73,10 @@ class Model(nn.Module):
     # for_softmax = for_select dot query
     for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
     loss = self.CEL(for_softmax, t.LongTensor([correct_index])) # Have softmax
-    # self.optim.zero_grad()
-    # loss.backward()
-    # self.optim.step()
     # print info
-    print(f"Correct index: {correct_index}, Decoder output: {for_softmax.argmax()}")
-    return next_dh, next_dc, loss
+    result_index = for_softmax.argmax()
+    print(f"Correct index: {correct_index}, Decoder output: {result_index}")
+    return next_dh, next_dc, loss, (correct_index, result_index)
 
   def _h_c_or_file_symbols(self, index):
     return self.embedding(t.LongTensor([[index]])).detach()
@@ -116,7 +113,7 @@ class Model(nn.Module):
     print(f'Now, train for 0,{list_of_num}')
     for onehot, correct_index in zip(one_hot_labels, correct_indexs):
       # 将hn作为dh0，SOF作为dinpt0喂给decoder，得到dh1
-      next_dh, next_dc, loss  = self.decode_and_train(next_dh, next_dc, next_inpt, correct_index, for_select)
+      next_dh, next_dc, loss, _  = self.decode_and_train(next_dh, next_dc, next_inpt, correct_index, for_select)
       # Get next_inpt,
       next_inpt = for_select[correct_index].view(1, 1, self.hidden_size)
       # accumulate loss
@@ -134,7 +131,75 @@ class Model(nn.Module):
       self.optim.step()
     print(f'Trained {list_of_num}')
 
-  def forward(list_of_num):
+  def forward(self, list_of_num):
     pass
 
+  # next_inpt, next_dh, next_dc, result_index = self.decode(next_dh, next_dc, next_inpt, for_select)
+  def decode(self, dh, dc, inpt, for_select):
+    _,(next_dh, next_dc) = self.decoder(inpt, (dh,dc))
+    # TODO: select的时候，用transformer的方案
+    query = self.query_from_dh_layer(dh) # (1, 1, 9)
+    # for_softmax = for_select dot query
+    for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
+    # print info
+    result_index = for_softmax.argmax()
+    next_inpt = for_select[result_index]
+    return next_inpt, next_dh, next_dc, result_index
+
+
+  @t.no_grad()
+  def dry_run(self, list_of_num):
+    # 转成inpts
+    inpts = self._inpt_for_encoder(list_of_num.copy()).detach()
+    # 喂进encoder(emb_of_EOF作为h0)，得到所有hidden_states as out & hn
+    h0 = self._h_c_or_file_symbols(self.EOF)
+    c0 = self._h_c_or_file_symbols(self.encoder_c0)
+    out,(hn, _) = self.encoder(inpts, (h0, c0))
+    # 将emb_of_EOF prepend到out，将out命名为for_select
+    # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
+    for_select = t.cat((h0, out)).detach()
+
+    # 通过经典排序，准备labels
+    one_hot_labels, correct_indexs  = self._one_hot_labels_and_indexs(list_of_num.copy())
+
+    next_dh = hn
+    next_dc = self._h_c_or_file_symbols(self.decoder_c0)
+    next_inpt = self._h_c_or_file_symbols(self.SOF)
+
+    result_indexs = []
+    # Decoder dry run
+    for current_step_num in range(self.max_decode_length):
+      next_inpt, next_dh, next_dc, result_index = self.decode(next_dh, next_dc, next_inpt, for_select)
+      result_indexs.append(result_index)
+      if result_index == 0:
+        break
+      else:
+        pass
+    
+    return correct_indexs, result_indexs
+
+  def test(self, list_of_list_of_num):
+    total_num = len(list_of_list_of_num)
+    # correct rate = correct_times / try_times
+    correct_times = 0
+    try_times = 0
+    # length exceed rate = length_exceed_num / total_num
+    length_exceed_num = 0
+    # length shorted rate = length_shorted_num / total_num
+    length_shorted_num = 0
+
+    for list_of_num in list_of_list_of_num:
+      (correct_indexs, result_indexs) = self.dry_run(list_of_num)
+      length_exceed_num += 1 if len(result_indexs) > len(correct_indexs)
+      length_shorted_num += 1 if len(result_indexs) < len(correct_indexs)
+      try_times += len(result_indexs)
+      for correct_index, result_index in zip(correct_indexs, result_indexs):
+        correct_times += 1 if correct_index == result_index
+    
+    correct_rate = correct_times / try_times
+    length_exceed_rate = length_exceed_num / total_num
+    length_shorted_rate = length_shorted_rate / total_num
+    return correct_rate, length_exceed_rate, length_shorted_rate
+
+      
 
