@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from itertools import chain
+import random
 
 
 def ordered_index(list_of_num, MAX_INT = 99999):
@@ -37,6 +38,7 @@ class Model(nn.Module):
     self.decoder_c0 = 2004
     # others
     self.MAX_INT = 999999
+    self.max_decode_length = 10 # 以防超量输出
 
   def __init__(self):
     super().__init__()
@@ -75,7 +77,7 @@ class Model(nn.Module):
     loss = self.CEL(for_softmax, t.LongTensor([correct_index])) # Have softmax
     # print info
     result_index = for_softmax.argmax()
-    print(f"Correct index: {correct_index}, Decoder output: {result_index}")
+    # print(f"Correct index: {correct_index}, Decoder output: {result_index}")
     return next_dh, next_dc, loss, (correct_index, result_index)
 
   def _h_c_or_file_symbols(self, index):
@@ -91,6 +93,19 @@ class Model(nn.Module):
       one_hot[i] = 1
       one_hots.append(one_hot)
     return (one_hots, indexs)
+
+  def SGD_train(self, list_of_list_of_num, epoch = 5):
+    if self.optim is None:
+      print('Failed! You should init optim at first! Just call init_optim()!')
+    else: 
+      print(f'Start train, epoch = {epoch}')
+      list_of_list_of_num = list_of_list_of_num.copy()
+      for i in range(epoch):
+        print(f'Start epoch{i}')
+        random.shuffle(list_of_list_of_num)
+        for list_of_num in list_of_list_of_num:
+          self.train(list_of_num)
+      print('Trained!')
 
   def train(self, list_of_num):
     # 转成inpts
@@ -110,7 +125,7 @@ class Model(nn.Module):
     next_dc = self._h_c_or_file_symbols(self.decoder_c0)
     next_inpt = self._h_c_or_file_symbols(self.SOF)
     acc_loss = None
-    print(f'Now, train for 0,{list_of_num}')
+    # print(f'Now, train for 0,{list_of_num}')
     for onehot, correct_index in zip(one_hot_labels, correct_indexs):
       # 将hn作为dh0，SOF作为dinpt0喂给decoder，得到dh1
       next_dh, next_dc, loss, _  = self.decode_and_train(next_dh, next_dc, next_inpt, correct_index, for_select)
@@ -121,7 +136,7 @@ class Model(nn.Module):
         acc_loss = loss
       else:
         acc_loss += loss
-      print(f'now the loss is {acc_loss.item()}')
+      # print(f'now the loss is {acc_loss.item()}')
     # backward
     if self.optim is None:
       print('Trained failed! Because you have never init the optimizer!')
@@ -129,7 +144,7 @@ class Model(nn.Module):
       self.optim.zero_grad()
       acc_loss.backward()
       self.optim.step()
-    print(f'Trained {list_of_num}')
+    # print(f'Trained {list_of_num}')
 
   def forward(self, list_of_num):
     pass
@@ -142,8 +157,8 @@ class Model(nn.Module):
     # for_softmax = for_select dot query
     for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
     # print info
-    result_index = for_softmax.argmax()
-    next_inpt = for_select[result_index]
+    result_index = for_softmax.argmax().item()
+    next_inpt = for_select[result_index].view(1, 1, self.hidden_size)
     return next_inpt, next_dh, next_dc, result_index
 
 
@@ -190,16 +205,26 @@ class Model(nn.Module):
 
     for list_of_num in list_of_list_of_num:
       (correct_indexs, result_indexs) = self.dry_run(list_of_num)
-      length_exceed_num += 1 if len(result_indexs) > len(correct_indexs)
-      length_shorted_num += 1 if len(result_indexs) < len(correct_indexs)
+      print(f'correct indexs: {correct_indexs}, result indexs: {result_indexs}')
+      length_exceed_num += 1 if len(result_indexs) > len(correct_indexs) else 0
+      length_shorted_num += 1 if len(result_indexs) < len(correct_indexs) else 0
       try_times += len(result_indexs)
       for correct_index, result_index in zip(correct_indexs, result_indexs):
-        correct_times += 1 if correct_index == result_index
+        correct_times += 1 if correct_index == result_index else 0
     
     correct_rate = correct_times / try_times
     length_exceed_rate = length_exceed_num / total_num
-    length_shorted_rate = length_shorted_rate / total_num
+    length_shorted_rate = length_shorted_num / total_num
     return correct_rate, length_exceed_rate, length_shorted_rate
 
       
+def run_example():
+  m = Model()
+  m.init_optim()
+  train_datas = [] # Using data_generator.read_data() to read train.txt 
+  test_datas = [] # Using data_generator.read_data() to read test.txt 
+  m.SGD_train(train_datas, 10)
+  m.test(test_datas)
+
+
 
