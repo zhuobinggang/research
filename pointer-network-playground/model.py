@@ -5,6 +5,7 @@ import torch.optim as optim
 from itertools import chain
 import random
 
+save_path = 'save/model.tch'
 
 def ordered_index(list_of_num, MAX_INT = 99999):
   l = list_of_num
@@ -25,24 +26,24 @@ def ordered_index(list_of_num, MAX_INT = 99999):
 
 class Model(nn.Module):
 
-  def _define_variables(self):
-    self.input_range = [0,2000] # min, max
-    self.num_embeddings = 2020
+  def _define_variables(self, hidden_state_size):
+    self.input_range = [0,100] # min, max
+    self.num_embeddings = 120
     # embedding_dim = 9 # Number embedding dimension
-    self.input_size = 9
-    self.hidden_size = self.input_size
+    self.input_size = hidden_state_size
+    self.hidden_size = hidden_state_size
     # 2000以上的数字用于特殊用途
-    self.SOF = 2001
-    self.EOF = 2002
-    self.encoder_c0 = 2003
-    self.decoder_c0 = 2004
+    self.SOF = 101
+    self.EOF = 102
+    self.encoder_c0 = 103
+    self.decoder_c0 = 104
     # others
     self.MAX_INT = 999999
     self.max_decode_length = 10 # 以防超量输出
 
-  def __init__(self):
+  def __init__(self, hidden_state_size = 50):
     super().__init__()
-    self._define_variables()
+    self._define_variables(hidden_state_size)
     self.embedding = nn.Embedding(self.num_embeddings, self.input_size)
     self.embedding.requires_grad_(False)#TODO: Do not add to optim
     self.encoder = t.nn.LSTM(self.input_size, self.hidden_size)
@@ -71,7 +72,7 @@ class Model(nn.Module):
     # Calculate loss 
     # 先用一个大型linear层过一下, 然后直接跟for_select相乘即可
     # TODO: select的时候，用transformer的方案
-    query = self.query_from_dh_layer(dh) # (1, 1, 9)
+    query = self.query_from_dh_layer(dh) # (1, 1, hidden_size)
     # for_softmax = for_select dot query
     for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
     loss = self.CEL(for_softmax, t.LongTensor([correct_index])) # Have softmax
@@ -202,6 +203,8 @@ class Model(nn.Module):
     length_exceed_num = 0
     # length shorted rate = length_shorted_num / total_num
     length_shorted_num = 0
+    # repeat rate = repeat_num / total_num
+    repeat_num = 0
 
     for list_of_num in list_of_list_of_num:
       (correct_indexs, result_indexs) = self.dry_run(list_of_num)
@@ -211,11 +214,13 @@ class Model(nn.Module):
       try_times += len(result_indexs)
       for correct_index, result_index in zip(correct_indexs, result_indexs):
         correct_times += 1 if correct_index == result_index else 0
+      repeat_num += 1 if len(result_indexs) != len(set(result_indexs)) else 0
     
     correct_rate = correct_times / try_times
     length_exceed_rate = length_exceed_num / total_num
     length_shorted_rate = length_shorted_num / total_num
-    return correct_rate, length_exceed_rate, length_shorted_rate
+    repeat_rate = repeat_num / total_num
+    return correct_rate, length_exceed_rate, length_shorted_rate, repeat_rate
 
       
 def run_example():
@@ -226,5 +231,8 @@ def run_example():
   m.SGD_train(train_datas, 10)
   m.test(test_datas)
 
+def save(m):
+  t.save(m, save_path)
 
-
+def load():
+  return t.load(save_path)
