@@ -206,7 +206,7 @@ class Model(nn.Module):
 
     for list_of_num in list_of_list_of_num:
       (correct_indexs, result_indexs) = self.dry_run(list_of_num)
-      result_nums = map(lambda i: list_of_num[i] ,result_indexs)
+      result_nums = list(map(lambda i: list_of_num[i-1], filter(lambda x: x>0, result_indexs)))
       print(f'origin nums: {list_of_num}, result nums: {result_nums}')
       # print(f'correct indexs: {correct_indexs}, result indexs: {result_indexs}')
       length_exceed_num += 1 if len(result_indexs) > len(correct_indexs) else 0
@@ -237,4 +237,4 @@ def save(m):
 
 def load(hidden_size = 50):
   path = f'save/model_{hidden_size}.tch' 
-  return t.load(save_path)
+  return t.load(path)
