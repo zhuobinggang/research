@@ -1,4 +1,10 @@
 import json
+from sentence_transformers import SentenceTransformer
+import torch as t
+
+default_pretrained_model = 'paraphrase-distilroberta-base-v1'
+model = None
+# model = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 
 def load_dataset(path = 'datasets/en_city_train.ds.json'):
   with open(path) as f:
@@ -20,4 +26,13 @@ def get_longest(sentences):
       max_index = i
   return max_s, max_index, max_len
 
+def sentence_to_embedding(s):
+  global model
+  if model is None:
+    model = SentenceTransformer(default_pretrained_model)
+    print(f'Inited s-bert model using {default_pretrained_model}')
+  else: 
+    pass
+  # dd
+  return t.Tensor(model.encode(s))
 
