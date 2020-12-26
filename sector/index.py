@@ -32,29 +32,28 @@ class Model(nn.Module):
     self.input_size = hidden_state_size
     self.hidden_size = hidden_state_size
     # 2000以上的数字用于特殊用途
-    self.SOF = 101
-    self.EOF = 102
-    self.encoder_c0 = 103
-    self.decoder_c0 = 104
     # others
     self.MAX_INT = 999999
     self.max_decode_length = 10 # 以防超量输出
     # for sentences
     self.s_bert_out_size = 768
     self.batch_size = 1
-    # strings
-    self.s_EOF = 'EOF' 
-    self.s_encoder_c0 = 'encoder_c0'
+    self.encoder_h0_cached = None
+    self.SOF_cached = None
+    self.EOF_cached = None
+    self.encoder_c0_cached = None
+    self.decoder_c0_cached = None
 
 
-  def __init__(self, hidden_state_size = 50, input_size = 50):
+  def __init__(self,  input_size = 50, hidden_state_size = 50):
     super().__init__()
     self._define_variables(hidden_state_size, input_size)
     # self.embedding = nn.Embedding(self.num_embeddings, self.input_size)
     # self.embedding.requires_grad_(False)#TODO: Do not add to optim
     self.minify_layer = t.nn.Linear(self.s_bert_out_size, self.input_size)
     self.encoder = t.nn.LSTM(self.input_size, self.hidden_size)
-    # self.decoder = t.nn.LSTM(self.input_size, self.hidden_size)
+    self.decoder = t.nn.LSTM(self.input_size, self.hidden_size)
+    self.query_from_dout_layer = nn.Linear(self.hidden_size, self.input_size)
     # self.CEL = nn.CrossEntropyLoss()
     # self.query_from_dh_layer = nn.Linear(self.hidden_size, self.hidden_size)
     # self.optim = None # init by calling self.init_optim()
@@ -232,33 +231,58 @@ class Model(nn.Module):
     return correct_rate, length_exceed_rate, length_shorted_rate, repeat_rate
 
   # output : (1, 1, input_size)
-  def encoder_h0(self):
-    if self.encoder_h0_cached is None:
-      self.encoder_h0_cached = self.minify_layer(data.sentence_to_embedding(self.s_EOF)).view(1, self.batch_size, -1)
-    return self.encoder_h0_cached.detach()
+  def EOF(self):
+    if self.EOF_cached is None:
+      self.EOF_cached = self.minify_layer(data.sentence_to_embedding('EOF')).view(1, self.batch_size, -1)
+    return self.EOF_cached.detach()
 
-  def encoder_c0(self)
+  def SOF(self):
+    if self.SOF_cached is None:
+      self.SOF_cached = self.minify_layer(data.sentence_to_embedding('SOF')).view(1, self.batch_size, -1)
+    return self.SOF_cached.detach()
+
+  def encoder_c0(self):
     if self.encoder_c0_cached is None:
-      self.encoder_c0_cached = self.minify_layer(data.sentence_to_embedding(self.s_encoder_c0)).view(1, self.batch_size, -1)
+      self.encoder_c0_cached = self.minify_layer(data.sentence_to_embedding('encoder_c0')).view(1, self.batch_size, -1)
     return self.encoder_c0_cached.detach()
 
+  def decoder_c0(self):
+    if self.decoder_c0_cached is None:
+      self.decoder_c0_cached = self.minify_layer(data.sentence_to_embedding('decoder_c0')).view(1, self.batch_size, -1)
+    return self.decoder_c0_cached.detach()
 
-  # doing...
+
   # sentences : (seq_len, str_len)
   def dry_run_for_sentences(self, sentences):
-    s_bert_sentence_embs = t.stack([data.sentence_to_embedding(sentences) for s in sentences]) # (seq_len, s_bert_out_size)
-    # minify_layer = t.nn.Linear(s_bert_out_size, input_size)
-    inpts = self.minify_layer(s_bert_sentence_embs).view(-1, self.batch_size, input_size) # (seq_len, batch_size, input_size)
+    s_bert_sentence_embs = t.stack([data.sentence_to_embedding(s) for s in sentences]) # (seq_len, s_bert_out_size)
+    inpts = self.minify_layer(s_bert_sentence_embs).view(-1, self.batch_size, self.input_size) # (seq_len, batch_size, input_size)
 
     # encode
-    outs, (hn, _) = self.encoder(inpts, (self.encoder_h0(), self.encoder_c0()))
+    outs, (encoder_hn, _) = self.encoder(inpts, (self.EOF(), self.encoder_c0()))
 
-    # TODO: prepare for_select
-    for_select = t.cat((h0, out)).detach()
+    # prepare for_select
+    for_select = t.cat((self.EOF(), outs)).detach()
 
-    # TODO: decode & get output
+    # decode & get output
+    # loop until encounter EOF or max_try_time
+    next_d_inpt = self.SOF()
+    next_dh = encoder_hn
+    next_dc = self.decoder_c0()
 
-    
+    chop_indexs = []
+
+    for _ in range(self.max_decode_length):
+      out, (next_dh, next_dc) = self.decoder(next_d_inpt, (next_dh, next_dc)) 
+      query = self.query_from_dout_layer(out) # (input_size)
+      for_softmax = t.matmul(for_select.view(-1, self.input_size), query.view(-1)) # (seq_len)
+      index = for_softmax.argmax().item()
+      chop_indexs.append(index)
+      if index == 0:
+        break
+      next_d_inpt = for_select[index].view(1,1,-1).detach()
+
+    return chop_indexs
+
 
       
 def run_example():
