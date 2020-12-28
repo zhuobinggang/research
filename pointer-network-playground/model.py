@@ -52,7 +52,7 @@ class Model(nn.Module):
 
   def init_optim(self):
     print('You should call this after loading model parameters')
-    should_update = chain(self.encoder.parameters(), self.decoder.parameters())
+    should_update = chain(self.encoder.parameters(), self.decoder.parameters(), self.query_from_dh_layer.parameters())
     self.optim = optim.SGD(should_update, lr=0.01, momentum=0.9)
 
   def _inpt_for_encoder(self, nums):

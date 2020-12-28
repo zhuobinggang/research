@@ -36,3 +36,5 @@ def sentence_to_embedding(s):
   # dd
   return t.Tensor(model.encode(s))
 
+def read_data(filename = 'datasets/en_city_train.ds.json'):
+  pass
