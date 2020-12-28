@@ -54,13 +54,14 @@ class Model(nn.Module):
     self.encoder = t.nn.LSTM(self.input_size, self.hidden_size)
     self.decoder = t.nn.LSTM(self.input_size, self.hidden_size)
     self.query_from_dout_layer = nn.Linear(self.hidden_size, self.input_size)
-    # self.CEL = nn.CrossEntropyLoss()
+    self.CEL = nn.CrossEntropyLoss()
     # self.query_from_dh_layer = nn.Linear(self.hidden_size, self.hidden_size)
     # self.optim = None # init by calling self.init_optim()
 
   def init_optim(self):
     print('You should call this after loading model parameters')
-    should_update = chain(self.encoder.parameters(), self.decoder.parameters())
+    # should_update = chain(self.encoder.parameters(), self.decoder.parameters())
+    should_update = chain(self.encoder.parameters(), self.decoder.parameters(), self.minify_layer.parameters(), self.query_from_dout_layer.parameters())
     self.optim = optim.SGD(should_update, lr=0.01, momentum=0.9)
 
   def _inpt_for_encoder(self, nums):
@@ -283,6 +284,46 @@ class Model(nn.Module):
 
     return chop_indexs
 
+
+  # 伪dataset： ['A','B','C/','D/','E','F','G/','H','I','J','K/'] ，正确输出: [3,4,7,11]
+  # correct_indexs: 需要考虑EOF为index = 0
+  def train_for_sentences(self, ss, correct_indexs):
+    s_bert_sentence_embs = t.stack([data.sentence_to_embedding(s) for s in ss]) # (seq_len, s_bert_out_size)
+    inpts = self.minify_layer(s_bert_sentence_embs).view(-1, self.batch_size, self.input_size) # (seq_len, batch_size, input_size)
+
+    # encode
+    outs, (encoder_hn, _) = self.encoder(inpts, (self.EOF(), self.encoder_c0()))
+
+    # prepare for_select
+    for_select = t.cat((self.EOF(), outs)).detach()
+
+    # decode & get output
+    # loop until encounter EOF or max_try_time
+    next_d_inpt = self.SOF()
+    next_dh = encoder_hn
+    next_dc = self.decoder_c0()
+
+    chop_indexs = []
+
+    loss = None
+    for correct_index in correct_indexs:
+      out, (next_dh, next_dc) = self.decoder(next_d_inpt, (next_dh, next_dc))
+      query = self.query_from_dout_layer(out) # (input_size)
+      for_softmax = t.matmul(for_select.view(-1, self.input_size), query.view(-1)) # (seq_len)
+      # Calculate loss
+      temp_loss = self.CEL(for_softmax.view(1, -1), t.LongTensor([correct_index]))
+      loss = temp_loss if loss is None else (loss + temp_loss)
+      index = for_softmax.argmax().item()
+      print(f'Correct index: {correct_index}, ouput index: {index}, loss: {loss}')
+      chop_indexs.append(index)
+      next_d_inpt = for_select[correct_index].view(1,1,-1).detach()
+
+    # backward
+    self.optim.zero_grad()
+    loss.backward()
+    self.optim.step()
+    print('backwarded')
+    
 
       
 def run_example():
