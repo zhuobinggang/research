@@ -6,23 +6,6 @@ from itertools import chain
 import random
 import data_operator as data
 
-def ordered_index(list_of_num, MAX_INT = 99999):
-  l = list_of_num
-  result = []
-  minus = MAX_INT
-  record_index = -1
-  for _ in range(len(l)):
-    minus = MAX_INT
-    record_index = -1
-    for index,num in enumerate(l):
-      if num != MAX_INT and num < minus:
-        minus = num
-        record_index = index
-    if record_index != -1:
-      l[record_index] = MAX_INT
-      result.append(record_index)
-  return result
-
 class Model(nn.Module):
 
   def _define_variables(self, hidden_state_size, input_size):
@@ -34,7 +17,7 @@ class Model(nn.Module):
     # 2000以上的数字用于特殊用途
     # others
     self.MAX_INT = 999999
-    self.max_decode_length = 10 # 以防超量输出
+    self.max_decode_length = 99 # 以防超量输出
     # for sentences
     self.s_bert_out_size = 768
     self.batch_size = 1
@@ -48,15 +31,11 @@ class Model(nn.Module):
   def __init__(self,  input_size = 50, hidden_state_size = 50):
     super().__init__()
     self._define_variables(hidden_state_size, input_size)
-    # self.embedding = nn.Embedding(self.num_embeddings, self.input_size)
-    # self.embedding.requires_grad_(False)#TODO: Do not add to optim
     self.minify_layer = t.nn.Linear(self.s_bert_out_size, self.input_size)
     self.encoder = t.nn.LSTM(self.input_size, self.hidden_size)
     self.decoder = t.nn.LSTM(self.input_size, self.hidden_size)
     self.query_from_dout_layer = nn.Linear(self.hidden_size, self.input_size)
     self.CEL = nn.CrossEntropyLoss()
-    # self.query_from_dh_layer = nn.Linear(self.hidden_size, self.hidden_size)
-    # self.optim = None # init by calling self.init_optim()
 
   def init_optim(self):
     print('You should call this after loading model parameters')
@@ -69,140 +48,30 @@ class Model(nn.Module):
     default_batch_size = 1 
     return self.embedding(t.LongTensor(nums)).reshape(seq_len, default_batch_size, self.input_size)
 
-  # 每一步
-  # dh, dc是loss的计算节点，联系着decoder + encoder
-  # inpt不是计算节点，detached
-  # correct_index: int， 理应输出的序号
-  # for_select: (seq_size + 1, 1, hidden_size), detached
-  def decode_and_train(self, dh, dc, inpt, correct_index, for_select):
-    _,(next_dh, next_dc) = self.decoder(inpt, (dh,dc))
-    # Calculate loss 
-    # 先用一个大型linear层过一下, 然后直接跟for_select相乘即可
-    # TODO: select的时候，用transformer的方案
-    query = self.query_from_dh_layer(dh) # (1, 1, hidden_size)
-    # for_softmax = for_select dot query
-    for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
-    loss = self.CEL(for_softmax, t.LongTensor([correct_index])) # Have softmax
-    # print info
-    result_index = for_softmax.argmax()
-    # print(f"Correct index: {correct_index}, Decoder output: {result_index}")
-    return next_dh, next_dc, loss, (correct_index, result_index)
-
-  def _h_c_or_file_symbols(self, index):
-    return self.embedding(t.LongTensor([[index]])).detach()
-
-  def _one_hot_labels_and_indexs(self, list_of_num):
-    indexs = ordered_index(list_of_num, self.MAX_INT)
-    indexs = list(map(lambda x: x + 1, indexs))
-    indexs.append(0) # For EOF prepended
-    one_hots = []
-    for i in indexs:
-      one_hot = t.zeros(len(indexs))
-      one_hot[i] = 1
-      one_hots.append(one_hot)
-    return (one_hots, indexs)
-
-  def SGD_train(self, list_of_list_of_num, epoch = 5):
+  def SGD_train(self, list_of_ss_and_indexs_and_section_num, epoch = 5):
     if self.optim is None:
       print('Failed! You should init optim at first! Just call init_optim()!')
     else: 
       print(f'Start train, epoch = {epoch}')
-      list_of_list_of_num = list_of_list_of_num.copy()
+      list_of_ss_and_indexs_and_section_num = list_of_ss_and_indexs_and_section_num.copy()
       for i in range(epoch):
         print(f'Start epoch{i}')
-        random.shuffle(list_of_list_of_num)
-        for list_of_num in list_of_list_of_num:
-          self.train(list_of_num)
+        random.shuffle(list_of_ss_and_indexs_and_section_num)
+        loss = 0
+        for (ss, correct_indexs, sections) in list_of_ss_and_indexs_and_section_num:
+          loss += self.train_for_sentences(ss, correct_indexs)
+        print('+++++++++++++++++++')
+        print('+++++++++++++++++++')
+        print('+++++++++++++++++++')
+        print('+++++++++++++++++++')
+        print(f'Loss after epoch {i} training: {loss}')
       print('Trained!')
-
-  def train(self, list_of_num):
-    # 转成inpts
-    inpts = self._inpt_for_encoder(list_of_num.copy()).detach()
-    # 喂进encoder(emb_of_EOF作为h0)，得到所有hidden_states as out & hn
-    h0 = self._h_c_or_file_symbols(self.EOF)
-    c0 = self._h_c_or_file_symbols(self.encoder_c0)
-    out,(hn, _) = self.encoder(inpts, (h0, c0))
-    # 将emb_of_EOF prepend到out，将out命名为for_select
-    # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
-    for_select = t.cat((h0, out)).detach()
-
-    # 通过经典排序，准备labels
-    one_hot_labels, correct_indexs  = self._one_hot_labels_and_indexs(list_of_num.copy())
-
-    next_dh = hn
-    next_dc = self._h_c_or_file_symbols(self.decoder_c0)
-    next_inpt = self._h_c_or_file_symbols(self.SOF)
-    acc_loss = None
-    # print(f'Now, train for 0,{list_of_num}')
-    for onehot, correct_index in zip(one_hot_labels, correct_indexs):
-      # 将hn作为dh0，SOF作为dinpt0喂给decoder，得到dh1
-      next_dh, next_dc, loss, _  = self.decode_and_train(next_dh, next_dc, next_inpt, correct_index, for_select)
-      # Get next_inpt,
-      next_inpt = for_select[correct_index].view(1, 1, self.hidden_size)
-      # accumulate loss
-      if acc_loss is None:
-        acc_loss = loss
-      else:
-        acc_loss += loss
-      # print(f'now the loss is {acc_loss.item()}')
-    # backward
-    if self.optim is None:
-      print('Trained failed! Because you have never init the optimizer!')
-    else:
-      self.optim.zero_grad()
-      acc_loss.backward()
-      self.optim.step()
-    # print(f'Trained {list_of_num}')
 
   def forward(self, list_of_num):
     pass
 
-  # next_inpt, next_dh, next_dc, result_index = self.decode(next_dh, next_dc, next_inpt, for_select)
-  def decode(self, dh, dc, inpt, for_select):
-    _,(next_dh, next_dc) = self.decoder(inpt, (dh,dc))
-    # TODO: select的时候，用transformer的方案
-    query = self.query_from_dh_layer(dh) # (1, 1, 9)
-    # for_softmax = for_select dot query
-    for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
-    # print info
-    result_index = for_softmax.argmax().item()
-    next_inpt = for_select[result_index].view(1, 1, self.hidden_size)
-    return next_inpt, next_dh, next_dc, result_index
-
-
-  @t.no_grad()
-  def dry_run(self, list_of_num):
-    # 转成inpts
-    inpts = self._inpt_for_encoder(list_of_num.copy()).detach()
-    # 喂进encoder(emb_of_EOF作为h0)，得到所有hidden_states as out & hn
-    h0 = self._h_c_or_file_symbols(self.EOF)
-    c0 = self._h_c_or_file_symbols(self.encoder_c0)
-    out,(hn, _) = self.encoder(inpts, (h0, c0))
-    # 将emb_of_EOF prepend到out，将out命名为for_select
-    # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
-    for_select = t.cat((h0, out)).detach()
-
-    # 通过经典排序，准备labels
-    one_hot_labels, correct_indexs  = self._one_hot_labels_and_indexs(list_of_num.copy())
-
-    next_dh = hn
-    next_dc = self._h_c_or_file_symbols(self.decoder_c0)
-    next_inpt = self._h_c_or_file_symbols(self.SOF)
-
-    result_indexs = []
-    # Decoder dry run
-    for current_step_num in range(self.max_decode_length):
-      next_inpt, next_dh, next_dc, result_index = self.decode(next_dh, next_dc, next_inpt, for_select)
-      result_indexs.append(result_index)
-      if result_index == 0:
-        break
-      else:
-        pass
-    
-    return correct_indexs, result_indexs
-
-  def test(self, list_of_list_of_num):
-    total_num = len(list_of_list_of_num)
+  def test(self, list_of_ss_and_indexs_and_section_num):
+    total_num = len(list_of_ss_and_indexs_and_section_num)
     # correct rate = correct_times / try_times
     correct_times = 0
     try_times = 0
@@ -213,11 +82,11 @@ class Model(nn.Module):
     # repeat rate = repeat_num / total_num
     repeat_num = 0
 
-    for list_of_num in list_of_list_of_num:
-      (correct_indexs, result_indexs) = self.dry_run(list_of_num)
-      result_nums = list(map(lambda i: list_of_num[i-1], filter(lambda x: x>0, result_indexs)))
-      print(f'origin nums: {list_of_num}, result nums: {result_nums}')
-      # print(f'correct indexs: {correct_indexs}, result indexs: {result_indexs}')
+    for (ss, correct_indexs, section_num) in list_of_ss_and_indexs_and_section_num:
+      result_indexs = self.dry_run_for_sentences(ss, section_num)
+      # result_nums = list(map(lambda i: list_of_num[i-1], filter(lambda x: x>0, result_indexs)))
+      # print(f'origin nums: {list_of_num}, result nums: {result_nums}')
+      print(f'correct indexs: {correct_indexs}, result indexs: {result_indexs}')
       length_exceed_num += 1 if len(result_indexs) > len(correct_indexs) else 0
       length_shorted_num += 1 if len(result_indexs) < len(correct_indexs) else 0
       try_times += len(result_indexs)
@@ -254,7 +123,8 @@ class Model(nn.Module):
 
 
   # sentences : (seq_len, str_len)
-  def dry_run_for_sentences(self, sentences):
+  @t.no_grad()
+  def dry_run_for_sentences(self, sentences, max_annotation):
     s_bert_sentence_embs = t.stack([data.sentence_to_embedding(s) for s in sentences]) # (seq_len, s_bert_out_size)
     inpts = self.minify_layer(s_bert_sentence_embs).view(-1, self.batch_size, self.input_size) # (seq_len, batch_size, input_size)
 
@@ -272,7 +142,7 @@ class Model(nn.Module):
 
     chop_indexs = []
 
-    for _ in range(self.max_decode_length):
+    for _ in range(max_annotation + 10):
       out, (next_dh, next_dc) = self.decoder(next_d_inpt, (next_dh, next_dc)) 
       query = self.query_from_dout_layer(out) # (input_size)
       for_softmax = t.matmul(for_select.view(-1, self.input_size), query.view(-1)) # (seq_len)
@@ -286,8 +156,9 @@ class Model(nn.Module):
 
 
   # 伪dataset： ['A','B','C/','D/','E','F','G/','H','I','J','K/'] ，正确输出: [3,4,7,11]
-  # correct_indexs: 需要考虑EOF为index = 0
+  # correct_indexs: [7, 16, 200, 0]
   def train_for_sentences(self, ss, correct_indexs):
+    correct_indexs = correct_indexs.copy()
     s_bert_sentence_embs = t.stack([data.sentence_to_embedding(s) for s in ss]) # (seq_len, s_bert_out_size)
     inpts = self.minify_layer(s_bert_sentence_embs).view(-1, self.batch_size, self.input_size) # (seq_len, batch_size, input_size)
 
@@ -305,6 +176,8 @@ class Model(nn.Module):
 
     chop_indexs = []
 
+    print(f'Correct indexs: {correct_indexs}' )
+
     loss = None
     for correct_index in correct_indexs:
       out, (next_dh, next_dc) = self.decoder(next_d_inpt, (next_dh, next_dc))
@@ -314,7 +187,6 @@ class Model(nn.Module):
       temp_loss = self.CEL(for_softmax.view(1, -1), t.LongTensor([correct_index]))
       loss = temp_loss if loss is None else (loss + temp_loss)
       index = for_softmax.argmax().item()
-      print(f'Correct index: {correct_index}, ouput index: {index}, loss: {loss}')
       chop_indexs.append(index)
       next_d_inpt = for_select[correct_index].view(1,1,-1).detach()
 
@@ -322,10 +194,14 @@ class Model(nn.Module):
     self.optim.zero_grad()
     loss.backward()
     self.optim.step()
-    print('backwarded')
+
+    print(f'ouput indexs: {chop_indexs}')
+
+    return loss.item()
     
 
       
+# TODO: Deprecated
 def run_example():
   m = Model()
   m.init_optim()
