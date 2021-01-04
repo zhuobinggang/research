@@ -7,7 +7,10 @@ def generate_data(num):
   for i in range(num):
     temp = []
     for j in range(random.randint(seq_size_range[0], seq_size_range[1])):
-      temp.append(random.randint(input_range[0], input_range[1]))
+      new_num = random.randint(input_range[0], input_range[1])
+      while new_num in temp:
+        new_num = random.randint(input_range[0], input_range[1])
+      temp.append(new_num)
     result.append(temp)
   return result
 
