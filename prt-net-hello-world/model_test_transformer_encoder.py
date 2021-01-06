@@ -5,6 +5,13 @@ import torch.optim as optim
 from itertools import chain
 import random
 
+
+def print_table(results):
+  counter = 0
+  for accuracy, ex_rate, short_rate, repeat_rate in results:
+    counter += 5
+    print(f'|{counter}|{round(accuracy, 2)}|{round(ex_rate, 2)}|{round(short_rate, 2)}|{round(repeat_rate, 2)}|')
+
 def ordered_index(list_of_num, MAX_INT = 99999):
   l = list_of_num
   result = []
@@ -98,25 +105,31 @@ class Model(nn.Module):
     if self.optim is None:
       print('Failed! You should init optim at first! Just call init_optim()!')
     else: 
-      print(f'Start train, epoch = {epoch}')
+      # print(f'Start train, epoch = {epoch}')
       list_of_list_of_num = list_of_list_of_num.copy()
       for i in range(epoch):
-        print(f'Start epoch{i}')
+        # print(f'Start epoch{i}')
         random.shuffle(list_of_list_of_num)
         for list_of_num in list_of_list_of_num:
           self.train(list_of_num)
       print('Trained!')
 
+  def SGD_train_output_table(self, train_datas, test_datas, epoch = 5):
+    counter = 0
+    results = []
+    print(f'Start train, epoch = {epoch}')
+    for i in range(epoch):
+      print(f'Start epoch{i}')
+      counter += 1
+      if counter % 5  == 0:
+        self.SGD_train(train_datas, 5)
+        results.append(self.test(test_datas))
+    print_table(results)
+    return results
+
   def train(self, list_of_num):
     # 转成inpts
     inpts = self._inpt_for_encoder(list_of_num.copy()).detach()
-    # 喂进encoder(emb_of_EOF作为h0)，得到所有hidden_states as out & hn
-    # h0 = self._h_c_or_file_symbols(self.EOF)
-    # c0 = self._h_c_or_file_symbols(self.encoder_c0)
-    # out,(hn, _) = self.encoder(inpts, (h0, c0))
-    # 将emb_of_EOF prepend到out，将out命名为for_select
-    # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
-    # for_select = t.cat((h0, out)).detach()
     for_select = t.cat((self._h_c_or_file_symbols(self.EOF), inpts)).detach()
     encoder_out = inpts.sum(0).view(-1, 1, self.input_size) # (seq_len, 1, input_size)
 
@@ -131,9 +144,10 @@ class Model(nn.Module):
     # print(f'Now, train for 0,{list_of_num}')
     for onehot, correct_index in zip(one_hot_labels, correct_indexs):
       # 将hn作为dh0，SOF作为dinpt0喂给decoder，得到dh1
-      next_dh, next_dc, loss, _  = self.decode_and_train(next_dh, next_dc, next_inpt, correct_index, for_select)
+      next_dh, next_dc, loss, (_, ouput_index)  = self.decode_and_train(next_dh, next_dc, next_inpt, correct_index, for_select)
       # Get next_inpt,
-      next_inpt = for_select[correct_index].view(1, 1, self.hidden_size)
+      # next_inpt = for_select[correct_index].view(1, 1, self.hidden_size)
+      next_inpt = for_select[ouput_index].view(1, 1, self.hidden_size)
       # accumulate loss
       if acc_loss is None:
         acc_loss = loss
