@@ -6,13 +6,6 @@ from itertools import chain
 import random
 import time
 
-def print_table(results, step):
-  counter = 0
-  for accuracy, ex_rate, short_rate, repeat_rate in results:
-    counter += step
-    print(f'|{counter}|{round(accuracy, 2)}|{round(ex_rate, 2)}|{round(short_rate, 2)}|{round(repeat_rate, 2)}|')
-
-
 def ordered_index(list_of_num, MAX_INT = 99999):
   l = list_of_num
   result = []

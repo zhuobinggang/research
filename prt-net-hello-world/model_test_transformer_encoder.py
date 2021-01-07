@@ -4,13 +4,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from itertools import chain
 import random
+import utils as U
 
-
-def print_table(results, step):
-  counter = 0
-  for accuracy, ex_rate, short_rate, repeat_rate in results:
-    counter += step
-    print(f'|{counter}|{round(accuracy, 2)}|{round(ex_rate, 2)}|{round(short_rate, 2)}|{round(repeat_rate, 2)}|')
 
 def ordered_index(list_of_num, MAX_INT = 99999):
   l = list_of_num
@@ -124,7 +119,7 @@ class Model(nn.Module):
       if counter % step  == 0:
         self.SGD_train(train_datas, step)
         results.append(self.test(test_datas))
-    print_table(results, step)
+    U.print_table(results, step)
     return results
 
   def train(self, list_of_num):
