@@ -4,11 +4,12 @@ import torch.nn.functional as F
 import torch.optim as optim
 from itertools import chain
 import random
+import time
 
-def print_table(results):
+def print_table(results, step):
   counter = 0
   for accuracy, ex_rate, short_rate, repeat_rate in results:
-    counter += 5
+    counter += step
     print(f'|{counter}|{round(accuracy, 2)}|{round(ex_rate, 2)}|{round(short_rate, 2)}|{round(repeat_rate, 2)}|')
 
 
@@ -113,17 +114,20 @@ class Model(nn.Module):
           self.train(list_of_num)
       print('Trained!')
 
-  def SGD_train_output_table(self, train_datas, test_datas, epoch = 5):
+  def SGD_train_output_table(self, train_datas, test_datas, epoch = 5, step = 5):
     counter = 0
     results = []
+    start = time.time()
     print(f'Start train, epoch = {epoch}')
     for i in range(epoch):
       print(f'Start epoch{i}')
       counter += 1
-      if counter % 5  == 0:
-        self.SGD_train(train_datas, 5)
+      if counter % step  == 0:
+        self.SGD_train(train_datas, step)
         results.append(self.test(test_datas))
-    print_table(results)
+    print_table(results, step)
+    end = time.time()
+    print(f'Epoch count: {epoch}, Train time: {end - start} seconds')
     return results
 
   def train(self, list_of_num):
