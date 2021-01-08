@@ -5,6 +5,7 @@ import torch.optim as optim
 from itertools import chain
 import random
 import time
+import utils as U
 
 def ordered_index(list_of_num, MAX_INT = 99999):
   l = list_of_num
@@ -40,20 +41,33 @@ class Model(nn.Module):
     self.MAX_INT = 999999
     self.max_decode_length = 10 # 以防超量输出
 
+  def init_encoder(self):
+    self.encoder = t.nn.LSTM(self.input_size, self.hidden_size)
+
+  def init_F(self):
+    # (v T tanh(W 1 e j + W 2 d i ))
+    self.W2 = nn.Linear(self.hidden_size, self.hidden_size)
+    self.W1 = nn.Linear(self.hidden_size, self.hidden_size)
+    self.tanh = nn.Tanh()
+    self.V = nn.Linear(self.hidden_size, 1)
+
+
   def __init__(self, hidden_state_size = 50):
     super().__init__()
     self._define_variables(hidden_state_size)
     self.embedding = nn.Embedding(self.num_embeddings, self.input_size)
     self.embedding.requires_grad_(False)#TODO: Do not add to optim
-    self.encoder = t.nn.LSTM(self.input_size, self.hidden_size)
+    self.init_encoder()
     self.decoder = t.nn.LSTM(self.input_size, self.hidden_size)
     self.CEL = nn.CrossEntropyLoss()
-    self.query_from_dh_layer = nn.Linear(self.hidden_size, self.hidden_size)
     self.optim = None # init by calling self.init_optim()
+    self.init_F()
+    # Auto init optim
+    self.init_optim()
 
   def init_optim(self):
     print('You should call this after loading model parameters')
-    should_update = chain(self.encoder.parameters(), self.decoder.parameters(), self.query_from_dh_layer.parameters())
+    should_update = chain(self.encoder.parameters(), self.decoder.parameters(), self.W2.parameters(), self.W1.parameters(), self.V.parameters())
     self.optim = optim.SGD(should_update, lr=0.01, momentum=0.9)
 
   def _inpt_for_encoder(self, nums):
@@ -67,17 +81,8 @@ class Model(nn.Module):
   # correct_index: int， 理应输出的序号
   # for_select: (seq_size + 1, 1, hidden_size), detached
   def decode_and_train(self, dh, dc, inpt, correct_index, for_select):
-    _,(next_dh, next_dc) = self.decoder(inpt, (dh,dc))
-    # Calculate loss 
-    # 先用一个大型linear层过一下, 然后直接跟for_select相乘即可
-    # TODO: select的时候，用transformer的方案
-    query = self.query_from_dh_layer(dh) # (1, 1, hidden_size)
-    # for_softmax = for_select dot query
-    for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
+    next_inpt, next_dh, next_dc, result_index, for_softmax = self.decode(dh, dc, inpt, for_select)
     loss = self.CEL(for_softmax, t.LongTensor([correct_index])) # Have softmax
-    # print info
-    result_index = for_softmax.argmax()
-    # print(f"Correct index: {correct_index}, Decoder output: {result_index}")
     return next_dh, next_dc, loss, (correct_index, result_index)
 
   def _h_c_or_file_symbols(self, index):
@@ -118,12 +123,13 @@ class Model(nn.Module):
       if counter % step  == 0:
         self.SGD_train(train_datas, step)
         results.append(self.test(test_datas))
-    print_table(results, step)
+    U.print_table(results, step)
     end = time.time()
     print(f'Epoch count: {epoch}, Train time: {end - start} seconds')
     return results
 
-  def train(self, list_of_num):
+
+  def get_encoded(self, list_of_num):
     # 转成inpts
     inpts = self._inpt_for_encoder(list_of_num.copy()).detach()
     # 喂进encoder(emb_of_EOF作为h0)，得到所有hidden_states as out & hn
@@ -133,11 +139,18 @@ class Model(nn.Module):
     # 将emb_of_EOF prepend到out，将out命名为for_select
     # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
     for_select = t.cat((h0, out)).detach()
+    return for_select, hn
+
+
+  def train(self, list_of_num):
+    # 将emb_of_EOF prepend到out，将out命名为for_select
+    # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
+    for_select, encoder_out = self.get_encoded(list_of_num)
 
     # 通过经典排序，准备labels
     one_hot_labels, correct_indexs  = self._one_hot_labels_and_indexs(list_of_num.copy())
 
-    next_dh = hn
+    next_dh = encoder_out
     next_dc = self._h_c_or_file_symbols(self.decoder_c0)
     next_inpt = self._h_c_or_file_symbols(self.SOF)
     acc_loss = None
@@ -166,42 +179,36 @@ class Model(nn.Module):
   def forward(self, list_of_num):
     pass
 
-  # next_inpt, next_dh, next_dc, result_index = self.decode(next_dh, next_dc, next_inpt, for_select)
+  def get_for_softmax(self, for_select, dh):
+    for_softmax = self.V(self.tanh(self.W1(for_select) + self.W2(dh))).view(1, -1)
+    return for_softmax
+
+
   def decode(self, dh, dc, inpt, for_select):
     _,(next_dh, next_dc) = self.decoder(inpt, (dh,dc))
-    # TODO: select的时候，用transformer的方案
-    query = self.query_from_dh_layer(dh) # (1, 1, 9)
-    # for_softmax = for_select dot query
-    for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
-    # print info
+    for_softmax = self.get_for_softmax(for_select, dh)
     result_index = for_softmax.argmax().item()
+    # TODO: 改变decode策略
     next_inpt = for_select[result_index].view(1, 1, self.hidden_size)
-    return next_inpt, next_dh, next_dc, result_index
+
+    return next_inpt, next_dh, next_dc, result_index, for_softmax
 
 
   @t.no_grad()
   def dry_run(self, list_of_num):
-    # 转成inpts
-    inpts = self._inpt_for_encoder(list_of_num.copy()).detach()
-    # 喂进encoder(emb_of_EOF作为h0)，得到所有hidden_states as out & hn
-    h0 = self._h_c_or_file_symbols(self.EOF)
-    c0 = self._h_c_or_file_symbols(self.encoder_c0)
-    out,(hn, _) = self.encoder(inpts, (h0, c0))
-    # 将emb_of_EOF prepend到out，将out命名为for_select
-    # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
-    for_select = t.cat((h0, out)).detach()
+    for_select, encoder_out = self.get_encoded(list_of_num)
 
     # 通过经典排序，准备labels
     one_hot_labels, correct_indexs  = self._one_hot_labels_and_indexs(list_of_num.copy())
 
-    next_dh = hn
+    next_dh = encoder_out
     next_dc = self._h_c_or_file_symbols(self.decoder_c0)
     next_inpt = self._h_c_or_file_symbols(self.SOF)
 
     result_indexs = []
     # Decoder dry run
     for current_step_num in range(self.max_decode_length):
-      next_inpt, next_dh, next_dc, result_index = self.decode(next_dh, next_dc, next_inpt, for_select)
+      next_inpt, next_dh, next_dc, result_index, _ = self.decode(next_dh, next_dc, next_inpt, for_select)
       result_indexs.append(result_index)
       if result_index == 0:
         break
@@ -256,3 +263,19 @@ def save(m):
 def load(hidden_size = 50):
   path = f'save/model_{hidden_size}.tch' 
   return t.load(path)
+
+
+class ModelWithDotF(Model):
+  def init_optim(self):
+    print('init_optim() inited query_from_dh_layer')
+    should_update = chain(self.encoder.parameters(), self.decoder.parameters(), self.query_from_dh_layer.parameters())
+    self.optim = optim.SGD(should_update, lr=0.01, momentum=0.9)
+    
+  def init_F(self):
+    self.query_from_dh_layer = nn.Linear(self.hidden_size, self.hidden_size)
+    print('init_F() inited query_from_dh_layer')
+
+  def get_for_softmax(self, for_select, dh):
+    query = self.query_from_dh_layer(dh) # (1, 1, 9)
+    for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
+    return for_softmax
