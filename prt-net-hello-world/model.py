@@ -51,13 +51,15 @@ class Model(nn.Module):
     self.tanh = nn.Tanh()
     self.V = nn.Linear(self.hidden_size, 1)
 
+  def no_grad_ember(self):
+    self.embedding.requires_grad_(False)#TODO: Do not add to optim
 
   def __init__(self, hidden_state_size = 50):
     super().__init__()
     self._define_variables(hidden_state_size)
-    self.embedding = nn.Embedding(self.num_embeddings, self.input_size)
-    self.embedding.requires_grad_(False)#TODO: Do not add to optim
     self.init_encoder()
+    self.embedding = nn.Embedding(self.num_embeddings, self.input_size)
+    self.no_grad_ember()
     self.decoder = t.nn.LSTM(self.input_size, self.hidden_size)
     self.CEL = nn.CrossEntropyLoss()
     self.optim = None # init by calling self.init_optim()
@@ -85,7 +87,7 @@ class Model(nn.Module):
     loss = self.CEL(for_softmax, t.LongTensor([correct_index])) # Have softmax
     return next_dh, next_dc, loss, (correct_index, result_index)
 
-  def _h_c_or_file_symbols(self, index):
+  def get_embedding(self, index):
     return self.embedding(t.LongTensor([[index]])).detach()
 
   def _one_hot_labels_and_indexs(self, list_of_num):
@@ -99,6 +101,9 @@ class Model(nn.Module):
       one_hots.append(one_hot)
     return (one_hots, indexs)
 
+  def strategy_train(self, list_of_num):
+    self.train(list_of_num)
+
   def SGD_train(self, list_of_list_of_num, epoch = 5):
     if self.optim is None:
       print('Failed! You should init optim at first! Just call init_optim()!')
@@ -109,7 +114,7 @@ class Model(nn.Module):
         # print(f'Start epoch{i}')
         random.shuffle(list_of_list_of_num)
         for list_of_num in list_of_list_of_num:
-          self.train(list_of_num)
+          self.strategy_train(list_of_num)
       print('Trained!')
 
   def SGD_train_output_table(self, train_datas, test_datas, epoch = 5, step = 5):
@@ -125,16 +130,17 @@ class Model(nn.Module):
         results.append(self.test(test_datas))
     U.print_table(results, step)
     end = time.time()
+    self.test(test_datas, True) # print test data
     print(f'Epoch count: {epoch}, Train time: {end - start} seconds')
     return results
 
 
   def get_encoded(self, list_of_num):
     # 转成inpts
-    inpts = self._inpt_for_encoder(list_of_num.copy()).detach()
+    inpts = self._inpt_for_encoder(list_of_num.copy())
     # 喂进encoder(emb_of_EOF作为h0)，得到所有hidden_states as out & hn
-    h0 = self._h_c_or_file_symbols(self.EOF)
-    c0 = self._h_c_or_file_symbols(self.encoder_c0)
+    h0 = self.get_embedding(self.EOF)
+    c0 = self.get_embedding(self.encoder_c0)
     out,(hn, _) = self.encoder(inpts, (h0, c0))
     # 将emb_of_EOF prepend到out，将out命名为for_select
     # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
@@ -151,8 +157,8 @@ class Model(nn.Module):
     one_hot_labels, correct_indexs  = self._one_hot_labels_and_indexs(list_of_num.copy())
 
     next_dh = encoder_out
-    next_dc = self._h_c_or_file_symbols(self.decoder_c0)
-    next_inpt = self._h_c_or_file_symbols(self.SOF)
+    next_dc = self.get_embedding(self.decoder_c0)
+    next_inpt = self.get_embedding(self.SOF)
     acc_loss = None
     # print(f'Now, train for 0,{list_of_num}')
     for onehot, correct_index in zip(one_hot_labels, correct_indexs):
@@ -202,8 +208,8 @@ class Model(nn.Module):
     one_hot_labels, correct_indexs  = self._one_hot_labels_and_indexs(list_of_num.copy())
 
     next_dh = encoder_out
-    next_dc = self._h_c_or_file_symbols(self.decoder_c0)
-    next_inpt = self._h_c_or_file_symbols(self.SOF)
+    next_dc = self.get_embedding(self.decoder_c0)
+    next_inpt = self.get_embedding(self.SOF)
 
     result_indexs = []
     # Decoder dry run
@@ -217,7 +223,7 @@ class Model(nn.Module):
     
     return correct_indexs, result_indexs
 
-  def test(self, list_of_list_of_num):
+  def test(self, list_of_list_of_num, output_result = False):
     total_num = len(list_of_list_of_num)
     # correct rate = correct_times / try_times
     correct_times = 0
@@ -232,7 +238,8 @@ class Model(nn.Module):
     for list_of_num in list_of_list_of_num:
       (correct_indexs, result_indexs) = self.dry_run(list_of_num)
       result_nums = list(map(lambda i: list_of_num[i-1], filter(lambda x: x>0, result_indexs)))
-      print(f'origin nums: {list_of_num}, result nums: {result_nums}')
+      if output_result:
+        print(f'origin nums: {list_of_num}, result nums: {result_nums}')
       # print(f'correct indexs: {correct_indexs}, result indexs: {result_indexs}')
       length_exceed_num += 1 if len(result_indexs) > len(correct_indexs) else 0
       length_shorted_num += 1 if len(result_indexs) < len(correct_indexs) else 0
@@ -279,3 +286,26 @@ class ModelWithDotF(Model):
     query = self.query_from_dh_layer(dh) # (1, 1, 9)
     for_softmax = t.matmul(for_select.view(-1, self.hidden_size), query.view(self.hidden_size)).view(1, -1) # (1, seq_size+1)
     return for_softmax
+
+class Model_GradEmber(Model):
+  def no_grad_ember(self):
+    print('I do nothing because my ember should grad')
+
+  def init_optim(self):
+    print('You should call this after loading model parameters')
+    should_update = chain(self.encoder.parameters(), self.decoder.parameters(), self.W2.parameters(), self.W1.parameters(), self.V.parameters(), self.embedding.parameters())
+    self.optim = optim.SGD(should_update, lr=0.01, momentum=0.9)
+  
+  def get_embedding(self, index):
+    return self.embedding(t.LongTensor([[index]])) # No detach
+
+
+class Model_GradEmber_AutoReverse(ModelWithGradEmber):
+  def strategy_train(self, list_of_num):
+    self.train(list_of_num)
+    self.train(list(reversed(list_of_num)))
+
+class Model_GradEmber_AutoReverse_TransformerEncoder(ModelWithGradEmber):
+  def strategy_train(self, list_of_num):
+    self.train(list_of_num)
+    self.train(list(reversed(list_of_num)))
