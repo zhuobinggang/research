@@ -37,6 +37,7 @@ class Model(nn.Module):
     self.EOF = 102
     self.encoder_c0 = 103
     self.decoder_c0 = 104
+    self.DECODER_H0 = 105
     # others
     self.MAX_INT = 999999
     self.max_decode_length = 10 # 以防超量输出
@@ -130,7 +131,7 @@ class Model(nn.Module):
         results.append(self.test(test_datas))
     U.print_table(results, step)
     end = time.time()
-    self.test(test_datas, True) # print test data
+    # self.test(test_datas, True) # print test data
     print(f'Epoch count: {epoch}, Train time: {end - start} seconds')
     return results
 
@@ -300,12 +301,39 @@ class Model_GradEmber(Model):
     return self.embedding(t.LongTensor([[index]])) # No detach
 
 
-class Model_GradEmber_AutoReverse(ModelWithGradEmber):
+class Model_GradEmber_AutoReverse(Model_GradEmber):
   def strategy_train(self, list_of_num):
     self.train(list_of_num)
     self.train(list(reversed(list_of_num)))
 
-class Model_GradEmber_AutoReverse_TransformerEncoder(ModelWithGradEmber):
+class Model_GradEmber_AutoReverse_GradForSelect(Model_GradEmber_AutoReverse):
+  def get_encoded(self, list_of_num):
+    # 转成inpts
+    inpts = self._inpt_for_encoder(list_of_num.copy())
+    # 喂进encoder(emb_of_EOF作为h0)，得到所有hidden_states as out & hn
+    h0 = self.get_embedding(self.EOF)
+    c0 = self.get_embedding(self.encoder_c0)
+    out,(hn, _) = self.encoder(inpts, (h0, c0))
+    # 将emb_of_EOF prepend到out，将out命名为for_select
+    # 将for_select变成不需要grad。Encoder只通过hn来进行回溯
+    for_select = t.cat((h0, out)) # No detach
+    return for_select, hn
+
+
+# 作为上边的对照组，证明order matters
+class Model_GradEmber_GradForSelect(Model_GradEmber_AutoReverse_GradForSelect):
   def strategy_train(self, list_of_num):
     self.train(list_of_num)
-    self.train(list(reversed(list_of_num)))
+    self.train(list_of_num)
+
+
+# 作为Model_GradEmber_AutoReverse_GradForSelect的对照组, loss不从encoder out回流
+# 精度掉的很厉害，重复率也高的可怕，速度也没见提高
+class Model_GradEmber_AutoReverse_GradForSelect_NoEncoderOut(Model_GradEmber_AutoReverse_GradForSelect):
+  def get_encoded(self, list_of_num):
+    for_select, _ =  super().get_encoded(list_of_num)
+    return for_select, self.get_embedding(self.DECODER_H0)
+    
+class Model_GradEmber_AutoReverse_GradForSelect_SelfAttend(Model_GradEmber_AutoReverse):
+  def get_encoded(self, list_of_num):
+    pass
