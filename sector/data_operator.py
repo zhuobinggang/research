@@ -40,16 +40,17 @@ def result_sentences_and_indexs_and_section_num(row):
   annotations = row['annotations']
   text = row['text']
   # sentences = [s.rstrip() for s in text.split('.')]
-  sections =  [text[a['begin'] : a['begin'] + a['length']].replace('\r', '').replace('\n', '') for a in annotations]
-  sss = [[s for s in sec.split('.') if s != ''] for sec in sections]
+  # sections =  [text[a['begin'] : a['begin'] + a['length']].replace('\r', '').replace('\n', '') for a in annotations]
+  sections =  [text[a['begin'] : a['begin'] + a['length']] for a in annotations]
+  sss = [[s for s in sec.split('\n') if s != ''] for sec in sections]
   indexs = []
   result_sentences = []
-  acc_index = 0
+  acc_index = 0 # 考虑0
   for ss in sss:
     acc_index += len(ss)
     result_sentences += ss
     indexs.append(acc_index)
-  indexs.append(0)
+  indexs.pop()
   return result_sentences, indexs, len(sections)
 
 
