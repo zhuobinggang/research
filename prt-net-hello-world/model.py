@@ -306,7 +306,9 @@ class Model_GradEmber_AutoReverse(Model_GradEmber):
     self.train(list_of_num)
     self.train(list(reversed(list_of_num)))
 
-class Model_GradEmber_AutoReverse_GradForSelect(Model_GradEmber_AutoReverse):
+
+# Default: GradEmber, AutoReverse, GradForSelect
+class Model_Default(Model_GradEmber_AutoReverse):
   def get_encoded(self, list_of_num):
     # 转成inpts
     inpts = self._inpt_for_encoder(list_of_num.copy())
@@ -321,7 +323,7 @@ class Model_GradEmber_AutoReverse_GradForSelect(Model_GradEmber_AutoReverse):
 
 
 # 作为上边的对照组，证明order matters
-class Model_GradEmber_GradForSelect(Model_GradEmber_AutoReverse_GradForSelect):
+class Model_GradEmber_GradForSelect(Model_Default):
   def strategy_train(self, list_of_num):
     self.train(list_of_num)
     self.train(list_of_num)
@@ -329,11 +331,7 @@ class Model_GradEmber_GradForSelect(Model_GradEmber_AutoReverse_GradForSelect):
 
 # 作为Model_GradEmber_AutoReverse_GradForSelect的对照组, loss不从encoder out回流
 # 精度掉的很厉害，重复率也高的可怕，速度也没见提高
-class Model_GradEmber_AutoReverse_GradForSelect_NoEncoderOut(Model_GradEmber_AutoReverse_GradForSelect):
+class Model_GradEmber_AutoReverse_GradForSelect_NoEncoderOut(Model_Default):
   def get_encoded(self, list_of_num):
     for_select, _ =  super().get_encoded(list_of_num)
     return for_select, self.get_embedding(self.DECODER_H0)
-    
-class Model_GradEmber_AutoReverse_GradForSelect_SelfAttend(Model_GradEmber_AutoReverse):
-  def get_encoded(self, list_of_num):
-    pass
