@@ -6,6 +6,8 @@ from itertools import chain
 import random
 import data_operator as data
 import time
+import datetime
+
 
 class Model(nn.Module):
 
@@ -68,8 +70,8 @@ class Model(nn.Module):
       for index, (ss, correct_indexs, sections) in enumerate(list_of_ss_and_indexs_and_section_num):
         # loss += self.strategy_train(ss, correct_indexs)
         self.strategy_train(ss, correct_indexs)
-        if self.verbose:
-          print(f'{index+1}/{length}')
+        # if self.verbose:
+        print(f'{index+1}/{length}, now: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         # Counting progress
       # print(f'Loss after epoch {i} training: {loss}')
       correct_rate = self.test(list_of_ss_and_indexs_and_section_num_org)
@@ -220,15 +222,15 @@ def load(hidden_size = 50):
   return t.load(path)
 
 
+def train_data_reversed(ss, correct_indexs):
+  length = len(ss)
+  reversed_ids = list(reversed([(length - index) for index in correct_indexs]))
+  return list(reversed(ss)), reversed_ids
+
 class Model_V2(Model):
   def strategy_train(self, ss, correct_indexs):
-    loss = 0
-    loss += self.train_for_sentences(ss, correct_indexs)
-    # Reverse
-    length = len(ss)
-    reversed_ids = list(reversed([(length - index) for index in correct_indexs]))
-    loss += self.train_for_sentences(list(reversed(ss)), reversed_ids)
-    return loss
+    ss_rvs, ids_rvs = train_data_reversed(ss, correct_indexs)
+    return self.train_for_sentences(ss, correct_indexs) + self.train_for_sentences(ss_rvs, ids_rvs)
 
   def get_encoded(self, sentences):
     s_bert_sentence_embs = t.stack([data.sentence_to_embedding(s) for s in sentences])
