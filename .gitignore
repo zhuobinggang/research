@@ -3,3 +3,4 @@ __pycache__
 **/__pycache__/**
 *.tch
 *.ds.json
+log.txt
