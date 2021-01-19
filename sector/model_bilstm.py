@@ -6,6 +6,10 @@ from itertools import chain
 import torch.optim as optim
 import time
 import random
+import utils as U
+
+# logger
+import logging
 
 
 # ids = [2, 5]
@@ -35,15 +39,19 @@ def beutiful_print(mat):
 class Model_BiLSTM(nn.Module):
 
   def SGD_train(self, datas, epochs = 5):
+    length = len(datas)
     start = time.time()
     for e in range(epochs):
-      print(f'start epoch{e}')
+      logging.info(f'start epoch{e}')
       shuffled = datas.copy()
       random.shuffle(shuffled)
+      counter = 0
       for inpt, label in shuffled:
+        counter += 1
+        logging.debug(f'training: {counter}/{length}')
         _,_ = self.train(inpt, label)
     end = time.time()
-    print(f'Trained! Epochs: {epochs}, dataset length: {len(datas)}, Time cost: {end - start} seconds')
+    logging.info(f'Trained! Epochs: {epochs}, dataset length: {len(datas)}, Time cost: {end - start} seconds')
     
 
   def init_hook(self):
@@ -51,6 +59,14 @@ class Model_BiLSTM(nn.Module):
 
   def init_embedding_layer(self):
     self.minify_layer = t.nn.Linear(self.s_bert_out_size, self.input_size)
+
+  def init_logger(self):
+    logging.basicConfig(
+      filename='model_bilstm.log',
+      format='%(asctime)s %(levelname)-8s %(message)s',
+      level=logging.DEBUG,
+      datefmt='%Y-%m-%d %H:%M:%S')
+    
 
   def __init__(self,  input_size = 50, hidden_state_size = 50, verbose = False):
     super().__init__()
@@ -61,6 +77,7 @@ class Model_BiLSTM(nn.Module):
     self.sigmoid = t.nn.Sigmoid()
     self.init_hook()
     self.init_optim()
+    self.init_logger()
 
   # after_softmax: (n)
   # labels: (n); item = 0 | 1
@@ -116,7 +133,6 @@ class Model_BiLSTM(nn.Module):
     embs = self.get_embs_from_inpts(inpts)
     embs = embs.view(-1, 1, self.input_size)
     labels =  self.labels_processed(labels, inpts) # (seq_len, seq_len)
-    # print(embs.shape)
     outs, (_, _) = self.encoder(embs) # (seq_len, 1, input_size * 2)
     loss, (output, label)  = self.get_loss(outs, labels)
     
@@ -134,14 +150,17 @@ class Model_BiLSTM(nn.Module):
   def dry_run(self, inpts):
     embs = self.get_embs_from_inpts(inpts)
     embs = embs.view(-1, 1, self.input_size)
-    # labels =  self.labels_processed(labels, inpts) # (seq_len, seq_len)
-    # print(embs.shape)
     outs, (_, _) = self.encoder(embs) # (seq_len, 1, input_size * 2)
-    # _, (output, label)  = self.get_loss(outs, labels)
-    # print(temp_outs.shape)
     # f = dot
     scores = self.get_scores(outs) # (seq_len, seq_len)
     return scores.tolist()
+
+  def output(self, mat, ss, ids, path='dd.png'):
+    ss = [s[0:5] for s in ss]
+    for i in ids:
+      ss[i] = '$ ' + ss[i]
+    U.output_heatmap(mat, ss, ss, path)
+    
 
 
 

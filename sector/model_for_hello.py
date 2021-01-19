@@ -6,8 +6,7 @@ from itertools import chain
 import torch.optim as optim
 import model_bilstm as model
 
-import seaborn as sns # for data visualization
-import matplotlib.pyplot as plt
+import utils as U
 
 
 class Model(model.Model_BCE_Adam):
@@ -26,10 +25,8 @@ class Model(model.Model_BCE_Adam):
     return t.FloatTensor(labels)
 
 
-def output_heatmap(mat, xs, ys):
-  plt.clf()
-  sns.heatmap(mat, xticklabels=xs, yticklabels=ys)
-  plt.savefig('dd.png')
+def output_heatmap(mat, xs, ys, path = 'dd.png'):
+  U.output_heatmap(mat, xs, ys, path)
 
 def get_train_datas(): 
   return data.read()

@@ -1,3 +1,5 @@
+import seaborn as sns # for data visualization
+import matplotlib.pyplot as plt
 
 def print_table(results, step):
   counter = 0
@@ -16,4 +18,15 @@ def print_table(results, step):
   length = len(results)
   print(f'|平均|{round(acc_accuracy / length, 2)}|{round(acc_ex_rate / length, 2)}|{round(acc_short_rate/ length, 2)}|{round(acc_repeat_rate / length, 2)}|')
 
+
+
+def output_heatmap(mat, xs, ys, path = 'dd.png'):
+  plt.clf()
+  sns.heatmap(mat, xticklabels=xs, yticklabels=ys)
+  plt.savefig(path)
+
+
+def save(m, name='NOTHING'):
+  path = f'save/model_{name}.tch' 
+  t.save(m, path)
 
