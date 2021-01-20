@@ -38,7 +38,7 @@ def beutiful_print(mat):
 
 class Model_BiLSTM(nn.Module):
 
-  def SGD_train(self, datas, epochs = 5):
+  def SGD_train(self, epochs = 5, datas = data.read_data()):
     length = len(datas)
     start = time.time()
     for e in range(epochs):
@@ -46,7 +46,9 @@ class Model_BiLSTM(nn.Module):
       shuffled = datas.copy()
       random.shuffle(shuffled)
       counter = 0
-      for inpt, label in shuffled:
+      for temp in shuffled:
+        inpt = temp[0]
+        label = temp[1]
         counter += 1
         logging.debug(f'training: {counter}/{length}')
         _,_ = self.train(inpt, label)
@@ -61,6 +63,7 @@ class Model_BiLSTM(nn.Module):
     self.minify_layer = t.nn.Linear(self.s_bert_out_size, self.input_size)
 
   def init_logger(self):
+    print('inited logger!!!')
     logging.basicConfig(
       filename='model_bilstm.log',
       format='%(asctime)s %(levelname)-8s %(message)s',
@@ -70,6 +73,7 @@ class Model_BiLSTM(nn.Module):
 
   def __init__(self,  input_size = 50, hidden_state_size = 50, verbose = False):
     super().__init__()
+    hidden_state_size = input_size
     self.verbose = verbose
     self._define_variables(hidden_state_size, input_size)
     self.init_embedding_layer()
@@ -111,11 +115,15 @@ class Model_BiLSTM(nn.Module):
   def get_loss_by_input_and_target(self, inpts, targets):
     return self.BCE(inpts, targets)
 
+  def zero_diagonal(self, mat):
+    zero_diagonal = ones_yet_zeros_diagonal(len(mat))
+    return mat * zero_diagonal
+
   def get_loss(self, outs, labels):
     scores = self.get_scores(outs) # (seq_len, seq_len)
-    zero_diagnol = ones_yet_zeros_diagnal(len(labels))
-    labels = labels * zero_diagnol
-    scores = scores * zero_diagnol
+    # zero_diagonal = ones_yet_zeros_diagonal(len(labels))
+    labels = self.zero_diagonal(labels)
+    scores = self.zero_diagonal(scores)
     loss = self.get_loss_by_input_and_target(scores, labels)
     self.print_info_this_step(scores, labels, loss)
     return loss, (scores, labels)
@@ -161,14 +169,17 @@ class Model_BiLSTM(nn.Module):
       ss[i] = '$ ' + ss[i]
     U.output_heatmap(mat, ss, ss, path)
     
+  def dry_run_then_output(self, datas, index):
+    mat = self.dry_run(datas[index][0])
+    self.output(mat, datas[index][0], datas[index][1])
 
 
 
-def ones_yet_zeros_diagnal(size):
-  zero_diagnol = t.ones(size, size)
+def ones_yet_zeros_diagonal(size):
+  zero_diagonal = t.ones(size, size)
   for i in range(size):
-    zero_diagnol[i][i] = 0
-  return zero_diagnol
+    zero_diagonal[i][i] = 0
+  return zero_diagonal
 
 
 
@@ -193,11 +204,11 @@ class Model_BCE_with_buff_layer(Model_BiLSTM):
     self.T = nn.Linear(self.input_size * 2, self.input_size * 2) # target buffer layer
 
   def get_loss(self, outs, labels):
-    zero_diagnol = ones_yet_zeros_diagnal(len(labels))
-    labels = labels * zero_diagnol
+    labels = self.zero_diagonal(labels)
+
     querys = self.Q(outs).view(-1, self.input_size * 2)
     targets = self.T(outs).view(-1, self.input_size * 2)
-    scores = self.sigmoid(t.mm(querys, targets.T)) * zero_diagnol # (seq_len, seq_len)
+    scores = self.zero_diagonal(self.sigmoid(t.mm(querys, targets.T))) # (seq_len, seq_len)
     loss = self.get_loss_by_input_and_target(scores, labels)
     self.print_info_this_step(scores, labels, loss)
     return loss, (scores, labels)

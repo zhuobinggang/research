@@ -59,3 +59,13 @@ def read_data(path = 'datasets/en_city_train.ds.json'):
   rows = load_dataset(path)
   return [result_sentences_and_indexs_and_section_num(row)for row in rows]
   
+
+def text2paragraphs(text):
+  return [s for s in text.split('\n') if len(s) > 0]
+
+
+def text2paragraphs(text):
+  return [s for s in text.split('\n') if len(s) > 0]
+
+def text2sentences(text):
+  return [s for s in text.replace('\r', '').replace('\n', '').split('.') if len(s) > 0]

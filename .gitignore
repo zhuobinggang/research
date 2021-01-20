@@ -5,3 +5,4 @@ __pycache__
 *.ds.json
 log.txt
 *.png
+*.log
