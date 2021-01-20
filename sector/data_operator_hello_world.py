@@ -6,13 +6,17 @@ path = 'data.txt'
 def generate_and_save(rows = 50):
   save(generate_rows(rows))
 
-def generate_rows(row_num = 50):
+
+def generate_and_save_sorted(rows = 50):
+  save(generate_rows(rows, True))
+
+def generate_rows(row_num = 50, sort = False):
   result = []
   for i in range(0, row_num):
-    result.append(generate_datas())
+    result.append(generate_datas(sort))
   return result 
 
-def generate_datas():
+def generate_datas(sort = False):
   results = [ ]
   labels = [ ]
   start = 0
@@ -23,7 +27,8 @@ def generate_datas():
       start += random.randint(1,3) # mini step
       results.append((cluster_index, start))
     start += random.randint(5,7)
-  random.shuffle(results)
+  if not sort:
+    random.shuffle(results)
   datas = [num for (_, num) in results]
   labels = attend_map(results)
   return datas, labels
