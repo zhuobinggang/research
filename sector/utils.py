@@ -47,3 +47,75 @@ def beuty_print_sentences(ss, ids = []):
 def beuty_print_data(datas, index):
   ss, ids, _ = datas[index]
   beuty_print_sentences(ss, ids)
+
+
+def segment_by_score_matrix(mat):
+  if len(mat) < 2:
+    print(f'Should not segment a list with length {len(mat)}')
+    return []
+  if not hasattr(mat, 'shape'): 
+    mat = t.tensor(mat)
+  n = mat.shape[0]
+  avg_score = (mat.triu(1).sum() / (n * (n - 1) / 2 )).item()
+  results = []
+  start = 0
+  for i in range(1,n):
+    score_against_prev_cluster  = 0
+    for j in range(start, i): 
+      score_against_prev_cluster += mat[j,i].item()
+    avg_score_temp = score_against_prev_cluster / (i - start)
+    if avg_score_temp < avg_score:
+      start = i
+      results.append(start)
+  return results
+
+
+def get_k_by_datas(datas):
+  lengths_and_segment_counts = [(len(ss), segment_count)  for (ss, _ ,segment_count) in datas]
+  total_lengths = sum([length for (length,_) in lengths_and_segment_counts])
+  total_count = sum([count for (_,count) in lengths_and_segment_counts])
+  return (total_lengths / total_count) / 2 # We set k to half of the average segment length
+
+def try_alarm_miss_times(o_ids, t_ids, length, k):
+  k = round(k)
+  try_times = 0
+  alarm_times = 0
+  miss_times = 0
+  for i in range(0, length - k):
+    try_times += 1
+    l_probe = i
+    r_probe = l_probe + k
+    refs = [item for item in t_ids if (item - 1) in range(l_probe, r_probe + 1)]
+    hyps = [item for item in o_ids if (item - 1) in range(l_probe, r_probe + 1)]
+    if len(refs) < len(hyps):
+      alarm_times += 1
+    if len(refs) > len(hyps):
+      miss_times += 1
+    else:
+      pass # ture_times = try_times - (alarm_times + miss_times)
+  return try_times, alarm_times, miss_times
+    
+
+def get_result_ids_by_datas(datas, m):
+  return [segment_by_score_matrix(m.dry_run(ss)) for (ss, _, _) in datas]
+
+# datas: [(ss, ids, segmentation_count)]
+# outs: [[id]]
+def cal_Pk(datas, outs):
+  all_try_times = 0
+  all_alarm_times = 0 
+  all_miss_times = 0
+  k = get_k_by_datas(datas)
+  for index, (ss, t_ids, _) in enumerate(datas):
+    o_ids = outs[index]
+    try_times, alarm_times, miss_times = try_alarm_miss_times(o_ids, t_ids, len(ss), k)
+    all_try_times += try_times
+    all_alarm_times += alarm_times
+    all_miss_times += miss_times
+  print(f'Pk = {(all_alarm_times + all_miss_times) / all_try_times}')
+  return all_try_times, all_alarm_times, all_miss_times
+
+
+def cal_Pk_by_model(datas, m):
+  outs = get_result_ids_by_datas(datas, m)
+  return cal_Pk(datas, outs)

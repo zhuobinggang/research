@@ -136,7 +136,6 @@ class Model_BiLSTM(nn.Module):
     embs = self.get_embs_from_inpts(inpts)
     embs = embs.view(-1, 1, self.input_size) # (?, 1, input_size)
     labels = self.labels_processed(labels, inpts) # (seq_len, seq_len)
-    beutiful_print(labels)
     outs, (_, _) = self.encoder(embs) # (seq_len, 1, input_size * 2)
 
     scores = self.get_scores(outs, embs)
