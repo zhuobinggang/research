@@ -36,6 +36,16 @@ def sentence_to_embedding(s):
   # dd
   return t.Tensor(model.encode(s))
 
+def ss_to_embs(ss):
+  global model
+  if model is None:
+    model = SentenceTransformer(default_pretrained_model)
+    print(f'Inited s-bert model using {default_pretrained_model}')
+  else: 
+    pass
+  # dd
+  return t.Tensor(model.encode(ss))
+
 def result_sentences_and_indexs_and_section_num(row):
   annotations = row['annotations']
   text = row['text']
@@ -58,7 +68,12 @@ def result_sentences_and_indexs_and_section_num(row):
 def read_data(path = 'datasets/en_city_train.ds.json'):
   rows = load_dataset(path)
   return [result_sentences_and_indexs_and_section_num(row)for row in rows]
+
+def read_trains():
+  return read_data('datasets/en_city_train.ds.json')
   
+def read_tests():
+  return read_data('datasets/en_city_test.ds.json')
 
 def text2paragraphs(text):
   return [s for s in text.split('\n') if len(s) > 0]

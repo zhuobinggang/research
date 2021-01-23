@@ -1,6 +1,7 @@
 import seaborn as sns # for data visualization
 import matplotlib.pyplot as plt
 import torch as t
+import time
 
 def print_table(results, step):
   counter = 0
@@ -77,7 +78,7 @@ def get_k_by_datas(datas):
   return (total_lengths / total_count) / 2 # We set k to half of the average segment length
 
 def try_alarm_miss_times(o_ids, t_ids, length, k):
-  k = round(k)
+  k = int(k)
   try_times = 0
   alarm_times = 0
   miss_times = 0
@@ -98,6 +99,13 @@ def try_alarm_miss_times(o_ids, t_ids, length, k):
 
 def get_result_ids_by_datas(datas, m):
   return [segment_by_score_matrix(m.dry_run(ss)) for (ss, _, _) in datas]
+
+def get_mats_by_datas(datas, m):
+  start = time.time()
+  results = [m.dry_run(ss) for (ss, _, _) in datas]
+  end = time.time()
+  print(f'Got outputs by datas and model, Time cost: {end - start} seconds')
+  return results
 
 # datas: [(ss, ids, segmentation_count)]
 # outs: [[id]]

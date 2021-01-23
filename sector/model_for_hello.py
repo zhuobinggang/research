@@ -6,6 +6,8 @@ from itertools import chain
 import torch.optim as optim
 import model_bilstm as model
 import logging
+from torch.nn.utils.rnn import pad_sequence
+from torch.nn.functional import pad
 
 import utils as U
 
@@ -26,13 +28,35 @@ class Model(model.Model_BCE_Adam):
   def get_should_update(self):
     return chain(self.encoder.parameters(), self.embedding.parameters())
 
-  def get_embs_from_inpts(self, inpts):
-    res = t.stack([self.embedding(t.tensor(inpt)) for inpt in inpts])
-    #print(res)
-    return res
+  def nums_to_embs(self, nums):
+    res = t.stack([self.embedding(t.tensor(num)) for num in nums])
+    return res # (seq_len, input_size)
 
-  def labels_processed(self, labels, inpts):
-    return t.FloatTensor(labels)
+  # embss: [(?, input_size)]
+  def max_length(self, embss):
+    the_max = 0
+    for embs in embss:
+      if embs.shape[0] > the_max:
+        the_max = embs.shape[0]
+    return the_max
+
+  def get_embs_no_batch(self, inpts):
+      return self.nums_to_embs(inpts).view(-1, 1, self.input_size)
+
+  def get_embs_with_batch(self, inpts):
+      return pad_sequence([self.nums_to_embs(nums) for nums in inpts]) # [(?, input_size)]
+
+  # labels: [(?,?)]
+  # inpt_embs: (max_seq_len, batch_size, inpt_size)
+  def labels_processed(self, labels, inpt_embs):
+    max_seq_len = inpt_embs.shape[0]
+    results = [] # [(max_seq_len, max_seq_len)]
+    for mat in [t.FloatTensor(mat) for mat in labels]:
+      should_pad = max_seq_len - mat.shape[0]
+      if should_pad > 0:
+        mat = pad(mat, (0, should_pad, 0, should_pad))
+      results.append(mat)
+    return t.stack(results, 1) # (max_seq_len, batch_size, max_seq_len)
 
   def output(self, mat, nums, path='dd.png'):
     output_heatmap(mat, nums, nums, path)
