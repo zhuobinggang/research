@@ -11,7 +11,7 @@ from torch.nn.utils.rnn import pad_sequence
 from torch.nn.functional import pad
 
 # logger
-import logging
+# import logging
 
 
 # ids = [2, 5]
@@ -28,6 +28,17 @@ def ids2labels(ids, length):
     start = end
   return result
   
+
+def cat_sss_return_pos(sss):
+  mark_ids = []
+  all_ss = []
+  end = 0
+  for ss in sss:
+    end += len(ss)
+    mark_ids.append(end)
+    all_ss += ss
+  return all_ss, mark_ids
+
   
 
 def beutiful_print(mat):
@@ -41,21 +52,22 @@ def beutiful_print(mat):
 class Model_BiLSTM(nn.Module):
 
   def SGD_train(self, epochs = 5, datas = data.read_data()):
-    length = len(datas)
-    start = time.time()
-    for e in range(epochs):
-      logging.info(f'start epoch{e}')
-      shuffled = datas.copy()
-      random.shuffle(shuffled)
-      counter = 0
-      for temp in shuffled:
-        inpt = temp[0]
-        label = temp[1]
-        counter += 1
-        logging.debug(f'training: {counter}/{length}')
-        _,_ = self.train(inpt, label)
-    end = time.time()
-    logging.info(f'Trained! Epochs: {epochs}, dataset length: {len(datas)}, Time cost: {end - start} seconds')
+    pass
+    # length = len(datas)
+    # start = time.time()
+    # for e in range(epochs):
+    #   logging.info(f'start epoch{e}')
+    #   shuffled = datas.copy()
+    #   random.shuffle(shuffled)
+    #   counter = 0
+    #   for temp in shuffled:
+    #     inpt = temp[0]
+    #     label = temp[1]
+    #     counter += 1
+    #     logging.debug(f'training: {counter}/{length}')
+    #     _,_ = self.train(inpt, label)
+    # end = time.time()
+    # logging.info(f'Trained! Epochs: {epochs}, dataset length: {len(datas)}, Time cost: {end - start} seconds')
     
 
   def init_hook(self):
@@ -65,12 +77,13 @@ class Model_BiLSTM(nn.Module):
     self.minify_layer = t.nn.Linear(self.s_bert_out_size, self.input_size)
 
   def init_logger(self):
-    print('inited logger!!!')
-    logging.basicConfig(
-      filename='model_bilstm.log',
-      format='%(asctime)s %(levelname)-8s %(message)s',
-      level=logging.DEBUG,
-      datefmt='%Y-%m-%d %H:%M:%S')
+    pass
+    # print('inited logger!!!')
+    # logging.basicConfig(
+    #   filename='model_bilstm.log',
+    #   format='%(asctime)s %(levelname)-8s %(message)s',
+    #   level=logging.DEBUG,
+    #   datefmt='%Y-%m-%d %H:%M:%S')
     
 
   def __init__(self,  input_size = 50, hidden_state_size = 50, verbose = False):
@@ -130,20 +143,26 @@ class Model_BiLSTM(nn.Module):
     return self.zero_diagonal(self.get_scores_old(outs))
     # (max_seq_len, batch_size, max_seq_len)
 
-  def get_embs_no_batch(self, inpts):
-    return self.minify_layer(data.ss_to_embs(inpts)).view(-1, 1, self.input_size)
 
   # inpts: [[string]]
-  def get_embs_with_batch(self, inpts):
+  def get_embs_from_inpts_old(self, inpts):
     embss = [self.minify_layer(data.ss_to_embs(ss)) for ss in inpts] # [(?, 768)]
     return pad_sequence(embss)
     
 
   def get_embs_from_inpts(self, inpts):
-    if isinstance(inpts[0], list): # should do batch
-      return self.get_embs_with_batch(inpts)
-    else:
-      return self.get_embs_no_batch(inpts)
+    all_ss, mark_ids = cat_sss_return_pos(inpts)
+    all_ss_emb = data.ss_to_embs(all_ss) # (?, 768)
+    minified_emb = self.minify_layer(all_ss_emb) # (?, input_size)
+    # return minified_emb, mark_ids
+    # print(f'mark_ids, minified_emb: {mark_ids}, {minified_emb.shape}')
+    start = 0
+    embss = [] # [(?, input_size)]
+    for end in mark_ids:
+      embss.append(minified_emb[start:end])
+      start = end
+    return pad_sequence(embss)
+
 
   # labels: [[id]]
   def labels_processed(self, labels, embs):

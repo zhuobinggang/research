@@ -2,7 +2,8 @@ import json
 from sentence_transformers import SentenceTransformer
 import torch as t
 
-default_pretrained_model = 'paraphrase-distilroberta-base-v1'
+# default_pretrained_model = 'paraphrase-distilroberta-base-v1'
+default_pretrained_model = 'stsb-distilbert-base'
 model = None
 # model = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 

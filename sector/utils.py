@@ -2,6 +2,15 @@ import seaborn as sns # for data visualization
 import matplotlib.pyplot as plt
 import torch as t
 import time
+import logging
+
+def init_logger(path):
+  logging.basicConfig(
+    filename=path,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.DEBUG,
+    datefmt='%Y-%m-%d %H:%M:%S')
+
 
 def print_table(results, step):
   counter = 0
@@ -137,11 +146,23 @@ def get_batch_from_datas(datas, start_index, batch_size = 4):
   return inpts, labels
     
   
-def train_by_data_loader(m, loader, epoch = 5):
+# def train_by_data_loader(m, loader, epoch = 5):
+#   start = time.time()
+#   for _ in range(epoch):
+#     for inpts, labels in loader:
+#       o,l = m.train(inpts, labels)
+#   end = time.time()
+#   print(f'Trained epoch = {epoch}, Time cost: {end - start} seconds')
+
+
+def train_by_data_loader(m, loader, epoch = 5, logger = print):
+  length = len(loader.ds)
   start = time.time()
-  for _ in range(epoch):
+  for e in range(epoch):
+    logger(f'start epoch{e}')
+    loader.shuffle()
     for inpts, labels in loader:
+      logger(f'{loader.start}/{length}')
       o,l = m.train(inpts, labels)
   end = time.time()
-  print(f'Trained epoch = {epoch}, Time cost: {end - start} seconds')
-
+  logger(f'Trained! Epochs: {epochs}, dataset length: {length}, Time cost: {end - start} seconds')
