@@ -85,10 +85,6 @@ class Model_BiLSTM(nn.Module):
     self.init_optim()
     self.init_logger()
 
-  # after_softmax: (n)
-  # labels: (n); item = 0 | 1
-  def multiple_pointer_loss(self, scores, labels):
-    return self.BCE(self.sigmoid(scores), labels)
 
   def get_should_update(self):
     return chain(self.encoder.parameters(), self.minify_layer.parameters())
@@ -114,9 +110,14 @@ class Model_BiLSTM(nn.Module):
       #beutiful_print(inpt)
       print(f'The loss: {loss.item()}')
 
+  # mats: (max_seq_len, batch_size, max_seq_len)
   def get_loss_by_input_and_target(self, inpts, targets):
-    return self.BCE(inpts, targets)
-
+    results = []
+    inpts = inpts.transpose(0, 1) # (batch_size, max_len, max_len)
+    targets = targets.transpose(0, 1) # (batch_size, max_len, max_len)
+    for i in range(inpts.shape[0]):
+      results.append(self.BCE(inpts[i], targets[i]))
+    return t.stack(results).mean()
 
   # mats: (max_seq_len, batch_size, max_seq_len)
   def zero_diagonal(self, mats):
@@ -144,27 +145,31 @@ class Model_BiLSTM(nn.Module):
     else:
       return self.get_embs_no_batch(inpts)
 
-  def labels_processed(self, labels, inpts):
-    return self.zero_diagonal(t.FloatTensor(ids2labels(labels, len(inpts))).detach()) # No grad
+  # labels: [[id]]
+  def labels_processed(self, labels, embs):
+    # 返回一个规整的tensor(max_seq_len, batch_size, max_seq_len)
+    return t.stack([self.zero_diagonal(t.FloatTensor(ids2labels(ids, embs.shape[0])).detach()) for ids in labels]).transpose(0,1)
 
+
+  # inpts: (seq_len, batch_size, m)
   def train(self, inpts, labels):
     if len(inpts) < 1:
       print('Warning: empty training sentence list')
       return
     embs = self.get_embs_from_inpts(inpts)
-    labels = self.labels_processed(labels, embs) # (max_seq_len, batch_size, max_seq_len)
+    labels_processed = self.labels_processed(labels, embs) # (max_seq_len, batch_size, max_seq_len)
     outs, (_, _) = self.encoder(embs) # (max_seq_len, batch_size, input_size * 2)
 
     scores = self.get_scores(outs, embs)  # (max_seq_len, batch_size, max_seq_len)
 
-    loss = self.get_loss_by_input_and_target(scores, labels)
-    self.print_info_this_step(scores, labels, loss)
+    loss = self.get_loss_by_input_and_target(scores, labels_processed)
+    self.print_info_this_step(scores, labels_processed, loss)
     
     self.optim.zero_grad()
     loss.backward()
     self.optim.step()
 
-    return scores.tolist(), labels.tolist()
+    return scores.tolist(), labels_processed.tolist()
 
   # outs: (max_seq_len, batch_size, input_size * 2)
   def get_scores_old(self, outs):
@@ -182,6 +187,11 @@ class Model_BiLSTM(nn.Module):
     outs, (_, _) = self.encoder(embs) # (max_seq_len, batch_size, input_size * 2)
     scores = self.get_scores(outs, embs)  # (max_seq_len, batch_size, max_seq_len)
     return scores.view(scores.shape[0], scores.shape[0]).tolist()
+
+  # inpts: (seq_len, batch_size, m)
+  def forward(self, inpts):
+    pass
+    
 
   def output(self, mat, ss, ids, path='dd.png'):
     ss = [s[0:5] for s in ss]
@@ -237,7 +247,7 @@ class Model_MSE_Adam(Model_MSE):
 
 class Model_BCE_Adam(Model_BiLSTM):
   def init_optim(self):
-    self.optim = optim.Adam(self.get_should_update())
+    self.optim = optim.Adam(self.get_should_update(), 0.01)
 
 class Model_BCE_Adam_Keep_Diagonal(Model_BiLSTM):
 

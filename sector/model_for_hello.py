@@ -64,11 +64,15 @@ class Model(model.Model_BCE_Adam):
   def dry_run_then_output_sorted(self, nums=data.generate_datas(True)[0], path='dd.png'):
     self.dry_run_then_output(nums, path)
 
-
   def dry_run_then_output(self, nums=data.generate_datas()[0], path='dd.png'):
     o = self.dry_run(nums)
     self.output(o, nums, path)
 
+  def forward(self, x):
+    pass
+
+
+# ======================
 
 def output_heatmap(mat, xs, ys, path = 'dd.png'):
   U.output_heatmap(mat, xs, ys, path)
@@ -76,6 +80,7 @@ def output_heatmap(mat, xs, ys, path = 'dd.png'):
 def get_train_datas(): 
   return data.read()
 
+# ======================
 
 class Model_No_Diagonal_Zero(Model):
   def zero_diagonal(self, mat):
@@ -109,11 +114,9 @@ class Model_Hourglass(Model):
         left_out = left_out.flip(0)
         left_squeezed = self.squeezed_layer(left_out) # (left_count, 1, 1)
         left_sigmoided = self.sigmoid(left_squeezed)
-        # total_loss += self.multiple_pointer_loss(squeezed, left_label)
       if len(right) > 0:
         right_out,_ = right_lstm(right, (query, self.zero_input())) #  (left_count, 1, input_size)
         right_squeezed = self.squeezed_layer(right_out) # (left_count, 1, 1)
-        # total_loss += self.multiple_pointer_loss(squeezed, right_out)
         right_sigmoided = self.sigmoid(right_squeezed)
       if len(left) > 0 and len(right) > 0:
         all_sigmoided = t.cat((left_sigmoided, right_sigmoided))

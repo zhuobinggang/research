@@ -127,3 +127,21 @@ def cal_Pk(datas, outs):
 def cal_Pk_by_model(datas, m):
   outs = get_result_ids_by_datas(datas, m)
   return cal_Pk(datas, outs)
+
+def get_batch_from_datas(datas, start_index, batch_size = 4):
+  inpts = []
+  labels = []
+  for d in datas:
+    inpts.append(d[0])
+    labels.append(ids = d[1])
+  return inpts, labels
+    
+  
+def train_by_data_loader(m, loader, epoch = 5):
+  start = time.time()
+  for _ in range(epoch):
+    for inpts, labels in loader:
+      o,l = m.train(inpts, labels)
+  end = time.time()
+  print(f'Trained epoch = {epoch}, Time cost: {end - start} seconds')
+
