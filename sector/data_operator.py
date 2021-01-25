@@ -1,11 +1,21 @@
 import json
 from sentence_transformers import SentenceTransformer
 import torch as t
+import numpy as np
 
+# === db ===
+from sqlitedict import SqliteDict
+default_sbert_db = './datasets/sbert_stsb_distilbert_base.sqlite'
+# db = SqliteDict(default_sbert_db, autocommit=True)
+db = None
+# === db ===
+
+# === sbert ===
 # default_pretrained_model = 'paraphrase-distilroberta-base-v1'
 default_pretrained_model = 'stsb-distilbert-base'
 model = None
 # model = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
+# === sbert ===
 
 def load_dataset(path = 'datasets/en_city_train.ds.json'):
   with open(path) as f:
@@ -37,7 +47,7 @@ def sentence_to_embedding(s):
   # dd
   return t.Tensor(model.encode(s))
 
-def ss_to_embs(ss):
+def ss_to_embs_old(ss):
   global model
   if model is None:
     model = SentenceTransformer(default_pretrained_model)
@@ -46,6 +56,27 @@ def ss_to_embs(ss):
     pass
   # dd
   return t.Tensor(model.encode(ss))
+
+
+def __numpy_to_string(A):
+  return A.tobytes().hex()
+
+def __string_to_numpy(S):
+  return np.frombuffer(bytes.fromhex(S), dtype=np.float32)
+
+def ss_to_embs(ss):
+  global db
+  if db is None:
+    db = SqliteDict(default_sbert_db, autocommit=True)
+    print(f'Inited db using {default_sbert_db}')
+  array_str = db.get(ss)
+  if array_str is not None:
+    return t.from_numpy(__string_to_numpy(array_str))
+  else:
+    tensor = ss_to_embs_old(ss)
+    db[ss] = __numpy_to_string(tensor.numpy())
+    # db.save(ss, __numpy_to_string(tensor.numpy()))
+    return tensor
 
 def result_sentences_and_indexs_and_section_num(row):
   annotations = row['annotations']
