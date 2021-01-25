@@ -166,3 +166,6 @@ def train_by_data_loader(m, loader, epoch = 5, logger = print):
       o,l = m.train(inpts, labels)
   end = time.time()
   logger(f'Trained! Epochs: {epochs}, dataset length: {length}, Time cost: {end - start} seconds')
+
+      
+
