@@ -218,9 +218,26 @@ class Model_BiLSTM(nn.Module):
       ss[i] = '$ ' + ss[i]
     U.output_heatmap(mat, ss, ss, path)
     
-  def dry_run_then_output(self, datas, index):
-    mat = self.dry_run(datas[index][0])
-    self.output(mat, datas[index][0], datas[index][1])
+  def dry_run_then_output(self, loader, index):
+    mat = self.dry_run(loader.ds.datas[index][0])
+    self.output(mat, loader.ds.datas[index][0], loader.ds.datas[index][1])
+
+  def cal_Pk_by_loader(self, loader):
+    mats = self.get_mats_by_loader(loader)
+    ids = self.mats2ids(mats)
+    return U.cal_Pk(loader.ds.datas, ids)
+
+  def get_mats_by_loader(self, loader):
+    loader.batch_size = 1
+    loader.start = 0
+    start = time.time()
+    results = [self.dry_run(inpts) for (inpts, _) in loader]
+    end = time.time()
+    print(f'Got outputs by datas and model, Time cost: {end - start} seconds')
+    return results
+
+  def mats2ids(self, mats):
+    return [segment_by_score_matrix(mat) for mat in mats]
 
 
 
@@ -280,4 +297,25 @@ class Model_BCE_Adam_Keep_Diagonal(Model_BiLSTM):
 class Model_BCE_SGD0001(Model_BiLSTM):
   def init_optim(self):
     self.optim = optim.SGD(self.get_should_update(), lr=0.001, momentum=0.9)
+
+
+def segment_by_score_matrix(mat):
+  if len(mat) < 2:
+    # print(f'Should not segment a list with length {len(mat)}')
+    return []
+  if not hasattr(mat, 'shape'): 
+    mat = t.tensor(mat)
+  n = mat.shape[0]
+  avg_score = (mat.triu(1).sum() / (n * (n - 1) / 2 )).item()
+  results = []
+  start = 0
+  for i in range(1,n):
+    score_against_prev_cluster  = 0
+    for j in range(start, i): 
+      score_against_prev_cluster += mat[j,i].item()
+    avg_score_temp = score_against_prev_cluster / (i - start)
+    if avg_score_temp < avg_score:
+      start = i
+      results.append(start)
+  return results
 

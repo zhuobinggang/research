@@ -54,10 +54,11 @@ def sentence_to_embedding(s):
     print(f'Inited db using {default_sbert_db}')
   array_str = db.get(s)
   if array_str is not None:
-    print(f'Cached: {s}')
+    # print(f'Cached: {s}')
     return t.from_numpy(__string_to_numpy(array_str))
   else:
-    tensor = ss_to_embs_old(s)
+    print(f'Not cached: {s}')
+    tensor = sentence_to_embedding_old(s)
     db[s] = __numpy_to_string(tensor.numpy())
     return tensor
 

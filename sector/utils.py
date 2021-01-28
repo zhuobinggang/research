@@ -59,25 +59,7 @@ def beuty_print_data(datas, index):
   beuty_print_sentences(ss, ids)
 
 
-def segment_by_score_matrix(mat):
-  if len(mat) < 2:
-    print(f'Should not segment a list with length {len(mat)}')
-    return []
-  if not hasattr(mat, 'shape'): 
-    mat = t.tensor(mat)
-  n = mat.shape[0]
-  avg_score = (mat.triu(1).sum() / (n * (n - 1) / 2 )).item()
-  results = []
-  start = 0
-  for i in range(1,n):
-    score_against_prev_cluster  = 0
-    for j in range(start, i): 
-      score_against_prev_cluster += mat[j,i].item()
-    avg_score_temp = score_against_prev_cluster / (i - start)
-    if avg_score_temp < avg_score:
-      start = i
-      results.append(start)
-  return results
+
 
 
 def get_k_by_datas(datas):
@@ -106,15 +88,33 @@ def try_alarm_miss_times(o_ids, t_ids, length, k):
   return try_times, alarm_times, miss_times
     
 
-def get_result_ids_by_datas(datas, m):
-  return [segment_by_score_matrix(m.dry_run(ss)) for (ss, _, _) in datas]
+# def get_result_ids_by_datas(datas, m):
+#   return [segment_by_score_matrix(m.dry_run(ss)) for (ss, _, _) in datas]
 
-def get_mats_by_datas(datas, m):
+def get_mats_by_loader(loader, m):
+  loader.batch_size = 1
+  loader.start = 0
   start = time.time()
-  results = [m.dry_run(ss) for (ss, _, _) in datas]
+  results = [m.dry_run(inpts) for (inpts, _) in loader]
   end = time.time()
   print(f'Got outputs by datas and model, Time cost: {end - start} seconds')
   return results
+
+
+# def cal_Pk_by_ids(oids, tids, k):
+#   all_try_times = 0
+#   all_alarm_times = 0 
+#   all_miss_times = 0
+#   for index, (ss, t_ids, _) in enumerate(datas):
+#     o_ids = outs[index]
+#     try_times, alarm_times, miss_times = try_alarm_miss_times(o_ids, t_ids, len(ss), k)
+#     all_try_times += try_times
+#     all_alarm_times += alarm_times
+#     all_miss_times += miss_times
+#   print(f'Pk = {(all_alarm_times + all_miss_times) / all_try_times}')
+#   return all_try_times, all_alarm_times, all_miss_times
+
+
 
 # datas: [(ss, ids, segmentation_count)]
 # outs: [[id]]
@@ -132,11 +132,6 @@ def cal_Pk(datas, outs):
   print(f'Pk = {(all_alarm_times + all_miss_times) / all_try_times}')
   return all_try_times, all_alarm_times, all_miss_times
 
-
-def cal_Pk_by_model(datas, m):
-  outs = get_result_ids_by_datas(datas, m)
-  return cal_Pk(datas, outs)
-
 def get_batch_from_datas(datas, start_index, batch_size = 4):
   inpts = []
   labels = []
@@ -144,15 +139,6 @@ def get_batch_from_datas(datas, start_index, batch_size = 4):
     inpts.append(d[0])
     labels.append(ids = d[1])
   return inpts, labels
-    
-  
-# def train_by_data_loader(m, loader, epoch = 5):
-#   start = time.time()
-#   for _ in range(epoch):
-#     for inpts, labels in loader:
-#       o,l = m.train(inpts, labels)
-#   end = time.time()
-#   print(f'Trained epoch = {epoch}, Time cost: {end - start} seconds')
 
 
 def train_by_data_loader(m, loader, epoch = 5, logger = print):
@@ -165,7 +151,15 @@ def train_by_data_loader(m, loader, epoch = 5, logger = print):
       logger(f'{loader.start}/{length}')
       o,l = m.train(inpts, labels)
   end = time.time()
-  logger(f'Trained! Epochs: {epochs}, dataset length: {length}, Time cost: {end - start} seconds')
+  logger(f'Trained! Epochs: {epoch}, Batch size: {loader.batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
 
-      
+
+def train_by_data_loader_check(m, loader, testloader, big_epoch = 10, output_step = 2):
+  results = []
+  for _ in range(big_epoch):
+    train_by_data_loader(m, loader, output_step, logging.debug)
+    res = m.cal_Pk_by_loader(testloader)
+    results.append(res)
+    print(f'res = {res}')
+  return results
 
