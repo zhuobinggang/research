@@ -142,6 +142,7 @@ def get_batch_from_datas(datas, start_index, batch_size = 4):
 
 
 def train_by_data_loader(m, loader, epoch = 5, logger = print):
+  loader.start = 0
   length = len(loader.ds)
   start = time.time()
   for e in range(epoch):
@@ -162,4 +163,63 @@ def train_by_data_loader_check(m, loader, testloader, big_epoch = 10, output_ste
     results.append(res)
     print(f'res = {res}')
   return results
+
+
+# === danraku ===
+
+def train_by_data_loader_danraku(m, loader, epoch = 5, logger = print):
+  loss_per_epoch = []
+  loader.start = 0
+  length = len(loader.ds)
+  start = time.time()
+  for e in range(epoch):
+    logger(f'start epoch{e}')
+    loader.shuffle()
+    total_loss = 0
+    counter = 0
+    for inpts, labels in loader:
+      counter += 1
+      logger(f'{loader.start}/{length}')
+      total_loss += m.train(inpts, labels)
+    avg_loss = total_loss / counter
+    loss_per_epoch.append(avg_loss)
+  end = time.time()
+  logger(f'Trained! Epochs: {epoch}, Batch size: {loader.batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
+  return loss_per_epoch
+
+def get_avg_loss(m, ld):
+  ld.start = 0
+  ld.batch_size = 1
+  loss = 0
+  counter = 0
+  for inpts,labels in ld:
+    counter += 1
+    loss += m.get_loss(inpts, labels).item()
+  return loss / counter
+
+
+def get_test_results(m, testld):
+  testld.start = 0
+  testld.batch_size = 1
+  targets = []
+  results = []
+  for inpts, labels in testld:
+    targets += labels
+    results.append(m.dry_run(inpts))
+  return results, targets
+
+
+def cal_prec_rec_f1(results, targets):
+  true_positive = 0
+  false_positive = 0
+  for guess, target in zip(results, targets):
+    if target == 1:
+      if guess == 1:
+        true_positive += 1
+      else:
+        false_positive += 1
+  prec = true_positive / len(results)
+  rec = true_positive / (true_positive + false_positive)
+  f1 = (2 * prec * rec) / (prec + rec)
+  return prec, rec, f1
 
