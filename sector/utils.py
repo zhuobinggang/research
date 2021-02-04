@@ -219,7 +219,7 @@ def cal_prec_rec_f1(results, targets):
       else:
         false_positive += 1
   prec = true_positive / len(results)
-  rec = true_positive / (true_positive + false_positive)
-  f1 = (2 * prec * rec) / (prec + rec)
+  rec = true_positive / (true_positive + false_positive) if (true_positive + false_positive) != 0 else 0
+  f1 = (2 * prec * rec) / (prec + rec) if (prec + rec) != 0 else 0
   return prec, rec, f1
 

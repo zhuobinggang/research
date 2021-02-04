@@ -1,5 +1,5 @@
 import data_jap as data
-import danraku as model
+import danraku2 as model
 import utils as U
 import matplotlib
 import matplotlib.pyplot as plt
@@ -8,19 +8,36 @@ import numpy as np
 
 testld = data.Loader(data.Test_DS(), 1)
 ld = data.Loader(data.Train_DS(), 8)
+mini_testld = data.Loader(data.Test_DS_Mini(), 1)
+mini_ld = data.Loader(data.Train_DS_Mini(), 8)
 
-def run(epoch = 20):
-  m = model.Model_Con()
+def run(m, epoch = 20, path = 'result.png'):
   U.init_logger('danraku.log')
   results = []
+  losss = []
   for i in range(epoch):
-    _ = U.train_by_data_loader_danraku(m, ld, 1, U.logging.debug)[0]
+    loss = U.train_by_data_loader_danraku(m, ld, 1, U.logging.debug)[0]
+    losss.append(loss)
     outputs, targets = U.get_test_results(m, testld)
     prec, rec, f1 = U.cal_prec_rec_f1(outputs, targets)
     results.append((prec, rec, f1))
-  plot_prec_rec_f1(results, epoch)
+  plot_prec_rec_f1(results, epoch, path)
   print('save to result.png')
-  return m, results
+  return m, results, losss
+
+def run_test(m, epoch = 1, path = 'result.png'):
+  U.init_logger('danraku.log')
+  results = []
+  losss = []
+  for i in range(epoch):
+    loss = U.train_by_data_loader_danraku(m, mini_ld, 1, U.logging.debug)[0]
+    losss.append(loss)
+    outputs, targets = U.get_test_results(m, mini_testld)
+    prec, rec, f1 = U.cal_prec_rec_f1(outputs, targets)
+    results.append((prec, rec, f1))
+  plot_prec_rec_f1(results, epoch, path)
+  print('save to result.png')
+  return m, results, losss
 
 
 def run_plot_loss(epoch = 20):
@@ -44,7 +61,7 @@ def plot_loss(epoch, train_loss, test_loss):
   plt.savefig('result.png')
   
 
-def plot_prec_rec_f1(results, epoch= 20):
+def plot_prec_rec_f1(results, epoch= 20, path = 'result.png'):
   precs = []
   recs = []
   f1s = []
@@ -58,4 +75,5 @@ def plot_prec_rec_f1(results, epoch= 20):
   plt.plot(xs, recs, label= 'recs')
   plt.plot(xs, f1s, label= 'f1s')
   plt.legend()
-  plt.savefig('result.png')
+  plt.savefig(path)
+

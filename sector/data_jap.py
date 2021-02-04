@@ -99,6 +99,15 @@ class Test_DS(Dataset):
   def init_datas_hook(self):
     self.datas = read_tests()
 
+class Train_DS_Mini(Dataset):
+  def init_datas_hook(self):
+    self.datas = read_trains()[:100]
+
+class Test_DS_Mini(Dataset):
+  def init_datas_hook(self):
+    self.datas = read_tests()[:50]
+
+
 class Loader():
   def __init__(self, ds, batch_size = 4):
     self.start = 0
