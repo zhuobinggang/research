@@ -1,5 +1,6 @@
 import data_jap as data
 import danraku2 as model
+import danraku3
 import utils as U
 import matplotlib
 import matplotlib.pyplot as plt
@@ -76,4 +77,11 @@ def plot_prec_rec_f1(results, epoch= 20, path = 'result.png'):
   plt.plot(xs, f1s, label= 'f1s')
   plt.legend()
   plt.savefig(path)
+
+# 层级BERT，1 sentence per side
+def run_feb_5():
+  m = danraku3.BERT_Cat_Sentence()
+  _, results, losss = run(m, 8, 'bert_catsentence_feb6_epoch8.png')
+  t.save(m, 'save/bert_catsentence_feb6_epoch8.tch')
+  return m, results, losss
 
