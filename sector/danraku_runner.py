@@ -1,19 +1,22 @@
 import data_jap as data
 import danraku2 as model
 import danraku3
+import danraku4
 import utils as U
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import torch as t
 
 
 testld = data.Loader(data.Test_DS(), 1)
 ld = data.Loader(data.Train_DS(), 8)
+ld2 = data.Loader(data.Train_DS(2), 8)
 mini_testld = data.Loader(data.Test_DS_Mini(), 1)
 mini_ld = data.Loader(data.Train_DS_Mini(), 8)
 
-def run(m, epoch = 20, path = 'result.png'):
-  U.init_logger('danraku.log')
+def run(m, epoch = 20, path = 'result.png', log_path = 'danraku.log', ld = ld):
+  U.init_logger(log_path)
   results = []
   losss = []
   for i in range(epoch):
@@ -22,12 +25,12 @@ def run(m, epoch = 20, path = 'result.png'):
     outputs, targets = U.get_test_results(m, testld)
     prec, rec, f1 = U.cal_prec_rec_f1(outputs, targets)
     results.append((prec, rec, f1))
-  plot_prec_rec_f1(results, epoch, path)
+  plot_prec_rec_f1_loss(results, losss, epoch, path)
   print('save to result.png')
   return m, results, losss
 
-def run_test(m, epoch = 1, path = 'result.png'):
-  U.init_logger('danraku.log')
+def run_test(m, epoch = 1, path = 'result.png', log_path = 'danraku.log'):
+  U.init_logger(log_path)
   results = []
   losss = []
   for i in range(epoch):
@@ -36,7 +39,7 @@ def run_test(m, epoch = 1, path = 'result.png'):
     outputs, targets = U.get_test_results(m, mini_testld)
     prec, rec, f1 = U.cal_prec_rec_f1(outputs, targets)
     results.append((prec, rec, f1))
-  plot_prec_rec_f1(results, epoch, path)
+  plot_prec_rec_f1_loss(results, losss, epoch, path)
   print('save to result.png')
   return m, results, losss
 
@@ -62,7 +65,7 @@ def plot_loss(epoch, train_loss, test_loss):
   plt.savefig('result.png')
   
 
-def plot_prec_rec_f1(results, epoch= 20, path = 'result.png'):
+def plot_prec_rec_f1(results, loss, epoch= 20, path = 'result.png'):
   precs = []
   recs = []
   f1s = []
@@ -75,13 +78,37 @@ def plot_prec_rec_f1(results, epoch= 20, path = 'result.png'):
   plt.plot(xs, precs, label= 'precs')
   plt.plot(xs, recs, label= 'recs')
   plt.plot(xs, f1s, label= 'f1s')
+
+
+def plot_prec_rec_f1_loss(results, loss, epoch= 20, path = 'result.png'):
+  plt.clf()
+  plot_prec_rec_f1(results, loss, epoch, path)
+  xs = [x+1 for x in list(range(epoch))]
+  plt.plot(xs, loss, label= 'loss')
   plt.legend()
   plt.savefig(path)
+
+  
+
 
 # 层级BERT，1 sentence per side
 def run_feb_5():
   m = danraku3.BERT_Cat_Sentence()
   _, results, losss = run(m, 8, 'bert_catsentence_feb6_epoch8.png')
   t.save(m, 'save/bert_catsentence_feb6_epoch8.tch')
+  return m, results, losss
+
+# 层级word2vec，1 sentence per side
+def run_feb_5_wiki():
+  m = danraku4.Model_Wiki2vec()
+  _, results, losss = run(m, 8, 'wiki2vec_feb6_epoch8.png', 'danraku4.log')
+  t.save(m, 'save/wiki2vec_feb6_epoch8.tch')
+  return m, results, losss
+
+# 层级word2vec，1 sentence per side
+def run_feb_5_wiki_2sentence_perside():
+  m = danraku4.Model_Wiki2vec()
+  _, results, losss = run(m, 8, 'wiki2vec_feb7_2sentence_epoch8.png', 'danraku4.log', ld = ld2)
+  t.save(m, 'save/wiki2vec_feb7_2sentence_epoch8.tch')
   return m, results, losss
 
