@@ -3,6 +3,7 @@ import torch as t
 import word2vec_fucker as data
 from transformers import BertModel, BertJapaneseTokenizer
 from torch.nn.utils.rnn import pad_sequence
+import torch.optim as optim
 from itertools import chain
 
 sentence_emb_size = 128
@@ -26,6 +27,9 @@ def get_embs_from_inpts(self, inpts):
   return hn.view(len(inpts), sentence_emb_size * 2)
 
 class Model_Wiki2vec(model.BERT_Cat_Sentence):
+  def init_optim(self):
+    self.optim = optim.AdamW(self.get_should_update(), 1e-3)
+
   def get_outs(self, inpts):
     embs = get_embs_from_inpts(self, inpts) # (batch_size, 768 * 2)
     outs = self.fw(embs) # (batch_size, 768)

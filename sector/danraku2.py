@@ -6,8 +6,10 @@ import torch.optim as optim
 one_count = 3897
 all_count = 28513
 zero_count = all_count - one_count
-weight_one = all_count / one_count
-weight_zero = all_count / zero_count
+# weight_one = all_count / one_count
+# weight_zero = all_count / zero_count
+weight_one = 2
+weight_zero = 1
 
 # outs : (batch_size, 1)
 # labels_processed : (batch_size)

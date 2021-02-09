@@ -212,13 +212,16 @@ def get_test_results(m, testld):
 def cal_prec_rec_f1(results, targets):
   true_positive = 0
   false_positive = 0
+  trues = 0
   for guess, target in zip(results, targets):
+    if target == guess:
+      trues += 1
     if target == 1:
       if guess == 1:
         true_positive += 1
       else:
         false_positive += 1
-  prec = true_positive / len(results)
+  prec = trues / len(results)
   rec = true_positive / (true_positive + false_positive) if (true_positive + false_positive) != 0 else 0
   f1 = (2 * prec * rec) / (prec + rec) if (prec + rec) != 0 else 0
   return prec, rec, f1

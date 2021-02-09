@@ -4,7 +4,7 @@ __pycache__
 *.tch
 *.ds.json
 log.txt
-*.png
+*temp.png
 *.log
 log**txt
 *.sqlite
