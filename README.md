@@ -1,7 +1,11 @@
 The nlp research project.
 
-## Experiment
 
-![pic1](save/bert_catsentence_epoch3.png)
+## Pointer network
 
-![pic2](save/bert_cross_seg_epoch3.png)
+Go into folder: prt-net-hello-world
+
+## 段落分割
+
+Go into folder: sector
+
