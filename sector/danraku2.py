@@ -3,13 +3,13 @@ import torch as t
 from transformers import BertModel, BertJapaneseTokenizer
 import torch.optim as optim
 
-one_count = 3897
-all_count = 28513
-zero_count = all_count - one_count
-# weight_one = all_count / one_count
-# weight_zero = all_count / zero_count
-weight_one = 2
-weight_zero = 1
+# one_count = 3897
+# all_count = 28513
+# zero_count = all_count - one_count
+# # weight_one = all_count / one_count
+# # weight_zero = all_count / zero_count
+# weight_one = 2
+# weight_zero = 1
 
 # outs : (batch_size, 1)
 # labels_processed : (batch_size)
@@ -45,8 +45,8 @@ class Model_Bert_Balanced_CE(model.Model_Bert):
     self.one_count = 3897
     self.all_count = 28513
     self.zero_count = self.all_count - self.one_count
-    self.weight_one = self.all_count / self.one_count 
-    self.weight_zero = self.all_count / self.zero_count 
+    self.weight_one = 3
+    self.weight_zero = 1
 
   def get_outs(self, inpts):
     embs = get_embs_from_inpts(self, inpts) # (batch_size, 768)
@@ -57,7 +57,11 @@ class Model_Bert_Balanced_CE(model.Model_Bert):
   # labels_processed : (batch_size)
   # outs : (batch_size, 1)
   def get_loss_by_input_and_target(self, outs, labels):
-    return cal_balanced_loss(outs, labels)
+    xs = outs
+    ys = labels
+    sigmoided = t.sigmoid(xs).view(-1)
+    return ((-1) * ((self.weight_one * ys * t.log(sigmoided)) + (self.weight_zero * (1 - ys) * t.log(1 - sigmoided)))).mean()
+
 
   @t.no_grad()
   def dry_run(self, inpts):

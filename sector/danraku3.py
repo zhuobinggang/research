@@ -23,6 +23,8 @@ class BERT_Cat_Sentence(model.Model_Bert_Balanced_CE):
     self.tokenizer = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
     self.fw = t.nn.Linear(self.s_bert_out_size * 2, self.s_bert_out_size)
     self.minify = t.nn.Linear(self.s_bert_out_size, 1)
+    self.weight_one = 3
+    self.weight_zero = 1
 
   def get_outs(self, inpts):
     embs = get_embs_from_inpts(self, inpts) # (batch_size, 768 * 2)

@@ -55,6 +55,9 @@ def read_trains():
 def read_tests():
   return read_sentences(3)
 
+def read_devs():
+  return read_sentences(2)
+
 def no_indicator(ss):
   return [s.replace('\u3000', '') for s in ss]
 
@@ -98,6 +101,10 @@ class Train_DS(Dataset):
 class Test_DS(Dataset):
   def init_datas_hook(self):
     self.datas = read_tests()
+
+class Dev_DS(Dataset):
+  def init_datas_hook(self):
+    self.datas = read_devs()
 
 class Train_DS_Mini(Dataset):
   def init_datas_hook(self):
