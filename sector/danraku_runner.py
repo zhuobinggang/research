@@ -4,6 +4,7 @@ danraku2 = model
 import danraku3
 import danraku4
 import danraku5 # Juman++
+import fake_sector
 import utils as U
 import matplotlib
 import matplotlib.pyplot as plt
@@ -25,6 +26,7 @@ def run(m, epoch = 20, path = 'result.png', log_path = 'danraku.log', ld = ld, b
   losss = []
   recover_batch_size = ld.batch_size
   ld.batch_size = batch
+  ld.start = 0
   print(f'Loader window size: {ld.ds.half_window_size}')
   for i in range(epoch):
     loss = U.train_by_data_loader_danraku(m, ld, 1, U.logging.debug)[0]
@@ -32,7 +34,7 @@ def run(m, epoch = 20, path = 'result.png', log_path = 'danraku.log', ld = ld, b
     outputs, targets = U.get_test_results(m, testld)
     prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
     results.append((prec, rec, f1, bacc))
-    print(f'epoch = {epoch}, loss = {loss}, {prec}, {rec}, {f1}')
+    print(f'epoch = {i}, loss = {loss}, {prec}, {rec}, {f1}')
   plot_prec_rec_f1_loss(results, losss, epoch, path)
   print('save to result.png')
   ld.batch_size = recover_batch_size
@@ -42,12 +44,14 @@ def run_test(m, epoch = 1, path = 'result.png', log_path = 'danraku.log'):
   U.init_logger(log_path)
   results = []
   losss = []
+  ld.start = 0
   for i in range(epoch):
     loss = U.train_by_data_loader_danraku(m, mini_ld, 1, U.logging.debug)[0]
     losss.append(loss)
     outputs, targets = U.get_test_results(m, mini_testld)
     prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
     results.append((prec, rec, f1, bacc))
+    print(f'epoch = {i}, loss = {loss}, {prec}, {rec}, {f1}')
   plot_prec_rec_f1_loss(results, losss, epoch, path)
   print('save to result.png')
   return m, results, losss
@@ -147,11 +151,20 @@ def run_kuro_catss(m = danraku5.Kuro_Catsentence()):
   print('kurobert catss over')
   return m, results, losss
 
+def run_fake_sector():
+  m = fake_sector.FakeSector()
+  _, results, losss = run(m, 10, 'save/fake_sector_epoch10.png', 'fake_sector.log', ld = ld)
+  t.save(m, 'save/fake_sector.tch')
+  print('Fake Sector over')
+  
+
 def run_feb10_night():
   # run_cross_seg()
   # run_cat_sentence()
-  run_kuro()
+  # run_kuro()
+  run_fake_sector()
   run_kuro_catss()
+
 
 def test_test(m):
   start = time.time()

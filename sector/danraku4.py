@@ -43,3 +43,5 @@ class Model_Wiki2vec(model.BERT_Cat_Sentence):
     self.fw = t.nn.Linear(sentence_emb_size * 2, sentence_emb_size)
     self.minify = t.nn.Linear(sentence_emb_size, 1)
     self.sentence_pooler = t.nn.LSTM(300, sentence_emb_size, batch_first=True)
+    self.weight_one = 3
+    self.weight_zero = 1
