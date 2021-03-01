@@ -99,7 +99,7 @@ class Model(nn.Module):
   def __init__(self):
     super().__init__()
     self.bert_size = 768
-    self.CEL = nn.CrossEntropyLoss()
+    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 3]))
     self.verbose = False
     self.classifier = nn.Sequential(
       nn.Linear(self.bert_size, int(self.bert_size / 2)),
@@ -132,33 +132,40 @@ class Model(nn.Module):
   def train(self, inpts, labels):
     token_ids, attend_marks = inpts
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (batch, 768)
-    return embs
-    # o = self.classifier(embs) # (batch, 2)
-    # loss = self.CEL(o, labels)
-    # self.zero_grad()
-    # loss.backward()
-    # self.optim.step()
-    # self.print_train_info(o, labels, loss.detach().item())
-    # return loss.detach().item()
+    o = self.classifier(embs) # (batch, 2)
+    loss = self.CEL(o, labels)
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, labels, loss.detach().item())
+    return loss.detach().item()
 
   def dry_run(self, inpts):
     token_ids, attend_marks = inpts
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (batch, 768)
     o = self.classifier(embs) # (batch, 2)
-    self.print_train_info(o, t.LongTensor([0]), 0)
-    return o.argmax(1).item()
+    # self.print_train_info(o, t.LongTensor([0]), 0)
+    return o.argmax(1)
 
 # ============
 
-ld = Loader(Train_DS(), 4)
-testld = Loader(Test_DS(), 1)
+ld = Loader(Train_DS(), 24)
+testld = Loader(Test_DS(), 24)
 
 def set_test():
   ld.dataset.datas = ld.dataset.datas[:100]
   testld.dataset.datas = testld.dataset.datas[:50]
 
 # return: (m, (prec, rec, f1, bacc), losss)
-def run(m):
+def run_test(m):
   set_test()
   m.verbose = True
-  return runner.run(m, ld, testld, 2, batch=10)
+  return runner.run(m, ld, testld, 2, batch=24)
+
+def run(m):
+  return runner.run(m, ld, testld, 2, batch=24)
+
+def run_at_night():
+  m = Model()
+  _, results, losss = run(m)
+  t.save(m, 'save/csg_bert.tch')

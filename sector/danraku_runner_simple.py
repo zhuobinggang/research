@@ -55,7 +55,7 @@ def run(m, ld, testld, epoch = 2, path = 'result.png', log_path = 'wiki.log', ba
   for i in range(epoch):
     loss = U.train_by_data_loader_danraku_origin(m, ld, 1, U.logging.debug)[0]
     losss.append(loss)
-    outputs, targets = U.get_test_results_origin(m, testld)
+    outputs, targets = U.get_test_results_batch(m, testld)
     prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
     results.append((prec, rec, f1, bacc))
     print(f'epoch = {i}, loss = {loss}, {prec}, {rec}, {f1}')
