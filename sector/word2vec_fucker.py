@@ -25,6 +25,5 @@ def sentence_to_wordvecs(s):
       #print(f'No word vec of {word}')
       pass
   return vecs
-    
-    
+        
 

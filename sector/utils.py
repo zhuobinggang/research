@@ -148,9 +148,11 @@ def train_by_data_loader(m, loader, epoch = 5, logger = print):
   for e in range(epoch):
     logger(f'start epoch{e}')
     loader.shuffle()
+    counter = 0
     for inpts, labels in loader:
-      logger(f'{loader.start}/{length}')
       o,l = m.train(inpts, labels)
+      counter += loader.batch_size
+      logger(f'{counter}/{length}')
   end = time.time()
   logger(f'Trained! Epochs: {epoch}, Batch size: {loader.batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
 
@@ -170,7 +172,7 @@ def train_by_data_loader_check(m, loader, testloader, big_epoch = 10, output_ste
 def train_by_data_loader_danraku(m, loader, epoch = 5, logger = print):
   loss_per_epoch = []
   loader.start = 0
-  length = len(loader.ds)
+  length = len(loader.dataset)
   start = time.time()
   for e in range(epoch):
     logger(f'start epoch{e}')
@@ -187,6 +189,27 @@ def train_by_data_loader_danraku(m, loader, epoch = 5, logger = print):
   logger(f'Trained! Epochs: {epoch}, Batch size: {loader.batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
   return loss_per_epoch
 
+def train_by_data_loader_danraku_origin(m, loader, epoch = 5, logger = print):
+  loss_per_epoch = []
+  loader.start = 0
+  length = len(loader.dataset)
+  start = time.time()
+  for e in range(epoch):
+    logger(f'start epoch{e}')
+    # loader.shuffle()
+    total_loss = 0
+    counter = 0
+    for inpts, labels in loader:
+      counter += loader.batch_size
+      logger(f'{counter}/{length}')
+      total_loss += m.train(inpts, labels)
+    avg_loss = total_loss / len(loader)
+    loss_per_epoch.append(total_loss)
+  end = time.time()
+  logger(f'Trained! Epochs: {epoch}, Batch size: {loader.batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
+  return loss_per_epoch
+
+
 def get_avg_loss(m, ld):
   ld.start = 0
   ld.batch_size = 1
@@ -196,6 +219,14 @@ def get_avg_loss(m, ld):
     counter += 1
     loss += m.get_loss(inpts, labels).item()
   return loss / counter
+
+def get_test_results_origin(m, testld):
+  targets = []
+  results = []
+  for inpts, labels in testld:
+    targets += labels
+    results.append(m.dry_run(inpts))
+  return results, targets
 
 
 def get_test_results(m, testld):
