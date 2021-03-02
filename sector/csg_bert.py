@@ -1,4 +1,3 @@
-import crossseg_w2v as W
 import numpy as np
 from transformers import BertModel, BertJapaneseTokenizer
 import data_jap_reader as data
@@ -16,7 +15,49 @@ sep_id = toker.sep_token_id
 def token_encode(text):
   return toker.encode(text, add_special_tokens = False)
 
-class Dataset(W.MyDataset):
+class DatasetAbstract(t.utils.data.dataset.Dataset):
+  def __init__(self, half_window_size = 1):
+    super().__init__()
+    self.feature_size = 300
+    self.init_datas_hook()
+    self.half_window_size = half_window_size
+
+  def __getitem_org__(self, idx):
+    if idx >= len(self.datas) - 1:
+      print(f'Warning: Should not get idx={idx}')
+      return None
+    left = []
+    start = max(0, idx + 1 - self.half_window_size)
+    end = min(idx + 1, len(self.datas))
+    for i in range(start, end):
+      left.append(self.datas[i])
+    right = []
+    start = max(0, idx + 1)
+    end = min(idx + 1 + self.half_window_size, len(self.datas))
+    for i in range(start, end):
+      right.append(self.datas[i])
+    label = 1 if right[0].startswith('\u3000') else 0
+    left = no_indicator(left)
+    right = no_indicator(right)
+    return (left,right), label
+
+
+  # return: (left: (128, 300), right: (128, 300)), label
+  # pad with zero if not enough 
+  def __getitem__(self, idx, tokens = 128):
+    pass
+
+  def init_datas_hook(self):
+    self.datas = []
+
+  def __len__(self):
+    return len(self.datas) - 1
+
+  def shuffle(self):
+    random.shuffle(self.datas)
+
+
+class Dataset(DatasetAbstract):
   # return: (left: (128, 300), right: (128, 300)), label
   # pad with zero if not enough 
   def __getitem__(self, idx, tokens = 128):
@@ -82,7 +123,37 @@ class Dev_DS(Dataset):
 
 # ==========
 
-class Loader(W.Loader):
+class LoaderAbstract():
+  def __len__(self):
+    length = len(self.ds.datas)
+    divided = length / self.batch_size
+    return int(divided) + 1 if int(divided) < divided else int(divided)
+
+  def __init__(self, ds, batch_size = 4):
+    self.start = 0
+    self.ds = ds
+    self.dataset = ds
+    self.batch_size = batch_size
+
+  def __iter__(self):
+    return self
+
+  # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
+  def __next__(self):
+    if self.start == len(self.ds):
+      self.start = 0
+      raise StopIteration()
+    results = []
+    end = min(self.start + self.batch_size, len(self.ds))
+    for i in range(self.start, end):
+      results.append(self.ds[i])
+    self.start = end
+    return (t.stack([d[0][0] for d in results]), t.stack([d[0][1] for d in results])), t.LongTensor([d[1] for d in results])
+
+  def shuffle(self):
+    self.ds.shuffle()
+
+class Loader(LoaderAbstract):
   def __init__(self, ds, batch_size = 4):
     super().__init__(ds, batch_size)
 
