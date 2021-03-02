@@ -1,4 +1,4 @@
-### News
+## News
 
 Setting: 
 
@@ -20,3 +20,16 @@ M.run(m)
 # epoch = 1, loss = 273.6536409219261, prec = 0.8530954879328436, rec = 0.814221331997997, f1 = 0.8332052267486548
 
 ```
+
+## Next plan
+
+- [ ] Train 3rd epoch and get scores: (F1 & BA & Prec & Rec) of (Dev & Test) Dataset
+- [ ] Train kuro BERT and get results
+- [ ] Train 2 BERTs with FL loss and get results
+
+#### New Idea
+
+- [ ] Train Bert without csg architechure 但是让他指出分割点 (理论上和csg seg的效果一样)
+- [ ] 将两部分句子倒过来训练
+- [ ] ETC
+
