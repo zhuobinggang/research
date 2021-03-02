@@ -75,6 +75,11 @@ class Test_DS(Dataset):
   def init_datas_hook(self):
     self.datas = data.read_tests()
 
+class Dev_DS(Dataset):
+  def init_datas_hook(self):
+    self.datas = data.read_tests()
+  
+
 # ==========
 
 class Loader(W.Loader):
@@ -151,6 +156,7 @@ class Model(nn.Module):
 
 ld = Loader(Train_DS(), 24)
 testld = Loader(Test_DS(), 24)
+devld = Loader(Dev_DS(), 24)
 
 def set_test():
   ld.dataset.datas = ld.dataset.datas[:100]
