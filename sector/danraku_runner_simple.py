@@ -58,7 +58,7 @@ def run(m, ld, testld, epoch = 2, path = 'result.png', log_path = 'wiki.log', ba
     outputs, targets = U.get_test_results_batch(m, testld)
     prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
     results.append((prec, rec, f1, bacc))
-    print(f'epoch = {i}, loss = {loss}, {prec}, {rec}, {f1}')
-  plot_prec_rec_f1_loss(results, losss, epoch, path)
-  print('save to result.png')
+    print(f'epoch = {i+1}, loss = {loss}, prec = {prec}, rec = {rec}, f1 = {f1}, bacc = {bacc}')
+  # plot_prec_rec_f1_loss(results, losss, epoch, path)
+  # print('save to result.png')
   return m, results, losss

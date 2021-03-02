@@ -12,6 +12,9 @@ pad_id = toker.pad_token_id
 cls_id = toker.cls_token_id
 sep_id = toker.sep_token_id
 
+def no_indicator(ss):
+  return [s.replace('\u3000', '') for s in ss]
+
 def token_encode(text):
   return toker.encode(text, add_special_tokens = False)
 
@@ -237,12 +240,18 @@ def set_test():
 def run_test(m):
   set_test()
   m.verbose = True
-  return runner.run(m, ld, testld, 2, batch=24)
+  return runner.run(m, ld, testld, 3, batch=24)
 
 def run(m):
-  return runner.run(m, ld, testld, 2, batch=24)
+  return runner.run(m, ld, testld, 3, batch=24)
 
 def run_at_night():
-  m = Model()
-  _, results, losss = run(m)
-  t.save(m, 'save/csg_bert.tch')
+  rs = []
+  ls = []
+  for i in range(1, 5):
+    m = Model()
+    _, results, losss = run(m)
+    rs.append(results)
+    ls.append(losss)
+    t.save(m, f'save/csg_bert_{i}.tch')
+  return rs, ls
