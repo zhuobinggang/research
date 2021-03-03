@@ -235,20 +235,21 @@ devld = Loader(Dev_DS(), 24)
 def set_test():
   ld.dataset.datas = ld.dataset.datas[:100]
   testld.dataset.datas = testld.dataset.datas[:50]
+  devld.dataset.datas = devld.dataset.datas[:50]
 
 # return: (m, (prec, rec, f1, bacc), losss)
-def run_test(m):
+def run_test(m, epoch = 2):
   set_test()
   m.verbose = True
-  return runner.run(m, ld, testld, 3, batch=24)
+  return runner.run(m, ld, testld, devld, epoch=epoch, batch=24)
 
-def run(m):
-  return runner.run(m, ld, testld, 3, batch=24)
+def run(m, epoch = 2):
+  return runner.run(m, ld, testld, devld, epoch=epoch, batch=24)
 
 def run_at_night():
   rs = []
   ls = []
-  for i in range(1, 5):
+  for i in [1]:
     m = Model()
     _, results, losss = run(m)
     rs.append(results)

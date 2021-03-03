@@ -43,22 +43,46 @@ def plot_prec_rec_f1_loss(results, loss, epoch= 20, path = 'result.png'):
   plt.legend()
   plt.savefig(path)
 
+def get_test_result(m, testld):
+  dic = {}
+  if testld is None:
+    dic['prec'] = -1
+    dic['rec'] = -1
+    dic['f1'] = -1
+    dic['bacc'] = -1
+  else: 
+    outputs, targets = U.get_test_results_batch(m, testld, U.logging.debug)
+    prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
+    dic['prec'] = prec
+    dic['rec'] = rec
+    dic['f1'] = f1
+    dic['bacc'] = bacc
+  return dic
 
-def run(m, ld, testld, epoch = 2, path = 'result.png', log_path = 'wiki.log', batch=100):
+def logout_info(text):
+  print(text)
+  U.logging.info(text)
+
+def run(m, ld, testld, devld = None, epoch = 2, log_path = 'wiki.log', batch=100):
+  # Initialize
   U.init_logger(log_path)
   ld.start = 0 
   ld.batch_size = batch
   testld.start = 0
-  testld.batch_size = 1
+  testld.batch_size = batch
+  devld.start = 0
+  devld.batch_size = batch
+  # Get result
   results = []
   losss = []
   for i in range(epoch):
     loss = U.train_by_data_loader_danraku_origin(m, ld, 1, U.logging.debug)[0]
     losss.append(loss)
-    outputs, targets = U.get_test_results_batch(m, testld)
-    prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
-    results.append((prec, rec, f1, bacc))
-    print(f'epoch = {i+1}, loss = {loss}, prec = {prec}, rec = {rec}, f1 = {f1}, bacc = {bacc}')
+    # Get test result
+    result = {'test': get_test_result(m, testld), 'dev': get_test_result(m, devld)}
+    results.append(result)
+    logout_info(f'epoch = {i+1}, loss = {loss}, result = {result}')
   # plot_prec_rec_f1_loss(results, losss, epoch, path)
   # print('save to result.png')
   return m, results, losss
+

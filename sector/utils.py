@@ -220,10 +220,14 @@ def get_avg_loss(m, ld):
     loss += m.get_loss(inpts, labels).item()
   return loss / counter
 
-def get_test_results_batch(m, testld):
+def get_test_results_batch(m, testld, logger = print):
   targets = []
   results = []
+  counter = 0
+  length = len(testld.dataset)
   for inpts, labels in testld:
+    counter += testld.batch_size
+    logger(f'Testing {counter}/{length}')
     targets += labels.tolist()
     results += m.dry_run(inpts).tolist()
   return results, targets
