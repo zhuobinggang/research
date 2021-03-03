@@ -12,6 +12,8 @@ pad_id = toker.pad_token_id
 cls_id = toker.cls_token_id
 sep_id = toker.sep_token_id
 
+GPU_OK = t.cuda.is_available()
+
 def no_indicator(ss):
   return [s.replace('\u3000', '') for s in ss]
 
@@ -188,6 +190,8 @@ class Model(nn.Module):
     self.bert = BertModel.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
     self.bert.train()
     self.optim = optim.AdamW(self.get_should_update(), 2e-5)
+    if GPU_OK:
+      _ = self.cuda()
 
   def set_verbose(self):
     self.verbose = not self.verbose
@@ -210,6 +214,10 @@ class Model(nn.Module):
   # labels: (batch), LongTensor
   def train(self, inpts, labels):
     token_ids, attend_marks = inpts
+    if GPU_OK:
+      token_ids = token_ids.cuda()
+      attend_marks = attend_marks.cuda()
+      labels = labels.cuda()
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (batch, 768)
     o = self.classifier(embs) # (batch, 2)
     loss = self.CEL(o, labels)
@@ -219,8 +227,12 @@ class Model(nn.Module):
     self.print_train_info(o, labels, loss.detach().item())
     return loss.detach().item()
 
+  @t.no_grad()
   def dry_run(self, inpts):
     token_ids, attend_marks = inpts
+    if GPU_OK:
+      token_ids = token_ids.cuda()
+      attend_marks = attend_marks.cuda()
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (batch, 768)
     o = self.classifier(embs) # (batch, 2)
     # self.print_train_info(o, t.LongTensor([0]), 0)
@@ -228,9 +240,11 @@ class Model(nn.Module):
 
 # ============
 
-ld = Loader(Train_DS(), 24)
-testld = Loader(Test_DS(), 24)
-devld = Loader(Dev_DS(), 24)
+batch_size = 4
+
+ld = Loader(Train_DS(), batch_size)
+testld = Loader(Test_DS(), batch_size)
+devld = Loader(Dev_DS(), batch_size)
 
 def set_test():
   ld.dataset.datas = ld.dataset.datas[:100]
@@ -241,10 +255,10 @@ def set_test():
 def run_test(m, epoch = 2):
   set_test()
   m.verbose = True
-  return runner.run(m, ld, testld, devld, epoch=epoch, batch=24)
+  return runner.run(m, ld, testld, devld, epoch=epoch, batch=batch_size)
 
 def run(m, epoch = 2):
-  return runner.run(m, ld, testld, devld, epoch=epoch, batch=24)
+  return runner.run(m, ld, testld, devld, epoch=epoch, batch=batch_size)
 
 def run_at_night():
   rs = []
