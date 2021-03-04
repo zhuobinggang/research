@@ -224,12 +224,15 @@ def get_test_results_batch(m, testld, logger = print):
   targets = []
   results = []
   counter = 0
+  start = time.time()
   length = len(testld.dataset)
   for inpts, labels in testld:
     counter += testld.batch_size
-    logger(f'Testing {counter}/{length}')
+    # logger(f'Testing {counter}/{length}')
     targets += labels.tolist()
     results += m.dry_run(inpts).tolist()
+  end = time.time()
+  logger(f'Tested! Time cost: {end - start} seconds')
   return results, targets
 
 
