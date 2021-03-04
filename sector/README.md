@@ -32,12 +32,11 @@ M.run(m)
 
 ## Next plan
 
-- [X] Train 3rd epoch and get scores: (F1 & BA & Prec & Rec) of (Dev & Test) Dataset
-- [ ] Train kuro BERT and get results
 - [ ] Train 2 BERTs with FL loss and get results
 
 - [ ] 实验数据收集
-  - [ ] 跑5个model，每个epoch=2, 但是要同时得出dev数据集的结果 (Doing) 
+  - [ ] 跑16个model，每个epoch=2, 但是要同时得出dev数据集的结果 (Doing 在panther上跑着呢)
+  - [ ] 跑16个kuro bert model，每个epoch=2, 但是要同时得出dev数据集的结果 (已编码, 速度慢一倍有余，只跑8个算了)
 
 #### New Idea
 

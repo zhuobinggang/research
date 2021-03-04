@@ -7,18 +7,9 @@ import danraku_runner_simple as runner
 import torch.optim as optim
 from itertools import chain
 nn = t.nn
-toker = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
-pad_id = toker.pad_token_id
-cls_id = toker.cls_token_id
-sep_id = toker.sep_token_id
 
 GPU_OK = t.cuda.is_available()
 
-def no_indicator(ss):
-  return [s.replace('\u3000', '') for s in ss]
-
-def token_encode(text):
-  return toker.encode(text, add_special_tokens = False)
 
 class DatasetAbstract(t.utils.data.dataset.Dataset):
   def __init__(self, half_window_size = 1):
@@ -26,6 +17,13 @@ class DatasetAbstract(t.utils.data.dataset.Dataset):
     self.feature_size = 300
     self.init_datas_hook()
     self.half_window_size = half_window_size
+    self.init_hook()
+
+  def init_hook(self):
+    pass
+
+  def no_indicator(self, ss):
+    return [s.replace('\u3000', '') for s in ss]
 
   def __getitem_org__(self, idx):
     if idx >= len(self.datas) - 1:
@@ -42,8 +40,8 @@ class DatasetAbstract(t.utils.data.dataset.Dataset):
     for i in range(start, end):
       right.append(self.datas[i])
     label = 1 if right[0].startswith('\u3000') else 0
-    left = no_indicator(left)
-    right = no_indicator(right)
+    left = self.no_indicator(left)
+    right = self.no_indicator(right)
     return (left,right), label
 
 
@@ -61,8 +59,22 @@ class DatasetAbstract(t.utils.data.dataset.Dataset):
   def shuffle(self):
     random.shuffle(self.datas)
 
+# ==============
 
 class Dataset(DatasetAbstract):
+  def token_encode(self, text):
+    return self.toker.encode(text, add_special_tokens = False)
+
+  def init_toker(self):
+    toker = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+    self.toker = toker
+    self.pad_id = toker.pad_token_id
+    self.cls_id = toker.cls_token_id
+    self.sep_id = toker.sep_token_id
+
+  def init_hook(self):
+    self.init_toker()
+  
   # return: (left: (128, 300), right: (128, 300)), label
   # pad with zero if not enough 
   def __getitem__(self, idx, tokens = 128):
@@ -75,13 +87,13 @@ class Dataset(DatasetAbstract):
       self.half_window_size = i
       (left,right), label = self.__getitem_org__(idx)
       if not left_stop:
-        left_token_ids = token_encode('。'.join(left))
+        left_token_ids = self.token_encode('。'.join(left))
         if len(lefts) == len(left_token_ids) or len(left_token_ids) > tokens:
           # print('。'.join(left) + '\n\n')
           left_stop = True
         lefts = left_token_ids
       if not right_stop:
-        right_token_ids = token_encode('。'.join(right))
+        right_token_ids = self.token_encode('。'.join(right))
         if len(rights) == len(right_token_ids) or len(right_token_ids) > tokens:
           # print('。'.join(right)  + '\n\n')
           right_stop = True
@@ -96,18 +108,18 @@ class Dataset(DatasetAbstract):
     attend_right = []
     if len(lefts) < tokens:
       attend_left = np.repeat(0, tokens - len(lefts)).tolist() + np.repeat(1, len(lefts)).tolist()
-      topad = np.repeat(pad_id, tokens - len(lefts)).tolist()
+      topad = np.repeat(self.pad_id, tokens - len(lefts)).tolist()
       lefts = topad + lefts # (=tokens), list
     else:
       attend_left = np.repeat(1, tokens).tolist()
     if len(rights) < tokens:
       attend_right = np.repeat(1, len(rights)).tolist() + np.repeat(0, tokens - len(rights)).tolist()
-      topad = np.repeat(pad_id, tokens - len(rights)).tolist()
+      topad = np.repeat(self.pad_id, tokens - len(rights)).tolist()
       rights = rights + topad
     else:
       attend_right = np.repeat(1, tokens).tolist()
     # Add special token
-    results_ids = [cls_id] + lefts + [sep_id] + rights
+    results_ids = [self.cls_id] + lefts + [self.sep_id] + rights
     attend_left = [1] + attend_left
     attend_right = [1] + attend_right
     attend_mark = attend_left + attend_right
@@ -123,7 +135,7 @@ class Test_DS(Dataset):
 
 class Dev_DS(Dataset):
   def init_datas_hook(self):
-    self.datas = data.read_tests()
+    self.datas = data.read_devs()
   
 
 # ==========
@@ -187,11 +199,14 @@ class Model(nn.Module):
       nn.LeakyReLU(0.1),
       nn.Linear(int(self.bert_size / 2), 2),
     )
-    self.bert = BertModel.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
-    self.bert.train()
+    self.init_bert()
     self.optim = optim.AdamW(self.get_should_update(), 2e-5)
     if GPU_OK:
       _ = self.cuda()
+
+  def init_bert(self):
+    self.bert = BertModel.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+    self.bert.train()
 
   def set_verbose(self):
     self.verbose = not self.verbose
@@ -247,9 +262,9 @@ testld = Loader(Test_DS(), batch_size)
 devld = Loader(Dev_DS(), batch_size)
 
 def set_test():
-  ld.dataset.datas = ld.dataset.datas[:100]
-  testld.dataset.datas = testld.dataset.datas[:50]
-  devld.dataset.datas = devld.dataset.datas[:50]
+  ld.dataset.datas = ld.dataset.datas[:30]
+  testld.dataset.datas = testld.dataset.datas[:15]
+  devld.dataset.datas = devld.dataset.datas[:15]
 
 # return: (m, (prec, rec, f1, bacc), losss)
 def run_test(m, epoch = 2):
