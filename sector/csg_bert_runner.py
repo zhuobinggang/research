@@ -17,16 +17,30 @@ def run_test(m, epoch = 2):
   m.verbose = True
   return runner.run(m, ld, testld, devld, epoch=epoch, batch=batch_size)
 
-def run(m, epoch = 2):
-  return runner.run(m, ld, testld, devld, epoch=epoch, batch=batch_size)
+def run(m, epoch):
+  # train
+  losses = runner.train_simple(m, ld, epoch)
+  testdic = runner.get_test_result(m, testld)
+  devdic = runner.get_test_result(m, devld)
+  return losses, testdic, devdic
 
-def run_at_night():
-  rs = []
-  ls = []
-  for i in [1]:
+def get_csg_128_normal_results():
+  org_res = []
+  for i in range(8):
     m = Model()
-    _, results, losss = run(m)
-    rs.append(results)
-    ls.append(losss)
-    t.save(m, f'save/csg_bert_{i}.tch')
-  return rs, ls
+    loss, testdic, devdic = run(m, 2)
+    org_res.append((testdic, devdic))
+  return org_res
+
+def analyse(org_res):
+  test_fs = []
+  test_baccs = []
+  dev_fs = []
+  dev_baccs = []
+  for testdic, devdic in org_res:
+    test_fs.append(testdic['f1'])
+    dev_fs.append(devdic['f1'])
+    test_baccs.append(testdic['bacc'])
+    dev_baccs.append(devdic['bacc'])
+  return test_fs, test_baccs, dev_fs, dev_baccs
+    
