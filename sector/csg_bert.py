@@ -189,10 +189,10 @@ class Loader(LoaderAbstract):
 # ==========
 
 class Model(nn.Module):
-  def __init__(self):
+  def __init__(self, weight_one = 1):
     super().__init__()
     self.bert_size = 768
-    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 3]))
+    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, weight_one]))
     self.verbose = False
     self.classifier = nn.Sequential(
       nn.Linear(self.bert_size, int(self.bert_size / 2)),
@@ -252,36 +252,3 @@ class Model(nn.Module):
     o = self.classifier(embs) # (batch, 2)
     # self.print_train_info(o, t.LongTensor([0]), 0)
     return o.argmax(1)
-
-# ============
-
-batch_size = 4
-
-ld = Loader(Train_DS(), batch_size)
-testld = Loader(Test_DS(), batch_size)
-devld = Loader(Dev_DS(), batch_size)
-
-def set_test():
-  ld.dataset.datas = ld.dataset.datas[:30]
-  testld.dataset.datas = testld.dataset.datas[:15]
-  devld.dataset.datas = devld.dataset.datas[:15]
-
-# return: (m, (prec, rec, f1, bacc), losss)
-def run_test(m, epoch = 2):
-  set_test()
-  m.verbose = True
-  return runner.run(m, ld, testld, devld, epoch=epoch, batch=batch_size)
-
-def run(m, epoch = 2):
-  return runner.run(m, ld, testld, devld, epoch=epoch, batch=batch_size)
-
-def run_at_night():
-  rs = []
-  ls = []
-  for i in [1]:
-    m = Model()
-    _, results, losss = run(m)
-    rs.append(results)
-    ls.append(losss)
-    t.save(m, f'save/csg_bert_{i}.tch')
-  return rs, ls

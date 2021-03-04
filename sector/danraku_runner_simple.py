@@ -43,21 +43,6 @@ def plot_prec_rec_f1_loss(results, loss, epoch= 20, path = 'result.png'):
   plt.legend()
   plt.savefig(path)
 
-def get_test_result(m, testld):
-  dic = {}
-  if testld is None:
-    dic['prec'] = -1
-    dic['rec'] = -1
-    dic['f1'] = -1
-    dic['bacc'] = -1
-  else: 
-    outputs, targets = U.get_test_results_batch(m, testld, U.logging.debug)
-    prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
-    dic['prec'] = prec
-    dic['rec'] = rec
-    dic['f1'] = f1
-    dic['bacc'] = bacc
-  return dic
 
 def logout_info(text):
   print(text)
@@ -85,4 +70,28 @@ def run(m, ld, testld, devld = None, epoch = 2, log_path = 'wiki.log', batch=100
   # plot_prec_rec_f1_loss(results, losss, epoch, path)
   # print('save to result.png')
   return m, results, losss
+
+
+def train_simple(m, ld, epoch, log_path = 'wiki.log'):
+  U.init_logger(log_path)
+  ld.start = 0 
+  losses = [U.train_by_data_loader_danraku_origin(m, ld, 1, U.logging.debug)[0] for _ in range(epoch)]
+  return losses
+
+def get_test_result(m, testld):
+  testld.start = 0
+  dic = {}
+  if testld is None:
+    dic['prec'] = -1
+    dic['rec'] = -1
+    dic['f1'] = -1
+    dic['bacc'] = -1
+  else: 
+    outputs, targets = U.get_test_results_batch(m, testld, U.logging.debug)
+    prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
+    dic['prec'] = prec
+    dic['rec'] = rec
+    dic['f1'] = f1
+    dic['bacc'] = bacc
+  return dic
 
