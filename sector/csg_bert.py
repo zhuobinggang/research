@@ -135,7 +135,7 @@ class Test_DS(Dataset):
 
 class Dev_DS(Dataset):
   def init_datas_hook(self):
-    self.datas = data.read_tests()
+    self.datas = data.read_devs()
   
 
 # ==========

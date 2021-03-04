@@ -37,7 +37,7 @@ class Test_DS(Dataset):
 
 class Dev_DS(Dataset):
   def init_datas_hook(self):
-    self.datas = data.read_tests()
+    self.datas = data.read_devs()
 
 class Model(M.Model):
   def init_bert(self):
@@ -48,7 +48,7 @@ class Model(M.Model):
 
 # ============
 
-batch_size = 4
+batch_size = 16
 
 ld = Loader(Train_DS(), batch_size)
 testld = Loader(Test_DS(), batch_size)
@@ -76,5 +76,5 @@ def run_at_night():
     _, results, losss = run(m)
     rs.append(results)
     ls.append(losss)
-    t.save(m, f'save/csg_bert_{i}.tch')
+    t.save(m, f'save/kuro_bert_{i}.tch')
   return rs, ls
