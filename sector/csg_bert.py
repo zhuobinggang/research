@@ -71,39 +71,23 @@ class Dataset(DatasetAbstract):
     self.pad_id = toker.pad_token_id
     self.cls_id = toker.cls_token_id
     self.sep_id = toker.sep_token_id
+    self.sentence_period = '。'
 
   def init_hook(self):
+    self.tokens = 128
     self.init_toker()
-  
-  # return: (left: (128, 300), right: (128, 300)), label
-  # pad with zero if not enough 
-  def __getitem__(self, idx, tokens = 128):
-    lefts = []
-    rights = []
-    left_stop = False
-    right_stop = False
-    # Get enough tokens
-    for i in range(1, 10):
-      self.half_window_size = i
-      (left,right), label = self.__getitem_org__(idx)
-      if not left_stop:
-        left_token_ids = self.token_encode('。'.join(left))
-        if len(lefts) == len(left_token_ids) or len(left_token_ids) > tokens:
-          # print('。'.join(left) + '\n\n')
-          left_stop = True
-        lefts = left_token_ids
-      if not right_stop:
-        right_token_ids = self.token_encode('。'.join(right))
-        if len(rights) == len(right_token_ids) or len(right_token_ids) > tokens:
-          # print('。'.join(right)  + '\n\n')
-          right_stop = True
-        rights = right_token_ids
-      if left_stop and right_stop:
-        break
-    # Trim
+
+  def joined(self, ss):
+    return self.sentence_period.join(ss)
+
+  def trim_ids(self, lefts, rights):
+    tokens = self.tokens
     lefts = lefts[-tokens:] # (<=tokens), list
     rights = rights[0:tokens] # (<=tokens), list
-    # Pad and create attend mark
+    return lefts, rights
+
+  def pad_and_create_attend_mark_with_special_token(self, lefts, rights):
+    tokens = self.tokens
     attend_left = []
     attend_right = []
     if len(lefts) < tokens:
@@ -123,6 +107,38 @@ class Dataset(DatasetAbstract):
     attend_left = [1] + attend_left
     attend_right = [1] + attend_right
     attend_mark = attend_left + attend_right
+    return results_ids, attend_mark
+  
+  # return: (left: (128, 300), right: (128, 300)), label
+  # pad with zero if not enough 
+  def __getitem__(self, idx):
+    tokens = self.tokens
+    lefts = []
+    rights = []
+    left_stop = False
+    right_stop = False
+    # Get enough tokens
+    for i in range(1, 10):
+      self.half_window_size = i
+      (left,right), label = self.__getitem_org__(idx)
+      if not left_stop:
+        left_token_ids = self.token_encode(self.joined(left))
+        if len(lefts) == len(left_token_ids) or len(left_token_ids) > tokens:
+          # print('。'.join(left) + '\n\n')
+          left_stop = True
+        lefts = left_token_ids
+      if not right_stop:
+        right_token_ids = self.token_encode(self.joined(right))
+        if len(rights) == len(right_token_ids) or len(right_token_ids) > tokens:
+          # print('。'.join(right)  + '\n\n')
+          right_stop = True
+        rights = right_token_ids
+      if left_stop and right_stop:
+        break
+    # Trim
+    lefts, rights = self.trim_ids(lefts, rights)
+    # Pad and create attend mark and add special token
+    results_ids, attend_mark = self.pad_and_create_attend_mark_with_special_token(lefts, rights)
     return (results_ids, attend_mark), label
 
 class Train_DS(Dataset):
@@ -200,9 +216,13 @@ class Model(nn.Module):
       nn.Linear(int(self.bert_size / 2), 2),
     )
     self.init_bert()
+    self.init_hook()
     self.optim = optim.AdamW(self.get_should_update(), 2e-5)
     if GPU_OK:
       _ = self.cuda()
+
+  def init_hook(self):
+    pass
 
   def init_bert(self):
     self.bert = BertModel.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
@@ -226,6 +246,9 @@ class Model(nn.Module):
     result = self.bert(token_ids, attend_marks, return_dict=True)
     return result.pooler_output
 
+  def processed_embs(self, embs):
+    return embs
+
   # inpts: (token_ids, attend_marks), list
   # token_ids = attend_marks: (batch, seq_len), LongTensor
   # labels: (batch), LongTensor
@@ -236,6 +259,7 @@ class Model(nn.Module):
       attend_marks = attend_marks.cuda()
       labels = labels.cuda()
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (batch, 768)
+    embs = self.processed_embs(embs)
     o = self.classifier(embs) # (batch, 2)
     loss = self.CEL(o, labels)
     self.zero_grad()
