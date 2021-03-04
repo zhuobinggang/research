@@ -211,8 +211,10 @@ class Model(nn.Module):
   def set_verbose(self):
     self.verbose = not self.verbose
 
-  def print_train_info(self, o, labels, loss):
+  def print_train_info(self, o, labels=None, loss=-1):
     if self.verbose:
+      if labels is None:
+        labels = t.LongTensor([-1])
       print(f'Want: {labels.tolist()} Got: {o.argmax(1).tolist()} Loss: {loss} ')
 
   def get_should_update(self):
@@ -243,12 +245,12 @@ class Model(nn.Module):
     return loss.detach().item()
 
   @t.no_grad()
-  def dry_run(self, inpts):
+  def dry_run(self, inpts, labels=None):
     token_ids, attend_marks = inpts
     if GPU_OK:
       token_ids = token_ids.cuda()
       attend_marks = attend_marks.cuda()
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (batch, 768)
     o = self.classifier(embs) # (batch, 2)
-    # self.print_train_info(o, t.LongTensor([0]), 0)
+    self.print_train_info(o, labels, -1)
     return o.argmax(1)

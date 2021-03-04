@@ -44,3 +44,9 @@ def analyse(org_res):
     dev_baccs.append(devdic['bacc'])
   return test_fs, test_baccs, dev_fs, dev_baccs
     
+def verbose_check(m):
+  m.verbose = True
+  dic = runner.get_test_result(m, devld)
+  m.verbose = False
+  return dic
+
