@@ -85,7 +85,7 @@ def get_datas_double_sentence(test):
   G['double_sentence_true_mess'] = mess
 
 
-def run(test):
+def run(test = False):
   get_datas_order_matters(test)
   get_datas_csg_128(test)
   get_datas_double_sentence(test)
