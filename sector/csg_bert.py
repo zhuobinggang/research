@@ -6,6 +6,7 @@ from importlib import reload
 import danraku_runner_simple as runner
 import torch.optim as optim
 from itertools import chain
+import logging
 nn = t.nn
 
 GPU_OK = t.cuda.is_available()
@@ -63,7 +64,11 @@ class DatasetAbstract(t.utils.data.dataset.Dataset):
 
 class Dataset(DatasetAbstract):
   def token_encode(self, text):
-    return self.toker.encode(text, add_special_tokens = False)
+    ids = self.toker.encode(text, add_special_tokens = False)
+    if self.max_size < len(ids):
+      logging.warning(f'Length {len(ids)} exceed!: {text[:30]}...')
+    ids = ids[0: self.max_size]
+    return ids
 
   def init_toker(self):
     toker = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
@@ -75,6 +80,7 @@ class Dataset(DatasetAbstract):
 
   def init_hook(self):
     self.tokens = 128
+    self.max_size = 128
     self.init_toker()
 
   def joined(self, ss):

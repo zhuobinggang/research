@@ -39,11 +39,12 @@ class Loader_Double_Order_Matters(CSG.Loader):
 
     return (t.LongTensor(idss_paded), t.LongTensor(attend_mark)), labels
 
-def get_datas_order_matters(test):
+# sentence = 2
+def get_datas_order_matters(test): 
   # Get Datas for Single_Sentence_CSG
-  ld = Loader_Double_Order_Matters(Train_DS_Double_Order_Matters(), 2)
-  testld = Loader_Single_Sentence_True(Test_DS_Single_Sentence_True(), 4)
-  devld = Loader_Single_Sentence_True(Dev_DS_Single_Sentence_True(), 4)
+  ld = Loader_Double_Order_Matters(Train_DS_Double_Order_Matters(2), 2)
+  testld = Loader_Single_Sentence_True(Test_DS_Single_Sentence_True(2), 4)
+  devld = Loader_Single_Sentence_True(Dev_DS_Single_Sentence_True(2), 4)
   if test:
     ld.dataset.datas = ld.dataset.datas[:30]
     testld.dataset.datas = testld.dataset.datas[:15]
@@ -51,7 +52,7 @@ def get_datas_order_matters(test):
   mess = []
   for i in range(2 if test else 5):
     m = CSG.Model()
-    loss = runner.train_simple(m, ld, 1)
+    loss = runner.train_simple(m, ld, 1) # only one epoch for order matter model
     runner.logout_info(f'Trained order matter model_{i} only one epoch, loss={loss}')
     runner.logout_info(f'Start test_{i}...')
     testdic = runner.get_test_result(m, testld)
@@ -60,3 +61,31 @@ def get_datas_order_matters(test):
     runner.logout_info(f'testdic: {testdic}, devdic: {devdic}')
     mess.append((loss, testdic, devdic))
   G['order_matters_mess'] = mess
+
+def get_datas_double_sentence(test):
+  # Get Datas for Single_Sentence_CSG
+  ld = Loader_Single_Sentence_True(Train_DS_Single_Sentence_True(2), 4)
+  testld = Loader_Single_Sentence_True(Test_DS_Single_Sentence_True(2), 4)
+  devld = Loader_Single_Sentence_True(Dev_DS_Single_Sentence_True(2), 4)
+  if test:
+    ld.dataset.datas = ld.dataset.datas[:30]
+    testld.dataset.datas = testld.dataset.datas[:15]
+    devld.dataset.datas = devld.dataset.datas[:15]
+  mess = []
+  for i in range(2 if test else 5):
+    m = CSG.Model()
+    loss = runner.train_simple(m, ld, 2)
+    runner.logout_info(f'Trained Single_Sentence True model_{i}, loss={loss}')
+    runner.logout_info(f'Start test_{i}...')
+    testdic = runner.get_test_result(m, testld)
+    devdic = runner.get_test_result(m, devld)
+    runner.logout_info(f'Over test_{i}:')
+    runner.logout_info(f'testdic: {testdic}, devdic: {devdic}')
+    mess.append((loss, testdic, devdic))
+  G['double_sentence_true_mess'] = mess
+
+
+def run(test):
+  get_datas_order_matters(test)
+  get_datas_csg_128(test)
+  get_datas_double_sentence(test)
