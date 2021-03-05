@@ -8,12 +8,11 @@ class Dataset_Double_Order_Matters(Dataset_Single_Sentence_True):
     r = self.joined(ss2)
     l_token_ids = self.token_encode(l)
     r_token_ids = self.token_encode(r)
-    return [self.cls_id] + l_token_ids + [self.sep_id] + r_token_ids
+    return ([self.cls_id] + l_token_ids + [self.sep_id] + r_token_ids), ([self.cls_id] + r_token_ids + [self.sep_id] + l_token_ids)
 
   def __getitem__(self, idx):
     (l,r), label = self.__getitem_org__(idx)
-    inpt = self.inpt_from_sentences_pair(l, r)
-    inpt_revs = self.inpt_from_sentences_pair(r, l)
+    inpt, inpt_revs = self.inpt_from_sentences_pair(l, r)
     return (inpt ,label), (inpt_revs ,label)
 
 class Train_DS_Double_Order_Matters(Dataset_Double_Order_Matters):
@@ -52,7 +51,7 @@ def get_datas_order_matters(test):
   mess = []
   for i in range(2 if test else 5):
     m = CSG.Model()
-    loss = runner.train_simple(m, ld, 1) # only one epoch for order matter model
+    loss = runner.train_simple(m, ld, 2) # only one epoch for order matter model
     runner.logout_info(f'Trained order matter model_{i} only one epoch, loss={loss}')
     runner.logout_info(f'Start test_{i}...')
     testdic = runner.get_test_result(m, testld)

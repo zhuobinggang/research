@@ -265,7 +265,7 @@ def get_datas_csg_128(test):
     runner.logout_info(f'Over test_{i}:')
     runner.logout_info(f'testdic: {testdic}, devdic: {devdic}')
     mess.append((loss, testdic, devdic))
-  G['single_sentence_true_mess'] = mess
+  G['csg_128_mess'] = mess
 
 def run(test = False):
   get_datas_csg_128(test)
