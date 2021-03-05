@@ -245,6 +245,28 @@ def get_datas_for_Single_Sentence(test):
   G['single_sentence_true_mess'] = mess
 
 
+def get_datas_csg_128(test):
+  # Get Datas for Single_Sentence_CSG
+  ld = CSG.Loader(CSG.Train_DS(), 4)
+  testld = CSG.Loader(CSG.Test_DS(), 4)
+  devld = CSG.Loader(CSG.Dev_DS(), 4)
+  if test:
+    ld.dataset.datas = ld.dataset.datas[:30]
+    testld.dataset.datas = testld.dataset.datas[:15]
+    devld.dataset.datas = devld.dataset.datas[:15]
+  mess = []
+  for i in range(2 if test else 5):
+    m = CSG.Model()
+    loss = runner.train_simple(m, ld, 2)
+    runner.logout_info(f'Trained Single_Sentence True model_{i}, loss={loss}')
+    runner.logout_info(f'Start test_{i}...')
+    testdic = runner.get_test_result(m, testld)
+    devdic = runner.get_test_result(m, devld)
+    runner.logout_info(f'Over test_{i}:')
+    runner.logout_info(f'testdic: {testdic}, devdic: {devdic}')
+    mess.append((loss, testdic, devdic))
+  G['single_sentence_true_mess'] = mess
+
 def run(test = False):
-  get_datas_for_Single_Sentence(test)
+  get_datas_csg_128(test)
 

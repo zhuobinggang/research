@@ -158,7 +158,7 @@ class Dev_DS(Dataset):
 
 class LoaderAbstract():
   def __len__(self):
-    length = len(self.ds.datas)
+    length = len(self.ds)
     divided = length / self.batch_size
     return int(divided) + 1 if int(divided) < divided else int(divided)
 
@@ -189,6 +189,10 @@ class LoaderAbstract():
 class Loader(LoaderAbstract):
   def __init__(self, ds, batch_size = 4):
     super().__init__(ds, batch_size)
+    self.init_hook()
+
+  def init_hook(self):
+    pass
 
   # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
   def __next__(self):

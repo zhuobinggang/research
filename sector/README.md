@@ -11,22 +11,20 @@ Setting:
 
 ### #1 BERT结构对比
 
-- [ ] #1 CSG 128
+- [X] #1 CSG 128
+  - [ ] 获取实验结果(5 次)
 - [ ] #2 CSG 64
-- [ ] #3 单句子取出[CLS]Token
-  - [X] Coding
+- [X] #3 单句子取出[CLS]Token
 - [X] #4 单句子CSG 128
-  - [X] Coding
 - [ ] #5 单句子，同时训练BERT辨认分割点
 - [ ] #6 CSG 256:0 (预测分割点)
 - [ ] #7 Kuro Bert
 - [X] #8 单句子取出[CLS]Token Cat Sentence
-  - [X] Coding
 
 #### 分析
 
 1. #1 vs #2: 前后token量对段落分割精度的影响?
-2. #3 vs #4: CSG结构(输入平衡性)对BERT精度的影响?
+2. #3 vs #4: CSG结构(输入平衡性)对BERT精度的影响? (没有影响。。。只是我BERT弄错了)
 3. #5 vs #3: 增加限制可以让模型学习更多东西?
 4. #5 vs #2#1: 辨认分割点Loss和CSG模型的内在联系?
 5. #6 能否预测分割点？
