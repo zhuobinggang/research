@@ -48,7 +48,8 @@ class Dataset_Around_Split_Point(Dataset_Single_Sentence_True):
 
 class Train_DS_Around_Split_Point(Dataset_Around_Split_Point):
   def init_datas_hook(self):
-    self.datas = data.read_trains()
+    datas = data.read_trains()
+    self.set_datas(datas)
 
 def get_datas_trimed_redundant(test):
   # Get Datas for Single_Sentence_CSG
