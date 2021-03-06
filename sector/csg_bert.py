@@ -62,6 +62,8 @@ class DatasetAbstract(t.utils.data.dataset.Dataset):
 
 # ==============
 
+
+# Trim length with max = 128
 class Dataset(DatasetAbstract):
   def token_encode(self, text):
     ids = self.toker.encode(text, add_special_tokens = False)
@@ -147,15 +149,20 @@ class Dataset(DatasetAbstract):
     results_ids, attend_mark = self.pad_and_create_attend_mark_with_special_token(lefts, rights)
     return (results_ids, attend_mark), label
 
-class Train_DS(Dataset):
+class Dataset_Without_Trim_Length(Dataset):
+  def token_encode(self, text):
+    ids = self.toker.encode(text, add_special_tokens = False)
+    return ids
+
+class Train_DS(Dataset_Without_Trim_Length):
   def init_datas_hook(self):
     self.datas = data.read_trains()
 
-class Test_DS(Dataset):
+class Test_DS(Dataset_Without_Trim_Length):
   def init_datas_hook(self):
     self.datas = data.read_tests()
 
-class Dev_DS(Dataset):
+class Dev_DS(Dataset_Without_Trim_Length):
   def init_datas_hook(self):
     self.datas = data.read_devs()
   
