@@ -16,8 +16,8 @@ class DatasetAbstract(t.utils.data.dataset.Dataset):
   def __init__(self, half_window_size = 1):
     super().__init__()
     self.feature_size = 300
-    self.init_datas_hook()
     self.half_window_size = half_window_size
+    self.init_datas_hook()
     self.init_hook()
 
   def init_hook(self):
