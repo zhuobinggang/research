@@ -81,9 +81,11 @@ class BERT_SEGBOT(CSG.Model):
   def init_hook(self):
     self.flatten_then_sigmoid = nn.Sequential(
       nn.Linear(self.hidden_size * 2, 1),
-      nn.Simoid(),
+      nn.Sigmoid(),
     )
     self.bi_gru_batch_first = nn.GRU(self.bert_size, self.hidden_size, batch_first=True, bidirectional=True)
+    self.EOF = t.randn(1, self.bert_size)
+    self.CEL = nn.CrossEntropyLoss()
 
   def get_should_update(self):
     return chain(self.bert.parameters(), self.flatten_then_sigmoid.parameters(), self.bi_gru_batch_first.parameters())
@@ -100,11 +102,18 @@ class BERT_SEGBOT(CSG.Model):
   def flatten_then_softmax(self, embs):
     return self.sigmoid(self.flatten_layer(embs)) # (sentence_size + 1, 1)
 
+  def print_train_info(self, o, labels=None, loss=-1):
+    if self.verbose:
+      if labels is None:
+        labels = t.LongTensor([-1])
+      print(f'Want: {labels.tolist()} Got: {o.argmax().item()} Loss: {loss} ')
+
   # inpts: token_ids, attend_marks
   # token_ids: (sentence_size, max_id_len)
   # labels: (sentence_size + 1)
   def train(self, inpts, labels):
     token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
+    labels = t.LongTensor([labels.tolist().index(1)]) # (1)
     if GPU_OK:
       token_ids = token_ids.cuda()
       attend_marks = attend_marks.cuda()
@@ -113,25 +122,28 @@ class BERT_SEGBOT(CSG.Model):
     embs = self.processed_embs(embs) # (sentence_size, 768)
 
     o = self.integrate_sentences_info(embs) # (sentence_size + 1, 2 * hidden_size)
-    o = self.flatten_then_sigmoid(embs) # (sentence_size + 1, 1)
-    loss = self.CEL(embs, labels)
+    o = self.flatten_then_sigmoid(o) # (sentence_size + 1, 1)
+    loss = self.CEL(o.view(1, -1), labels)
 
     self.zero_grad()
     loss.backward()
     self.optim.step()
     self.print_train_info(o, labels, loss.detach().item())
 
-    return loss.detach().item(), o.argmax().item()
+    return loss.detach().item()
 
   def dry_run(self, inpts, labels=None):
-    token_ids, attend_marks = inpts
+    token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
+    labels = t.LongTensor([labels.tolist().index(1) if labels is not None else -1])  # (1)
     if GPU_OK:
       token_ids = token_ids.cuda()
       attend_marks = attend_marks.cuda()
+      labels = labels.cuda()
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (sentence_size, 768)
     embs = self.processed_embs(embs) # (sentence_size, 768)
+
     o = self.integrate_sentences_info(embs) # (sentence_size + 1, 2 * hidden_size)
-    o = self.flatten_then_sigmoid(embs) # (sentence_size + 1, 1)
+    o = self.flatten_then_sigmoid(o) # (sentence_size + 1, 1)
     self.print_train_info(o, labels, -1)
     return o.argmax().item()
 
@@ -141,26 +153,27 @@ class Dataset_Segbot(t.utils.data.dataset.Dataset):
     super().__init__()
     self.ss_len = ss_len
     self.max_ids = max_ids
-    self.init_hook()
     self.init_datas_hook()
     self.init_toker()
+    self.init_hook()
     self.start = 0
 
   def init_hook(self):
     pass
 
+  def count_exceed_length_ground_truth(self):
+    counter = 0
+    for _, labels in self.ground_truth_datas:
+      if labels.index(1) >= self.ss_len:
+        counter += 1
+    return counter
+
   def init_datas_hook(self):
     self.datas = []
+    self.ground_truth_datas = []
 
   def set_datas(self, datas):
     self.datas = datas
-    self.ground_truth_datas = []
-    start = 0
-    stop = False
-    while start < len(self.datas):
-      inpts, labels = self[start]
-      self.ground_truth_datas.append((inpts, labels))
-      start = self.next_start(start)
 
   def is_begining(self, s):
     return s.startswith('\u3000')
@@ -182,15 +195,18 @@ class Dataset_Segbot(t.utils.data.dataset.Dataset):
   def get_ss_and_labels(self, start):
     end = min(start + self.ss_len, len(self.datas)) 
     ss = []
-    cut_point = self.ss_len
+    cut_point = -1
     for i in range(start, end):
       s = self.datas[i]
       ss.append(s)
-      if i != start and cut_point == self.ss_len  and self.is_begining(s):
+      if i != start and cut_point == -1  and self.is_begining(s):
         cut_point = len(ss) - 1
     ss = self.no_indicator(ss)
-    labels = np.zeros(self.ss_len + 1, np.int8).tolist()
-    labels[cut_point] = 1
+    labels = np.zeros(len(ss) + 1, np.int8).tolist()
+    if cut_point != -1:
+      labels[cut_point] = 1
+    else: 
+      labels[-1] = 1
     return ss, labels
 
   def __getitem__(self, start):
@@ -199,7 +215,7 @@ class Dataset_Segbot(t.utils.data.dataset.Dataset):
     return ([ids for ids, masks in ids_and_masks], [masks for ids, masks in ids_and_masks]), labels
 
   def __len__(self):
-    return len(self.ground_truth_datas)
+    return len(self.datas)
 
   def shuffle(self):
     random.shuffle(self.datas)
@@ -224,12 +240,129 @@ class Dataset_Segbot(t.utils.data.dataset.Dataset):
     self.cls_id = toker.cls_token_id
     self.sep_id = toker.sep_token_id
     self.sentence_period = '。'
+
+class Test_DS_Segbot(Dataset_Segbot):
+  def init_hook(self):
+    datas = data.read_tests()
+    self.set_datas(datas)
+  def __getitem__(self, idx):
+    (ids, ms), labels = super().__getitem__(idx)
+    return (t.LongTensor(ids), t.LongTensor(ms)), t.LongTensor(labels)
+    
+
+class Dev_DS_Segbot(Dataset_Segbot):
+  def init_hook(self):
+    datas = data.read_devs()
+    self.set_datas(datas)
+  def __getitem__(self, idx):
+    (ids, ms), labels = super().__getitem__(idx)
+    return (t.LongTensor(ids), t.LongTensor(ms)), t.LongTensor(labels)
+
+class Train_DS_Segbot(Dataset_Segbot):
+  def init_hook(self):
+    datas = data.read_trains()
+    self.set_datas(datas)
+
+  def set_datas(self, datas):
+    self.datas = datas
+    self.ground_truth_datas = []
+    start = 0
+    stop = False
+    while start < len(self.datas):
+      inpts, labels = self[start]
+      self.ground_truth_datas.append((inpts, labels))
+      start = self.next_start(start)
+
+class Loader_Segbot_GroundTrue():
+  def __init__(self, ds):
+    self.ds = ds
+    self.dataset = ds
+    self.start = 0
+    self.batch_size = self.ds.ss_len
+
+  def __iter__(self):
+    return self
+
+  def __len__(self):
+    return len(self.ds.ground_truth_datas)
+
+  # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
+  def __next__(self):
+    if self.start >= len(self):
+      self.start = 0
+      raise StopIteration()
+    else:
+      (ids, masks), labels = self.ds.ground_truth_datas[self.start]
+      self.start += 1
+      return (t.LongTensor(ids), t.LongTensor(masks)), t.LongTensor(labels)
+
+class Loader_Segbot_Fool():
+  def __init__(self, ds):
+    self.ds = ds
+    self.dataset = ds
+    self.start = 0
+    self.batch_size = self.ds.ss_len
+
+  def __iter__(self):
+    return self
+
+  def __len__(self):
+    return len(self.ds.ground_truth_datas)
+
+  def __getitem__(self, idx):
+    (ids, ms), labels = self.ds[idx]
+    return (t.LongTensor(ids), t.LongTensor(ms)), t.LongTensor(labels)
+
+
+class Loader_Segbot_Normal():
+  def __init__(self, ds):
+    self.ds = ds
+    self.dataset = ds
+    self.start = 0
+    self.batch_size = self.ds.ss_len
+
+  def __iter__(self):
+    return self
+
+  def __len__(self):
+    return len(self.ds.ground_truth_datas)
+
+  # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
+  def __next__(self):
+    if self.start >= len(self):
+      self.start = 0
+      raise StopIteration()
+    else:
+      (ids, masks), labels = self.ds.ground_truth_datas[self.start]
+      self.start += 1
+      return (t.LongTensor(ids), t.LongTensor(masks)), t.LongTensor(labels)
+
  
 # =======================
 
 def get_datas_segbot(test):
-  pass
+  ld = Loader_Segbot_GroundTrue(Train_DS_Segbot(ss_len = 16))
+  testds = Test_DS_Segbot(ss_len = 16)
+  devds = Dev_DS_Segbot(ss_len = 16)
+  if test:
+    ld.dataset.ground_truth_datas = ld.dataset.ground_truth_datas[:5]
+    testds.datas = testds.datas[:30]
+    devds.datas = devds.datas[:30]
+  mess = []
+  for i in range(2 if test else 5):
+    m = BERT_SEGBOT(hidden_size = 256)
+    # m.verbose = True
+    loss = runner.train_simple(m, ld, 2) # only one epoch for order matter model
+    runner.logout_info(f'Trained order matter model_{i} only one epoch, loss={loss}')
+    runner.logout_info(f'Start test_{i}...')
+    testdic = runner.get_test_result_segbot(m, testds)
+    devdic = runner.get_test_result_segbot(m, devds)
+    runner.logout_info(f'Over test_{i}:')
+    runner.logout_info(f'testdic: {testdic}, devdic: {devdic}')
+    mess.append((loss, testdic, devdic))
+  G['segbot_mess'] = mess
 
 
 def run(test = False):
-  get_datas_trimed_redundant(test)
+  # get_datas_trimed_redundant(test)
+  get_datas_segbot(test)

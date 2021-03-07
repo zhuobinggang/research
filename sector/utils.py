@@ -192,16 +192,14 @@ def train_by_data_loader_danraku(m, loader, epoch = 5, logger = print):
 def train_by_data_loader_danraku_origin(m, loader, epoch = 5, logger = print):
   loss_per_epoch = []
   loader.start = 0
-  length = len(loader.dataset)
+  length = len(loader)
   start = time.time()
   for e in range(epoch):
     logger(f'start epoch{e}')
     # loader.shuffle()
     total_loss = 0
-    counter = 0
     for inpts, labels in loader:
-      counter += loader.batch_size
-      logger(f'{counter}/{length}')
+      logger(f'{loader.start}/{length}')
       total_loss += m.train(inpts, labels)
     avg_loss = total_loss / len(loader)
     loss_per_epoch.append(total_loss)

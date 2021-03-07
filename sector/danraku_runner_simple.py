@@ -95,3 +95,37 @@ def get_test_result(m, testld):
     dic['bacc'] = bacc
   return dic
 
+
+def get_test_result_segbot(m, testds):
+  dic = {}
+  if testds is None:
+    dic['prec'] = -1
+    dic['rec'] = -1
+    dic['f1'] = -1
+    dic['bacc'] = -1
+  else: 
+    outputs, targets = get_test_results_segbot(m, testds, U.logging.debug)
+    prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
+    dic['prec'] = prec
+    dic['rec'] = rec
+    dic['f1'] = f1
+    dic['bacc'] = bacc
+  return dic
+
+def get_test_results_segbot(m, ds, logger = print):
+  targets = []
+  results = []
+  time_start = time.time()
+  start = 0
+  while start != -1 and start < len(ds.datas):
+    inpts, labels = ds[start]
+    ground_truth = labels.tolist().index(1)
+    predict = m.dry_run(inpts, labels)
+    targets += [1]
+    results += ([0] if predict != ground_truth else [1])
+    start += predict
+  time_end = time.time()
+  logger(f'Tested! Time cost: {time_end - time_start} seconds')
+  return results, targets
+
+

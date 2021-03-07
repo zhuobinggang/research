@@ -224,6 +224,7 @@ class Loader(LoaderAbstract):
 class Model(nn.Module):
   def __init__(self, weight_one = 1, hidden_size = 256):
     super().__init__()
+    self.max_memory_batch = 4
     self.hidden_size = hidden_size
     self.bert_size = 768
     self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, weight_one]))
@@ -260,8 +261,15 @@ class Model(nn.Module):
   # token_ids = attend_marks: (batch, seq_len)
   # return: (batch, 768)
   def get_batch_cls_emb(self, token_ids, attend_marks):
-    result = self.bert(token_ids, attend_marks, return_dict=True)
-    return result.pooler_output
+    if token_ids.shape[0] <= self.max_memory_batch:
+      result = self.bert(token_ids, attend_marks, return_dict=True)
+      return result.pooler_output
+    else:
+      batch_token_ids = token_ids.split(self.max_memory_batch)
+      batch_attend_marks = attend_marks.split(self.max_memory_batch)
+      batch_results = [self.bert(token_ids, attend_marks, return_dict=True) for token_ids, attend_marks in zip(batch_token_ids, batch_attend_marks)]
+      batch_results = [res.pooler_output for res in batch_results] #(?, mini_batch, 768)
+      return t.cat(batch_results)
 
   def processed_embs(self, embs):
     return embs

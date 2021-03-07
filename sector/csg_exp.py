@@ -9,6 +9,8 @@ import torch as t
 from itertools import chain
 nn = t.nn
 
+GPU_OK = CSG.GPU_OK
+
 # ========= Single Sentence CSG
 
 class Dataset_Single_Sentence_CSG(CSG.Dataset):
