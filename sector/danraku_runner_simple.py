@@ -123,7 +123,13 @@ def get_test_results_segbot(m, ds, logger = print):
     predict = m.dry_run(inpts, labels)
     targets += [1]
     results += ([0] if predict != ground_truth else [1])
-    start += predict
+    if predict == 0:
+      start += 1 
+    elif predict >= ds.ss_len:
+      start += (predict - 1) # 防止错过换段
+      print('防止错过换段')
+    else:
+      start += predict
   time_end = time.time()
   logger(f'Tested! Time cost: {time_end - time_start} seconds')
   return results, targets

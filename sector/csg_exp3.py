@@ -134,6 +134,7 @@ class BERT_SEGBOT(CSG.Model):
 
   def dry_run(self, inpts, labels=None):
     token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
+    org_labels = labels
     labels = t.LongTensor([labels.tolist().index(1) if labels is not None else -1])  # (1)
     if GPU_OK:
       token_ids = token_ids.cuda()
@@ -144,7 +145,7 @@ class BERT_SEGBOT(CSG.Model):
 
     o = self.integrate_sentences_info(embs) # (sentence_size + 1, 2 * hidden_size)
     o = self.flatten_then_sigmoid(o) # (sentence_size + 1, 1)
-    self.print_train_info(o, labels, -1)
+    self.print_train_info(o, org_labels, -1)
     return o.argmax().item()
 
 
@@ -345,13 +346,13 @@ def get_datas_segbot(test):
   testds = Test_DS_Segbot(ss_len = 16)
   devds = Dev_DS_Segbot(ss_len = 16)
   if test:
-    ld.dataset.ground_truth_datas = ld.dataset.ground_truth_datas[:5]
+    ld.dataset.ground_truth_datas = ld.dataset.ground_truth_datas[:3]
     testds.datas = testds.datas[:30]
     devds.datas = devds.datas[:30]
   mess = []
   for i in range(2 if test else 5):
     m = BERT_SEGBOT(hidden_size = 256)
-    # m.verbose = True
+    m.verbose = True
     loss = runner.train_simple(m, ld, 2) # only one epoch for order matter model
     runner.logout_info(f'Trained order matter model_{i} only one epoch, loss={loss}')
     runner.logout_info(f'Start test_{i}...')
