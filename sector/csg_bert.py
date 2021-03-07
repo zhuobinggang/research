@@ -222,16 +222,12 @@ class Loader(LoaderAbstract):
 # ==========
 
 class Model(nn.Module):
-  def __init__(self, weight_one = 1):
+  def __init__(self, weight_one = 1, hidden_size = 256):
     super().__init__()
+    self.hidden_size = hidden_size
     self.bert_size = 768
     self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, weight_one]))
     self.verbose = False
-    self.classifier = nn.Sequential(
-      nn.Linear(self.bert_size, int(self.bert_size / 2)),
-      nn.LeakyReLU(0.1),
-      nn.Linear(int(self.bert_size / 2), 2),
-    )
     self.init_bert()
     self.init_hook()
     self.optim = optim.AdamW(self.get_should_update(), 2e-5)
@@ -239,7 +235,11 @@ class Model(nn.Module):
       _ = self.cuda()
 
   def init_hook(self):
-    pass
+    self.classifier = nn.Sequential(
+      nn.Linear(self.bert_size, int(self.bert_size / 2)),
+      nn.LeakyReLU(0.1),
+      nn.Linear(int(self.bert_size / 2), 2),
+    )
 
   def init_bert(self):
     self.bert = BertModel.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
