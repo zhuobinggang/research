@@ -202,7 +202,8 @@ class Dataset_Segbot(t.utils.data.dataset.Dataset):
     for i in range(start, end):
       s = self.datas[i]
       ss.append(s)
-      if i != start and cut_point == -1  and self.is_begining(s):
+      # if i != start and cut_point == -1  and self.is_begining(s):
+      if cut_point == -1  and self.is_begining(s):
         cut_point = len(ss) - 1
     ss = self.no_indicator(ss)
     labels = np.zeros(len(ss) + 1, np.int8).tolist()
@@ -271,8 +272,20 @@ class Train_DS_Segbot(Dataset_Segbot):
     self.ground_truth_datas = []
     start = 0
     stop = False
+    while start < len(self.datas):
+      inpts, labels = self[start]
+      # if labels[-1] != 1: # 存在分割点
+      self.ground_truth_datas.append((inpts, labels))
+      start += int(self.ss_len / 2)
+
+  def set_datas_ground_true(self, datas):
+    self.datas = datas
+    self.ground_truth_datas = []
+    start = 0
+    stop = False
     while start + 1 < len(self.datas):
       inpts, labels = self[start + 1]
+      # if labels[-1] != 1: # 存在分割点
       self.ground_truth_datas.append((inpts, labels))
       start = self.next_start(start)
 
