@@ -130,6 +130,7 @@ def get_test_results_segbot(m, ds, logger = print):
       print('防止错过换段')
     else:
       start += predict
+    logger(f'Testing: {start}/{len(ds.datas)}')
   time_end = time.time()
   logger(f'Tested! Time cost: {time_end - time_start} seconds')
   return results, targets
@@ -140,28 +141,6 @@ def get_targets_by_ds(ds):
     targets.append(1 if ds.is_begining(s) else 0)
   return targets
 
-def get_test_results_segbot(m, ds, logger = print):
-  targets = []
-  results = []
-  time_start = time.time()
-  start = 0
-  while start != -1 and start < len(ds.datas):
-    inpts, labels = ds[start]
-    ground_truth = labels.tolist().index(1)
-    predict = m.dry_run(inpts, labels)
-    targets += [1]
-    results += ([0] if predict != ground_truth else [1])
-    if predict == 0:
-      start += 1 
-    elif predict >= ds.ss_len:
-      start += (predict - 1) # 防止错过换段
-      print('防止错过换段')
-    else:
-      start += predict
-  time_end = time.time()
-  logger(f'Tested! Time cost: {time_end - time_start} seconds')
-  return results, targets
-
 def get_test_results_segbot_v2(m, ds, logger = print):
   targets = get_targets_by_ds(ds)
   results = np.zeros(len(targets), dtype=np.int8).tolist()
@@ -171,13 +150,11 @@ def get_test_results_segbot_v2(m, ds, logger = print):
     inpts, labels = ds[start]
     # ground_truth = labels.tolist().index(1)
     predict = m.dry_run(inpts, labels)
-
     # 根据predict填充分割点
     if predict == labels.shape[0] - 1: # 预测没有分割点
       pass
     else:
       results[start + predict] = 1
-
     # 移动指针
     if predict == 0:
       start += 1 
@@ -186,7 +163,7 @@ def get_test_results_segbot_v2(m, ds, logger = print):
       print('防止错过换段')
     else:
       start += predict
-
+    logger(f'Testing: {start}/{len(ds.datas)}')
   time_end = time.time()
   logger(f'Tested! Time cost: {time_end - time_start} seconds')
   return results, targets

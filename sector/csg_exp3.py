@@ -134,6 +134,7 @@ class BERT_SEGBOT(CSG.Model):
 
     return loss.detach().item()
 
+  @t.no_grad()
   def dry_run(self, inpts, labels=None):
     token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
     org_labels = labels
