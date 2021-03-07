@@ -271,8 +271,8 @@ class Train_DS_Segbot(Dataset_Segbot):
     self.ground_truth_datas = []
     start = 0
     stop = False
-    while start < len(self.datas):
-      inpts, labels = self[start]
+    while start + 1 < len(self.datas):
+      inpts, labels = self[start + 1]
       self.ground_truth_datas.append((inpts, labels))
       start = self.next_start(start)
 
