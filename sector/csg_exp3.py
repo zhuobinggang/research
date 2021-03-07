@@ -85,9 +85,7 @@ class BERT_SEGBOT(CSG.Model):
       nn.Sigmoid(),
     )
     self.bi_gru_batch_first = nn.GRU(self.bert_size, self.hidden_size, batch_first=True, bidirectional=True)
-    self.EOF = self.ember(t.LongTensor([0]))
-    if GPU_OK:
-      self.EOF = self.EOF.cuda()
+    self.EOF = t.LongTensor([0])
     self.CEL = nn.CrossEntropyLoss()
 
   def get_should_update(self):
@@ -95,7 +93,7 @@ class BERT_SEGBOT(CSG.Model):
 
   # ss: (sentence_size, 768)
   def integrate_sentences_info(self, ss):
-    ss = t.cat((ss, self.EOF)) # (sentence_size + 1, 768)
+    ss = t.cat((ss, self.ember(self.EOF))) # (sentence_size + 1, 768)
     ss = ss.view(1, ss.shape[0], ss.shape[1]) # (1, sentence_size + 1, 768)
     out, _ = self.bi_gru_batch_first(ss) # (1, sentence_size + 1, 2 * hidden_size)
     out = out.view(out.shape[1], out.shape[2])
