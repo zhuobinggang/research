@@ -79,18 +79,19 @@ def get_datas_trimed_redundant(test):
 
 class BERT_SEGBOT(CSG.Model):
   def init_hook(self):
+    self.ember = nn.Embedding(9, self.bert_size)
     self.flatten_then_sigmoid = nn.Sequential(
       nn.Linear(self.hidden_size * 2, 1),
       nn.Sigmoid(),
     )
     self.bi_gru_batch_first = nn.GRU(self.bert_size, self.hidden_size, batch_first=True, bidirectional=True)
-    self.EOF = t.randn(1, self.bert_size)
+    self.EOF = self.ember(t.LongTensor([0]))
     if GPU_OK:
       self.EOF = self.EOF.cuda()
     self.CEL = nn.CrossEntropyLoss()
 
   def get_should_update(self):
-    return chain(self.bert.parameters(), self.flatten_then_sigmoid.parameters(), self.bi_gru_batch_first.parameters())
+    return chain(self.ember.parameters(), self.bert.parameters(), self.flatten_then_sigmoid.parameters(), self.bi_gru_batch_first.parameters())
 
   # ss: (sentence_size, 768)
   def integrate_sentences_info(self, ss):
