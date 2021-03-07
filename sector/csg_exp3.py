@@ -85,6 +85,8 @@ class BERT_SEGBOT(CSG.Model):
     )
     self.bi_gru_batch_first = nn.GRU(self.bert_size, self.hidden_size, batch_first=True, bidirectional=True)
     self.EOF = t.randn(1, self.bert_size)
+    if GPU_OK:
+      self.EOF = self.EOF.cuda()
     self.CEL = nn.CrossEntropyLoss()
 
   def get_should_update(self):
