@@ -109,12 +109,20 @@ class BERT_SEGBOT(CSG.Model):
         labels = t.LongTensor([-1])
       print(f'Want: {labels.tolist()} Got: {o.argmax().item()} Loss: {loss} ')
 
+  def preprocess_labels(self, labels):
+    if labels is None: # 在dry run时候可以传None进来
+      return t.LongTensor([-1]) 
+    elif sum(labels.tolist()) > 0: # 如果labels里边没有任何一个分割点, 则设置为EOF也即长度限制的index
+      return t.LongTensor([labels.tolist().index(1)])  
+    else:
+      return t.LongTensor([labels.shape[0]])
+
   # inpts: token_ids, attend_marks
   # token_ids: (sentence_size, max_id_len)
   # labels: (sentence_size + 1)
   def train(self, inpts, labels):
     token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
-    labels = t.LongTensor([labels.tolist().index(1)]) # (1)
+    labels = self.preprocess_labels(labels)
     if GPU_OK:
       token_ids = token_ids.cuda()
       attend_marks = attend_marks.cuda()
@@ -137,7 +145,7 @@ class BERT_SEGBOT(CSG.Model):
   def dry_run(self, inpts, labels=None):
     token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
     org_labels = labels
-    labels = t.LongTensor([labels.tolist().index(1) if labels is not None else -1])  # (1)
+    labels = self.preprocess_labels(labels)
     if GPU_OK:
       token_ids = token_ids.cuda()
       attend_marks = attend_marks.cuda()
@@ -150,6 +158,8 @@ class BERT_SEGBOT(CSG.Model):
     self.print_train_info(o, org_labels, -1)
     return o.argmax().item()
 
+
+# ======================
 
 class Dataset_Segbot(t.utils.data.dataset.Dataset):
   def __init__(self, ss_len = 8, max_ids = 64):
@@ -195,22 +205,16 @@ class Dataset_Segbot(t.utils.data.dataset.Dataset):
   def no_indicator(self, ss):
     return [s.replace('\u3000', '') for s in ss]
 
-  def get_ss_and_labels(self, start):
+  # 作为最底层的方法，需要保留所有分割信息
+  def get_ss_and_labels(self, start): 
     end = min(start + self.ss_len, len(self.datas)) 
     ss = []
-    cut_point = -1
+    labels = []
     for i in range(start, end):
       s = self.datas[i]
+      labels.append(1 if self.is_begining(s) else 0)
       ss.append(s)
-      # if i != start and cut_point == -1  and self.is_begining(s):
-      if cut_point == -1  and self.is_begining(s):
-        cut_point = len(ss) - 1
     ss = self.no_indicator(ss)
-    labels = np.zeros(len(ss) + 1, np.int8).tolist()
-    if cut_point != -1:
-      labels[cut_point] = 1
-    else: 
-      labels[-1] = 1
     return ss, labels
 
   def __getitem__(self, start):
@@ -268,6 +272,20 @@ class Train_DS_Segbot(Dataset_Segbot):
     self.set_datas(datas)
 
   def set_datas(self, datas):
+    self.set_datas_ground_true_v1()
+
+  def set_datas_ground_true_v1(self, datas):
+    self.datas = datas
+    self.ground_truth_datas = []
+    start = 0
+    stop = False
+    while start + 1 < len(self.datas): # 跳过第一句, 因为没有前文判断是比较麻烦的，没必要特意训练这个
+      inpts, labels = self[start + 1]
+      # if labels[-1] != 1: # 存在分割点
+      self.ground_truth_datas.append((inpts, labels))
+      start = self.next_start(start)
+
+  def set_datas_ground_true_v2(self, datas):
     self.datas = datas
     self.ground_truth_datas = []
     start = 0
@@ -277,17 +295,6 @@ class Train_DS_Segbot(Dataset_Segbot):
       # if labels[-1] != 1: # 存在分割点
       self.ground_truth_datas.append((inpts, labels))
       start += int(self.ss_len / 2)
-
-  def set_datas_ground_true(self, datas):
-    self.datas = datas
-    self.ground_truth_datas = []
-    start = 0
-    stop = False
-    while start + 1 < len(self.datas):
-      inpts, labels = self[start + 1]
-      # if labels[-1] != 1: # 存在分割点
-      self.ground_truth_datas.append((inpts, labels))
-      start = self.next_start(start)
 
 class Loader_Segbot_GroundTrue():
   def __init__(self, ds):

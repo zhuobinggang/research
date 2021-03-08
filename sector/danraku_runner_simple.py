@@ -104,7 +104,7 @@ def get_test_result_segbot(m, testds):
     dic['f1'] = -1
     dic['bacc'] = -1
   else: 
-    outputs, targets = get_test_results_segbot(m, testds, U.logging.debug)
+    outputs, targets = get_test_results_segbot_v2(m, testds, U.logging.debug)
     prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
     dic['prec'] = prec
     dic['rec'] = rec
@@ -141,6 +141,7 @@ def get_targets_by_ds(ds):
     targets.append(1 if ds.is_begining(s) else 0)
   return targets
 
+# Tested 基本没问题
 def get_test_results_segbot_v2(m, ds, logger = print):
   targets = get_targets_by_ds(ds)
   results = np.zeros(len(targets), dtype=np.int8).tolist()

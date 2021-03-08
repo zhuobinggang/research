@@ -23,8 +23,8 @@ def read_lines(data_id = 1):
     lines += doc
   return [line.replace(' ', '').replace('\n', '') for line in lines]
 
-def read_sentences(data_id = 1):
-  lines = read_lines(data_id)
+def read_sentences(data_id = 1): 
+  lines = read_lines(data_id) # 隐式根据换行划分句子
   sentences = []
   for line in lines:
     ss = line.split('。')
