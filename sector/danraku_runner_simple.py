@@ -95,6 +95,23 @@ def get_test_result(m, testld):
     dic['bacc'] = bacc
   return dic
 
+def get_test_result_long(m, testld):
+  testld.start = 0
+  dic = {}
+  if testld is None:
+    dic['prec'] = -1
+    dic['rec'] = -1
+    dic['f1'] = -1
+    dic['bacc'] = -1
+  else: 
+    outputs, targets = U.get_test_results_single_point(m, testld, U.logging.debug)
+    prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
+    dic['prec'] = prec
+    dic['rec'] = rec
+    dic['f1'] = f1
+    dic['bacc'] = bacc
+  return dic
+
 
 def get_test_result_segbot(m, testds):
   dic = {}

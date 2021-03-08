@@ -159,6 +159,83 @@ class BERT_SEGBOT(CSG.Model):
     return o.argmax().item()
 
 
+class BERT_LONG_DEPEND(BERT_SEGBOT): 
+  def init_hook(self):
+    self.bi_gru_batch_first = nn.GRU(self.bert_size, self.hidden_size, batch_first=True, bidirectional=True)
+    self.classifier = nn.Sequential( # (1, 2 * hidden_size) => (1, 2)
+      nn.Linear(self.hidden_size * 2, self.hidden_size),
+      nn.LeakyReLU(0.1), 
+      nn.Linear(self.hidden_size, 2),
+    )
+    self.CEL = nn.CrossEntropyLoss()
+
+  def get_should_update(self):
+    return chain(self.bert.parameters(), self.classifier.parameters(), self.bi_gru_batch_first.parameters())
+
+  # ss: (sentence_size, 768)
+  def integrate_sentences_info(self, ss):
+    ss = ss.view(1, ss.shape[0], ss.shape[1]) # (1, sentence_size, 768)
+    out, _ = self.bi_gru_batch_first(ss) # (1, sentence_size, 2 * hidden_size)
+    out = out.view(out.shape[1], out.shape[2])
+    return out
+
+  def print_train_info(self, o, labels=None, loss=-1):
+    if self.verbose:
+      o = o.view(-1)
+      if labels is None:
+        labels = -1
+      print(f'Want: {labels} Got: {o.argmax().item()} Loss: {loss} ')
+
+  # inpts: token_ids, attend_marks
+  # token_ids: (sentence_size, max_id_len)
+  # labels: (sentence_size), zero/one
+  def train(self, inpts, labels):
+    token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
+    # labels = self.preprocess_labels(labels)
+    label, pos = labels # LongTensor([label/pos])
+    pos = pos.item()
+    if GPU_OK:
+      token_ids = token_ids.cuda()
+      attend_marks = attend_marks.cuda()
+      label = label.cuda()
+    embs = self.get_batch_cls_emb(token_ids, attend_marks) # (sentence_size, 768)
+    embs = self.processed_embs(embs) # (sentence_size, 768)
+
+    o = self.integrate_sentences_info(embs) # (sentence_size, 2 * hidden_size)
+    o = o[pos] # (2 * hidden_size)
+    o = o.view(1, -1) # (1, 2 * hidden_size)
+    o = self.classifier(o) # (1, 2)
+    loss = self.CEL(o, label)
+
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, label, loss.detach().item())
+
+    return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, inpts, labels=None):
+    token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
+    # labels = self.preprocess_labels(labels)
+    label, pos = labels # LongTensor([label/pos])
+    pos = pos.item()
+    if GPU_OK:
+      token_ids = token_ids.cuda()
+      attend_marks = attend_marks.cuda()
+      label = label.cuda()
+    embs = self.get_batch_cls_emb(token_ids, attend_marks) # (sentence_size, 768)
+    embs = self.processed_embs(embs) # (sentence_size, 768)
+
+    o = self.integrate_sentences_info(embs) # (sentence_size, 2 * hidden_size)
+    o = o[pos] # (2 * hidden_size)
+    o = o.view(1, -1) # (1, 2 * hidden_size)
+    o = self.classifier(o) # (1, 2)
+    self.print_train_info(o, label, -1)
+    return o.view(-1).argmax().item()
+
+
+
 # ======================
 
 class Dataset_Segbot(t.utils.data.dataset.Dataset):
@@ -266,13 +343,75 @@ class Dev_DS_Segbot(Dataset_Segbot):
     (ids, ms), labels = super().__getitem__(idx)
     return (t.LongTensor(ids), t.LongTensor(ms)), t.LongTensor(labels)
 
+# ================ Long_Depend
+
+class Dataset_Long_Depend(Dataset_Segbot):
+  # 作为最底层的方法，需要保留所有分割信息
+  def get_ss_and_labels(self, cut_point): 
+    half = int(self.ss_len / 2)
+    start = cut_point - half
+    start = max(start, 0)
+    end = cut_point + half # 因为在range的右边，所以没必要-1
+    end = min(end, len(self.datas))
+    ss = self.no_indicator([self.datas[i] for i in range(start, end)])
+    label = 1 if self.is_begining(self.datas[cut_point]) else 0
+    pos_relative = cut_point - start
+    return ss, label, pos_relative
+
+  def __getitem__(self, start):
+    ss, label, pos_relative = self.get_ss_and_labels(start)
+    ids_and_masks = [self.token_encode_with_masks(s) for s in ss]
+    return ([ids for ids, masks in ids_and_masks], [masks for ids, masks in ids_and_masks]), label, pos_relative
+
+class Train_DS_Long_Depend(Dataset_Long_Depend):
+  def init_hook(self):
+    datas = data.read_trains()
+    self.set_datas(datas)
+
+class Test_DS_Long_Depend(Dataset_Long_Depend):
+  def init_hook(self):
+    datas = data.read_tests()
+    self.set_datas(datas)
+
+class Dev_DS_Long_Depend(Dataset_Long_Depend):
+  def init_hook(self):
+    datas = data.read_devs()
+    self.set_datas(datas)
+
+class Loader_Long_Depend():
+  def __init__(self, ds):
+    self.ds = ds
+    self.dataset = ds
+    self.start = 0
+    self.batch_size = self.ds.ss_len
+
+  def __iter__(self):
+    return self
+
+  def __len__(self):
+    return len(self.ds.datas)
+
+  # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
+  def __next__(self):
+    if self.start >= len(self):
+      self.start = 0
+      raise StopIteration()
+    else:
+      (ids, masks), label, pos_relative = self.ds[self.start]
+      self.start += 1
+      return (t.LongTensor(ids), t.LongTensor(masks)), (t.LongTensor([label]), t.LongTensor([pos_relative]))
+
+
+# ===================
+
+# NOTE: 更改训练逻辑从这里开始
 class Train_DS_Segbot(Dataset_Segbot):
   def init_hook(self):
     datas = data.read_trains()
     self.set_datas(datas)
 
   def set_datas(self, datas):
-    self.set_datas_ground_true_v1()
+    self.set_datas_ground_true_v1(datas)
 
   def set_datas_ground_true_v1(self, datas):
     self.datas = datas
@@ -386,6 +525,30 @@ def get_datas_segbot(test):
   G['segbot_mess'] = mess
 
 
+def get_datas_long_depend(test):
+  ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = 8))
+  testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = 8))
+  devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = 8))
+  if test:
+    ld.ds.datas = ld.ds.datas[:10]
+    testld.ds.datas = testld.ds.datas[:5]
+    devld.ds.datas = devld.ds.datas[:5]
+  mess = []
+  for i in range(2 if test else 5):
+    m = BERT_LONG_DEPEND(hidden_size = 256)
+    m.verbose = True
+    loss = runner.train_simple(m, ld, 2) # only one epoch for order matter model
+    runner.logout_info(f'Trained order matter model_{i} only one epoch, loss={loss}')
+    runner.logout_info(f'Start test_{i}...')
+    testdic = runner.get_test_result_long(m, testld)
+    devdic = runner.get_test_result_long(m, devld)
+    runner.logout_info(f'Over test_{i}:')
+    runner.logout_info(f'testdic: {testdic}, devdic: {devdic}')
+    mess.append((loss, testdic, devdic))
+  G['long_dep_mess'] = mess
+
+
 def run(test = False):
   # get_datas_trimed_redundant(test)
-  get_datas_segbot(test)
+  # get_datas_segbot(test)
+  get_datas_long_depend(test)
