@@ -167,7 +167,7 @@ class BERT_LONG_DEPEND(BERT_SEGBOT):
       nn.LeakyReLU(0.1), 
       nn.Linear(self.hidden_size, 2),
     )
-    self.CEL = nn.CrossEntropyLoss()
+    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 2])) # 
 
   def get_should_update(self):
     return chain(self.bert.parameters(), self.classifier.parameters(), self.bi_gru_batch_first.parameters())
@@ -536,7 +536,7 @@ def get_datas_long_depend(test):
   mess = []
   for i in range(2 if test else 5):
     m = BERT_LONG_DEPEND(hidden_size = 256)
-    m.verbose = True
+    # m.verbose = True
     loss = runner.train_simple(m, ld, 2) # only one epoch for order matter model
     runner.logout_info(f'Trained order matter model_{i} only one epoch, loss={loss}')
     runner.logout_info(f'Start test_{i}...')
