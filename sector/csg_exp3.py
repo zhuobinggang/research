@@ -162,10 +162,13 @@ class BERT_SEGBOT(CSG.Model):
 class BERT_LONG_DEPEND(BERT_SEGBOT): 
   def init_hook(self):
     self.bi_gru_batch_first = nn.GRU(self.bert_size, self.hidden_size, batch_first=True, bidirectional=True)
+    # self.classifier = nn.Sequential( # (1, 2 * hidden_size) => (1, 2)
+    #   nn.Linear(self.hidden_size * 2, self.hidden_size),
+    #   nn.LeakyReLU(0.1), 
+    #   nn.Linear(self.hidden_size, 2),
+    # )
     self.classifier = nn.Sequential( # (1, 2 * hidden_size) => (1, 2)
-      nn.Linear(self.hidden_size * 2, self.hidden_size),
-      nn.LeakyReLU(0.1), 
-      nn.Linear(self.hidden_size, 2),
+      nn.Linear(self.hidden_size * 2, 2),
     )
     self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 2])) # 
 
