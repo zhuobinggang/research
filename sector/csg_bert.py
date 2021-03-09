@@ -231,9 +231,13 @@ class Model(nn.Module):
     self.verbose = False
     self.init_bert()
     self.init_hook()
-    self.optim = optim.AdamW(self.get_should_update(), 2e-5)
+    self.optim = optim.AdamW(self.get_should_update(), self.learning_rate())
+    print('Init AdamW with lr = {self.learning_rate()}')
     if GPU_OK:
       _ = self.cuda()
+
+  def learning_rate(self):
+    return 2e-5
 
   def init_hook(self):
     self.classifier = nn.Sequential(

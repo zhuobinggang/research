@@ -170,10 +170,13 @@ class BERT_LONG_DEPEND(BERT_SEGBOT):
     self.classifier = nn.Sequential( # (1, 2 * hidden_size) => (1, 2)
       nn.Linear(self.hidden_size * 2, 2),
     )
-    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 2])) # 
+    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 3])) # 
 
   def get_should_update(self):
     return chain(self.bert.parameters(), self.classifier.parameters(), self.bi_gru_batch_first.parameters())
+
+  def learning_rate(self):
+    return 5e-6
 
   # ss: (sentence_size, 768)
   def integrate_sentences_info(self, ss):
