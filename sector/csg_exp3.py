@@ -560,7 +560,7 @@ def get_datas_long_depend_baseline(test):
   G['ld'] = ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = 4))
   G['testld'] = testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = 4))
   G['devld'] = devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = 4))
-  m = BERT_LONG_DEPEND(hidden_size = 256)
+  G['m'] = m = BERT_LONG_DEPEND(hidden_size = 256)
   m.set_verbose()
   loss = runner.train_simple(m, ld, 2) # only one epoch for order matter model
   return m
