@@ -189,9 +189,8 @@ class BERT_LONG_DEPEND(BERT_SEGBOT):
   def print_train_info(self, o, labels=None, loss=-1):
     if self.verbose:
       o = o.view(-1)
-      if labels is None:
-        labels = -1
-      print(f'Want: {labels} Got: {o.argmax().item()} Loss: {loss} ')
+      label_to_print = labels.item() if labels is None else -1
+      print(f'Want: {label_to_print} Got: {o.argmax().item()} Loss: {loss} ')
 
   # inpts: token_ids, attend_marks
   # token_ids: (sentence_size, max_id_len)
