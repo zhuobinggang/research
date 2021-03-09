@@ -662,13 +662,47 @@ def get_datas_long_depend_baseline(length = 4):
   G['devdic'] = runner.get_test_result_long(m, devld)
   return m
 
+def get_datas_long_depend_baseline_at_night(length = 6):
+  G['ld'] = ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = length))
+  G['testld'] = testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = length))
+  G['devld'] = devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = length))
+  G['m'] = m = BERT_LONG_DEPEND(hidden_size = 256)
+  # m.set_verbose()
+  runner.train_simple(m, ld, 2) # only one epoch for order matter model
+  G['testdic'] = runner.get_test_result_long(m, testld)
+  G['devdic'] = runner.get_test_result_long(m, devld)
+  runner.train_simple(m, ld, 1) # only one epoch for order matter model
+  G['testdic3'] = runner.get_test_result_long(m, testld)
+  G['devdic3'] = runner.get_test_result_long(m, devld)
+  runner.train_simple(m, ld, 1) # only one epoch for order matter model
+  G['testdic4'] = runner.get_test_result_long(m, testld)
+  G['devdic4'] = runner.get_test_result_long(m, devld)
+  runner.train_simple(m, ld, 1) # only one epoch for order matter model
+  G['testdic5'] = runner.get_test_result_long(m, testld)
+  G['devdic5'] = runner.get_test_result_long(m, devld)
+  runner.train_simple(m, ld, 1) # only one epoch for order matter model
+  G['testdic6'] = runner.get_test_result_long(m, testld)
+  G['devdic6'] = runner.get_test_result_long(m, devld)
+  runner.train_simple(m, ld, 1) # only one epoch for order matter model
+  G['testdic7'] = runner.get_test_result_long(m, testld)
+  G['devdic7'] = runner.get_test_result_long(m, devld)
+  runner.train_simple(m, ld, 1) # only one epoch for order matter model
+  G['testdic8'] = runner.get_test_result_long(m, testld)
+  G['devdic8'] = runner.get_test_result_long(m, devld)
+  runner.train_simple(m, ld, 1) # only one epoch for order matter model
+  G['testdic9'] = runner.get_test_result_long(m, testld)
+  G['devdic9'] = runner.get_test_result_long(m, devld)
+  t.save(m, 'dd.tch')
+  return m
+
+
 def run_long_depend2(test):
   # ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = 8))
   #testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = 8))
   # devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = 8))
-  ld = Loader_Long_Depend_V2(Train_DS_Long_Depend_V2(ss_len = 4))
-  testld = Loader_Long_Depend_V2(Test_DS_Long_Depend_V2(ss_len = 4))
-  devld = Loader_Long_Depend_V2(Dev_DS_Long_Depend_V2(ss_len = 4))
+  ld = Loader_Long_Depend_V2(Train_DS_Long_Depend_V2(ss_len = 6))
+  testld = Loader_Long_Depend_V2(Test_DS_Long_Depend_V2(ss_len = 6))
+  devld = Loader_Long_Depend_V2(Dev_DS_Long_Depend_V2(ss_len = 6))
   if test:
     ld.ds.datas = ld.ds.datas[:10]
     testld.ds.datas = testld.ds.datas[:5]
@@ -691,4 +725,4 @@ def run_long_depend2(test):
 def run(test = False):
   # get_datas_trimed_redundant(test)
   # get_datas_segbot(test)
-  get_datas_long_depend(test)
+  get_datas_long_depend_baseline_at_night(False)
