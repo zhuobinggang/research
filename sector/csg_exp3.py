@@ -725,4 +725,4 @@ def run_long_depend2(test):
 def run(test = False):
   # get_datas_trimed_redundant(test)
   # get_datas_segbot(test)
-  get_datas_long_depend_baseline_at_night(False)
+  get_datas_long_depend_baseline_at_night(6)
