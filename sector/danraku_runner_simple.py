@@ -75,6 +75,7 @@ def run(m, ld, testld, devld = None, epoch = 2, log_path = 'wiki.log', batch=100
 def train_simple(m, ld, epoch, log_path = 'wiki.log'):
   U.init_logger(log_path)
   ld.start = 0 
+  ld.shuffle() # NOTE:
   losses = [U.train_by_data_loader_danraku_origin(m, ld, 1, U.logging.debug)[0] for _ in range(epoch)]
   return losses
 
@@ -96,21 +97,40 @@ def get_test_result(m, testld):
   return dic
 
 def get_test_result_long(m, testld):
-  testld.start = 0
-  dic = {}
   if testld is None:
-    dic['prec'] = -1
-    dic['rec'] = -1
-    dic['f1'] = -1
-    dic['bacc'] = -1
+    return none_dic()
   else: 
+    dic = {}
+    testld.start = 0
     outputs, targets = U.get_test_results_single_point(m, testld, U.logging.debug)
     prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
     dic['prec'] = prec
     dic['rec'] = rec
     dic['f1'] = f1
     dic['bacc'] = bacc
+    return dic
+
+def none_dic():
+  dic = {}
+  dic['prec'] = -1
+  dic['rec'] = -1
+  dic['f1'] = -1
+  dic['bacc'] = -1
   return dic
+
+def get_test_result_long_v2(m, testld):
+  if testld is None:
+    return none_dic()
+  else: 
+    dic = {}
+    testld.start = 0
+    outputs, targets = U.get_test_results_single_point_v2(m, testld, U.logging.debug)
+    prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
+    dic['prec'] = prec
+    dic['rec'] = rec
+    dic['f1'] = f1
+    dic['bacc'] = bacc
+    return dic
 
 
 def get_test_result_segbot(m, testds):

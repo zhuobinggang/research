@@ -232,7 +232,7 @@ class Model(nn.Module):
     self.init_bert()
     self.init_hook()
     self.optim = optim.AdamW(self.get_should_update(), self.learning_rate())
-    print('Init AdamW with lr = {self.learning_rate()}')
+    print(f'Init AdamW with lr = {self.learning_rate()}')
     if GPU_OK:
       _ = self.cuda()
 
