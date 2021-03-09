@@ -526,9 +526,12 @@ def get_datas_segbot(test):
 
 
 def get_datas_long_depend(test):
-  ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = 8))
-  testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = 8))
-  devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = 8))
+  # ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = 8))
+  #testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = 8))
+  # devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = 8))
+  ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = 4))
+  testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = 4))
+  devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = 4))
   if test:
     ld.ds.datas = ld.ds.datas[:10]
     testld.ds.datas = testld.ds.datas[:5]
@@ -547,6 +550,14 @@ def get_datas_long_depend(test):
     mess.append((loss, testdic, devdic))
   G['long_dep_mess'] = mess
 
+def get_datas_long_depend_baseline(test):
+  G['ld'] = ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = 4))
+  G['testld'] = testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = 4))
+  G['devld'] = devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = 4))
+  m = BERT_LONG_DEPEND(hidden_size = 256)
+  m.set_verbose()
+  loss = runner.train_simple(m, ld, 2) # only one epoch for order matter model
+  return m
 
 def run(test = False):
   # get_datas_trimed_redundant(test)
