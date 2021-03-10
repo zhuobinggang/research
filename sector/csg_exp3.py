@@ -692,7 +692,7 @@ def get_datas_long_depend_baseline_at_night(length = 6):
   # 训练5e-8
   G['m2'] = BERT_LONG_DEPEND(hidden_size = 256)
   m = G['m2']
-  m.verbose = True
+  # m.verbose = True
   m.optim = optim.AdamW(m.get_should_update(), 5e-8)
   print(m.optim)
   G['long_depend2'] = []
