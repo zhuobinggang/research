@@ -671,9 +671,10 @@ def get_datas_long_depend_baseline_at_night(length = 6):
   G['ld'] = ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = length))
   G['testld'] = testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = length))
   G['devld'] = devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = length))
-  # 训练5e-7
   G['m'] = BERT_LONG_DEPEND(hidden_size = 256)
   m = G['m']
+  # 训练5e-7, weight 4 for one label
+  m.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 4])) # LSTM比较难训练，试着
   m.verbose = True
   m.optim = optim.AdamW(m.get_should_update(), 5e-7)
   print(m.optim)
@@ -721,7 +722,7 @@ def run_long_depend2(test):
     testld.ds.datas = testld.ds.datas[:5]
     devld.ds.datas = devld.ds.datas[:5]
   mess = []
-  for i in range(2 if test else 5):
+  for i in range(2 if test else 3):
     m = BERT_LONG_DEPEND_V2(hidden_size = 256)
     # m.verbose = True
     loss = runner.train_simple(m, ld, 2) # only one epoch for order matter model
@@ -739,3 +740,4 @@ def run(test = False):
   # get_datas_trimed_redundant(test)
   # get_datas_segbot(test)
   get_datas_long_depend_baseline_at_night(6)
+  run_long_depend2(False)
