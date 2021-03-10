@@ -177,7 +177,8 @@ class BERT_LONG_DEPEND(BERT_SEGBOT):
     return chain(self.bert.parameters(), self.classifier.parameters(), self.bi_gru_batch_first.parameters())
 
   def learning_rate(self):
-    return 5e-6
+    # return 5e-6
+    return 5e-7
 
   # ss: (sentence_size, 768)
   def integrate_sentences_info(self, ss):
