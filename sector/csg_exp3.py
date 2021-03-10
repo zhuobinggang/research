@@ -2,6 +2,7 @@ from csg_exp2 import *
 from transformers import BertModel, BertJapaneseTokenizer
 import random
 import logging
+import torch.optim as optim
 
 class Dataset_Around_Split_Point(Dataset_Single_Sentence_True):
   def init_hook(self):
@@ -177,8 +178,8 @@ class BERT_LONG_DEPEND(BERT_SEGBOT):
     return chain(self.bert.parameters(), self.classifier.parameters(), self.bi_gru_batch_first.parameters())
 
   def learning_rate(self):
-    # return 5e-6
-    return 5e-7
+    return 5e-6
+    # return 5e-7
 
   # ss: (sentence_size, 768)
   def integrate_sentences_info(self, ss):
@@ -663,37 +664,43 @@ def get_datas_long_depend_baseline(length = 4):
   G['devdic'] = runner.get_test_result_long(m, devld)
   return m
 
+# Learning rate = 5e-7再训练
 def get_datas_long_depend_baseline_at_night(length = 6):
   G['ld'] = ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = length))
   G['testld'] = testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = length))
   G['devld'] = devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = length))
-  G['m'] = m = BERT_LONG_DEPEND(hidden_size = 256)
+  # 训练5e-7
+  G['m'] = BERT_LONG_DEPEND(hidden_size = 256)
+  m = G['m']
+  m.optim = optim.AdamW(m.get_should_update(), 5e-7)
+  print(m.optim)
+  G['long_depend_results'] = []
+  mess = G['long_depend_results']
   # m.set_verbose()
-  runner.train_simple(m, ld, 2) # only one epoch for order matter model
-  G['testdic'] = runner.get_test_result_long(m, testld)
-  G['devdic'] = runner.get_test_result_long(m, devld)
-  runner.train_simple(m, ld, 1) # only one epoch for order matter model
-  G['testdic3'] = runner.get_test_result_long(m, testld)
-  G['devdic3'] = runner.get_test_result_long(m, devld)
-  runner.train_simple(m, ld, 1) # only one epoch for order matter model
-  G['testdic4'] = runner.get_test_result_long(m, testld)
-  G['devdic4'] = runner.get_test_result_long(m, devld)
-  runner.train_simple(m, ld, 1) # only one epoch for order matter model
-  G['testdic5'] = runner.get_test_result_long(m, testld)
-  G['devdic5'] = runner.get_test_result_long(m, devld)
-  runner.train_simple(m, ld, 1) # only one epoch for order matter model
-  G['testdic6'] = runner.get_test_result_long(m, testld)
-  G['devdic6'] = runner.get_test_result_long(m, devld)
-  runner.train_simple(m, ld, 1) # only one epoch for order matter model
-  G['testdic7'] = runner.get_test_result_long(m, testld)
-  G['devdic7'] = runner.get_test_result_long(m, devld)
-  runner.train_simple(m, ld, 1) # only one epoch for order matter model
-  G['testdic8'] = runner.get_test_result_long(m, testld)
-  G['devdic8'] = runner.get_test_result_long(m, devld)
-  runner.train_simple(m, ld, 1) # only one epoch for order matter model
-  G['testdic9'] = runner.get_test_result_long(m, testld)
-  G['devdic9'] = runner.get_test_result_long(m, devld)
-  t.save(m, 'dd.tch')
+  print(runner.train_simple(m, ld, 1)) # only one epoch for order matter model
+  for i in range(0, 4): # 在1的基础上再跑4遍 = 5 epochs
+    print(runner.train_simple(m, ld, 1)) # only one epoch for order matter model
+    mess.append({
+      'testdic': runner.get_test_result_long(m, testld),
+      'devdic': runner.get_test_result_long(m, devld),
+    })
+  t.save(m, 'long_5e7.tch')
+  # 训练5e-8
+  G['m2'] = BERT_LONG_DEPEND(hidden_size = 256)
+  m = G['m2']
+  m.optim = optim.AdamW(m.get_should_update(), 5e-8)
+  print(m.optim)
+  G['long_depend2'] = []
+  mess = G['long_depend2']
+  # m.set_verbose()
+  print(runner.train_simple(m, ld, 1)) # only one epoch for order matter model
+  for i in range(0, 4): # 在1的基础上再跑4遍 = 5 epochs
+    print(runner.train_simple(m, ld, 1)) # only one epoch for order matter model
+    mess.append({
+      'testdic': runner.get_test_result_long(m, testld),
+      'devdic': runner.get_test_result_long(m, devld),
+    })
+  t.save(m, 'long_5e8.tch')
   return m
 
 
