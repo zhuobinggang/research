@@ -672,22 +672,24 @@ def get_datas_long_depend_baseline_at_night(length = 6):
   # 训练5e-7
   G['m'] = BERT_LONG_DEPEND(hidden_size = 256)
   m = G['m']
+  m.verbose = True
   m.optim = optim.AdamW(m.get_should_update(), 5e-7)
   print(m.optim)
   G['long_depend_results'] = []
   mess = G['long_depend_results']
-  # m.set_verbose()
   print(runner.train_simple(m, ld, 1)) # only one epoch for order matter model
   for i in range(0, 4): # 在1的基础上再跑4遍 = 5 epochs
-    print(runner.train_simple(m, ld, 1)) # only one epoch for order matter model
+    loss = (runner.train_simple(m, ld, 1)) # only one epoch for order matter model
     mess.append({
       'testdic': runner.get_test_result_long(m, testld),
       'devdic': runner.get_test_result_long(m, devld),
+      'loss': loss,
     })
   t.save(m, 'long_5e7.tch')
   # 训练5e-8
   G['m2'] = BERT_LONG_DEPEND(hidden_size = 256)
   m = G['m2']
+  m.verbose = True
   m.optim = optim.AdamW(m.get_should_update(), 5e-8)
   print(m.optim)
   G['long_depend2'] = []
@@ -695,10 +697,11 @@ def get_datas_long_depend_baseline_at_night(length = 6):
   # m.set_verbose()
   print(runner.train_simple(m, ld, 1)) # only one epoch for order matter model
   for i in range(0, 4): # 在1的基础上再跑4遍 = 5 epochs
-    print(runner.train_simple(m, ld, 1)) # only one epoch for order matter model
+    loss = runner.train_simple(m, ld, 1) # only one epoch for order matter model
     mess.append({
       'testdic': runner.get_test_result_long(m, testld),
       'devdic': runner.get_test_result_long(m, devld),
+      'loss': loss,
     })
   t.save(m, 'long_5e8.tch')
   return m
