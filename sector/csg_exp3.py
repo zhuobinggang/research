@@ -174,7 +174,8 @@ class BERT_LONG_DEPEND(BERT_SEGBOT):
     self.classifier = nn.Sequential( # (1, 2 * hidden_size) => (1, 2)
       nn.Linear(self.hidden_size * 2, 2),
     )
-    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 3])) # 
+    # self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 3])) # 
+    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 4])) # LSTM比较难训练，试着
 
   def get_should_update(self):
     return chain(self.bert.parameters(), self.classifier.parameters(), self.bi_gru_batch_first.parameters())
@@ -674,7 +675,6 @@ def get_datas_long_depend_baseline_at_night(length = 6):
   G['m'] = BERT_LONG_DEPEND(hidden_size = 256)
   m = G['m']
   # 训练5e-7, weight 4 for one label
-  m.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 4])) # LSTM比较难训练，试着
   m.verbose = True
   m.optim = optim.AdamW(m.get_should_update(), 5e-7)
   print(m.optim)
