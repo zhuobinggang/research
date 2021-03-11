@@ -67,7 +67,8 @@ class Model(nn.Module):
 
   # (seq_len + 1, feature)
   def add_pos_encoding(self, embs):
-    pos_embs = position_encoding(embs)
+    # position_encoding_(embs)
+    return embs
 
   # (seq_len + 1, feature)
   # return: (seq_len + 1, feature)
@@ -104,7 +105,7 @@ class Model(nn.Module):
   def train(self, inpts, labels): 
     embs = self.ember(inpts) # (seq_len, feature)
     embs = self.add_EOS(embs) # (seq_len + 1, feature)
-    position_encoding_(embs) # Add pos encoding
+    embs = self.add_pos_encoding(embs)
     embs = self.selfatt(embs) # (seq_len + 1, feature)
     # emb_EOS = embs[-1] # (feature)
     decoder_input = self.get_sof() # (1, feature)
@@ -130,7 +131,7 @@ class Model(nn.Module):
   def dry_run(self, inpts, labels):
     embs = self.ember(inpts) # (seq_len, feature)
     embs = self.add_EOS(embs) # (seq_len + 1, feature)
-    position_encoding_(embs) # Add pos encoding
+    embs = self.add_pos_encoding(embs)
     embs = self.selfatt(embs) # (seq_len + 1, feature)
     # emb_EOS = embs[-1] # (feature)
     decoder_input = self.get_sof() # (1, feature)
@@ -146,3 +147,9 @@ class Model(nn.Module):
     self.print_info(outputs, targets)
     return outputs, targets
 
+
+class Model_Pos_Encoding(Model):
+  # (seq_len + 1, feature)
+  def add_pos_encoding(self, embs):
+    position_encoding_(embs)
+    return embs
