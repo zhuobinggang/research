@@ -153,3 +153,119 @@ class Model_Pos_Encoding(Model):
   def add_pos_encoding(self, embs):
     position_encoding_(embs)
     return embs
+
+
+class Model_Emb_Encoder(Model):
+  # inpts: tensor([6, 9, 8])
+  # labels: tensor([0, 2, 1, 3])
+  def train(self, inpts, labels): 
+    embs = self.ember(inpts) # (seq_len, feature)
+    embs = self.add_EOS(embs) # (seq_len + 1, feature)
+    # emb_EOS = embs[-1] # (feature)
+    decoder_input = self.get_sof() # (1, feature)
+    result_losss = []
+    outputs = []
+    targets = []
+    loss = torch.tensor([0.0])
+    for label in labels:
+      decoder_output = self.seq_output(decoder_input) # (1, feature)
+      pointed_output = self.point(decoder_output, embs) # (1, seq_len + 1)
+      result_id = pointed_output.argmax()
+      true_next_id = label.item() # Correct input feed in
+      outputs.append(result_id.item())
+      targets.append(label.item())
+      loss += self.CEL(pointed_output, label.view(1))
+      result_losss.append(loss.detach().item())
+      decoder_input = embs[result_id].view(1, -1)
+    self.train_step(loss)
+    self.print_info(outputs, targets)
+    return np.average(result_losss)
+
+  @t.no_grad()
+  def dry_run(self, inpts, labels):
+    embs = self.ember(inpts) # (seq_len, feature)
+    embs = self.add_EOS(embs) # (seq_len + 1, feature)
+    # emb_EOS = embs[-1] # (feature)
+    decoder_input = self.get_sof() # (1, feature)
+    outputs = []
+    targets = []
+    for label in labels:
+      decoder_output = self.seq_output(decoder_input) # (1, feature)
+      pointed_output = self.point(decoder_output, embs) # (1, seq_len + 1)
+      result_id = pointed_output.argmax()
+      outputs.append(result_id.item())
+      targets.append(label.item())
+      decoder_input = embs[result_id].view(1, -1)
+    self.print_info(outputs, targets)
+    return outputs, targets
+
+Model_Default = Model_Emb_Encoder
+
+
+class Model_TF_Decoder(Model_Default):
+  # inpts: tensor([6, 9, 8])
+  # labels: tensor([0, 2, 1, 3])
+  def train(self, inpts, labels): 
+    embs = self.ember(inpts) # (seq_len, feature)
+    embs = self.add_EOS(embs) # (seq_len + 1, feature)
+    # emb_EOS = embs[-1] # (feature)
+    decoder_inputs = [self.get_sof()] # (?, feature)
+    result_losss = []
+    outputs = []
+    targets = []
+    loss = torch.tensor([0.0])
+    for label in labels:
+      decoder_output = self.seq_output(decoder_inputs) # (1, feature)
+      pointed_output = self.point(decoder_output, embs) # (1, seq_len + 1)
+      result_id = pointed_output.argmax()
+      true_next_id = label.item() # Correct input feed in
+      outputs.append(result_id.item())
+      targets.append(label.item())
+      loss += self.CEL(pointed_output, label.view(1))
+      result_losss.append(loss.detach().item())
+      decoder_input = embs[result_id].view(1, -1)
+      decoder_inputs.append(decoder_input)
+    self.train_step(loss)
+    self.print_info(outputs, targets)
+    return np.average(result_losss)
+
+  @t.no_grad()
+  def dry_run(self, inpts, labels):
+    embs = self.ember(inpts) # (seq_len, feature)
+    embs = self.add_EOS(embs) # (seq_len + 1, feature)
+    # emb_EOS = embs[-1] # (feature)
+    decoder_inputs = [self.get_sof()] # (?, feature)
+    outputs = []
+    targets = []
+    for label in labels:
+      decoder_output = self.seq_output(decoder_inputs) # (1, feature)
+      pointed_output = self.point(decoder_output, embs) # (1, seq_len + 1)
+      result_id = pointed_output.argmax()
+      outputs.append(result_id.item())
+      targets.append(label.item())
+      decoder_input = embs[result_id].view(1, -1)
+      decoder_inputs.append(decoder_input)
+    self.print_info(outputs, targets)
+    return outputs, targets
+
+  # decoder_inputs: (n, 1, feature)
+  # return: (1, feature)
+  def seq_output(self, decoder_inputs):
+    decoder_inputs = t.stack(decoder_inputs) # decoder_inputs: (n, 1, feature)
+    seq_len, batch, feature = decoder_inputs.shape
+    out = self.selfatt_layer(decoder_inputs)
+    return out[-1]
+
+
+class Model_TF_With_Pos(Model_TF_Decoder):
+  # decoder_inputs: (n, 1, feature)
+  # return: (1, feature)
+  def seq_output(self, decoder_inputs):
+    decoder_inputs = t.stack(decoder_inputs) # decoder_inputs: (n, 1, feature)
+    seq_len, batch, feature = decoder_inputs.shape
+    decoder_inputs = decoder_inputs.view(seq_len, feature)
+    pos_codings = position_encoding(decoder_inputs) # (n, feature)
+    decoder_inputs = decoder_inputs + pos_codings # (n, feature)
+    decoder_inputs = decoder_inputs.view(seq_len, 1, feature) # (n, 1, feature)
+    out = self.selfatt_layer(decoder_inputs.float())
+    return out[-1]
