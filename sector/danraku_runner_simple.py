@@ -75,7 +75,7 @@ def run(m, ld, testld, devld = None, epoch = 2, log_path = 'wiki.log', batch=100
 def train_simple(m, ld, epoch, log_path = 'wiki.log'):
   U.init_logger(log_path)
   ld.start = 0 
-  ld.shuffle() # NOTE:
+  # ld.shuffle() # NOTE: ???????????? shuffle还能玩？
   losses = [U.train_by_data_loader_danraku_origin(m, ld, 1, U.logging.debug)[0] for _ in range(epoch)]
   return losses
 
