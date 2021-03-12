@@ -1,4 +1,5 @@
 from csg_exp3 import *
+torch = t
 
 def position_encoding_ddd(t, i, d):
   k = int(i/2)
@@ -9,7 +10,6 @@ def position_encoding_ddd(t, i, d):
 # seq: (seq_len, feature)
 # return: (seq_len, feature)
 def position_encoding(seq):
-  torch = t
   embs = []
   for t, data in enumerate(seq):
     d = data.shape[0]
