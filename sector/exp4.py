@@ -26,11 +26,12 @@ def position_encoding(seq):
 
 class BERT_LONG_TF(BERT_LONG_DEPEND):
   def init_hook(self):
-    self.self_att_layer = nn.TransformerEncoderLayer(d_model=self.bert_size, nhead=1, dim_feedforward=int(self.bert_size * 1.5), dropout=0.1)
+    self.self_att_layer = nn.TransformerEncoderLayer(d_model=self.bert_size, nhead=8, dim_feedforward=int(self.bert_size * 1.5), dropout=0)
     self.classifier = nn.Sequential( # (1, 768) => (1, 2)
       nn.Linear(self.bert_size, 2),
     )
-    self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 3]))
+    # self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 3]))
+    self.CEL = nn.CrossEntropyLoss()
     # self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 4])) # LSTM比较难训练，试着
 
   def get_should_update(self):
