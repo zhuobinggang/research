@@ -1,5 +1,24 @@
 from csg_exp3 import *
 
+def position_encoding_ddd(t, i, d):
+  k = int(i/2)
+  omiga = 1 / np.power(10000, 2 * k / d)
+  even = (i / 2).is_integer()
+  return np.sin(omiga * t) if even else np.cos(omiga * t)
+
+# seq: (seq_len, feature)
+# return: (seq_len, feature)
+def position_encoding(seq):
+  embs = []
+  for t, data in enumerate(seq):
+    d = data.shape[0]
+    pos_emb = [position_encoding_ddd(t, i, d) for i in range(0, d)]
+    pos_emb = torch.tensor(pos_emb)
+    embs.append(pos_emb)
+  embs = torch.stack(embs)
+  return embs
+
+
 class BERT_LONG_TF(BERT_LONG_DEPEND):
   def init_hook(self):
     self.self_att_layer = nn.TransformerEncoderLayer(d_model=self.bert_size, nhead=1, dim_feedforward=int(self.bert_size * 1.5), dropout=0.1)
@@ -69,6 +88,21 @@ class BERT_LONG_TF(BERT_LONG_DEPEND):
     self.print_train_info(o, label, -1)
     return o.view(-1).argmax().item()
 
+
+
+class BERT_LONG_TF_POS(BERT_LONG_TF):
+  # ss: (sentence_size, 768)
+  # return: (sentence_size, 768)
+  def integrate_sentences_info(self, ss):
+    seq_len, feature = ss.shape
+    # NOTE: Add pos
+    pos = position_encoding(ss) # (seq_len, feature)
+    ss = (ss + pos).float()
+    ss = ss.view(seq_len, 1, feature) # (sentence_size, 1, 768)
+    ss = self.self_att_layer(ss) # (sentence_size, 1, 768)
+    return ss.view(seq_len, feature)
+
+
 # =============== 
 
 def init_G(length):
@@ -77,15 +111,18 @@ def init_G(length):
   G['devld'] = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = length))
   G['m'] = BERT_LONG_TF()
 
+def set_G(m, ld, testld, devld):
+  G['ld'] = ld
+  G['testld'] = testld
+  G['devld'] = devld
+  G['m'] = m
+
 def read_G():
   return G['m'], G['ld'], G['testld'], G['devld']
 
-def train_then_record(m, ld, testld, name, epoch = 1):
-  losses = runner.train_simple(m, ld, epoch) # only one epoch for order matter model
-  G[name] = runner.get_test_result_long(m, testld)
-
-def get_datas_long_tf(index = 0):
+def get_datas(index, epoch):
   m, ld, testld, devld = read_G()
-  train_then_record(m, ld, testld,name=f'testdic_{index}', epoch=1)
-  train_then_record(m, ld, devld,name=f'devdic_{index}', epoch=1)
+  losses = runner.train_simple(m, ld, epoch) # only one epoch for order matter model
+  G[f'testdic_{index}'] = runner.get_test_result_long(m, testld)
+  G[f'devdic_{index}'] = runner.get_test_result_long(m, devld)
   return losses
