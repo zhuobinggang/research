@@ -71,7 +71,7 @@ class BERT_LONG_TF(BERT_LONG_DEPEND):
 
 # =============== 
 
-def get_datas_long_depend_baseline(length = 4):
+def get_datas_long_tf(length = 4):
   G['ld'] = ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = length))
   G['testld'] = testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = length))
   G['devld'] = devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = length))
