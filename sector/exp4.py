@@ -138,10 +138,12 @@ def run_at_night():
    # head = 1, with pos
    G['m'] = m = BERT_LONG_TF_POS()
    m.self_att_layer = nn.TransformerEncoderLayer(d_model=m.bert_size, nhead=1, dim_feedforward=int(m.bert_size * 1.5), dropout=0)
+   m = m.cuda()
    get_datas(2, 2)
    # head = 1, no pos
    G['m'] = m = BERT_LONG_TF()
    m.self_att_layer = nn.TransformerEncoderLayer(d_model=m.bert_size, nhead=1, dim_feedforward=int(m.bert_size * 1.5), dropout=0)
+   m = m.cuda()
    get_datas(2, 2)
    # head = 8, with pos
    G['m'] = m = BERT_LONG_TF_POS()
