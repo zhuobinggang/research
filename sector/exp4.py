@@ -1,6 +1,10 @@
 from csg_exp3 import *
 torch = t
 
+
+def cuda(emb):
+  return emb.cuda() if GPU_OK else emb
+
 def position_encoding_ddd(t, i, d):
   k = int(i/2)
   omiga = 1 / np.power(10000, 2 * k / d)
@@ -17,7 +21,7 @@ def position_encoding(seq):
     pos_emb = torch.tensor(pos_emb)
     embs.append(pos_emb)
   embs = torch.stack(embs)
-  return embs
+  return cuda(embs)
 
 
 class BERT_LONG_TF(BERT_LONG_DEPEND):

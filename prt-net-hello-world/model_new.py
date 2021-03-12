@@ -7,6 +7,8 @@ import torch.optim as optim
 from itertools import chain
 import logging
 
+GPU_OK = t.cuda.is_available()
+
 # ============= Position Encoding ===============
 
 def position_encoding_ddd(t, i, d):
@@ -14,6 +16,9 @@ def position_encoding_ddd(t, i, d):
   omiga = 1 / np.power(10000, 2 * k / d)
   even = (i / 2).is_integer()
   return np.sin(omiga * t) if even else np.cos(omiga * t)
+
+def cuda(emb):
+  return emb.cuda() if GPU_OK else emb
 
 # seq: (seq_len, feature)
 # return: (seq_len, feature)
@@ -25,7 +30,7 @@ def position_encoding(seq):
     pos_emb = torch.tensor(pos_emb)
     embs.append(pos_emb)
   embs = torch.stack(embs)
-  return embs
+  return cuda(embs)
 
 # seq: (seq_len, feature)
 # return: (seq_len, feature)
