@@ -115,7 +115,6 @@ def init_G(length):
   G['ld'] = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = length))
   G['testld'] = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = length))
   G['devld'] = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = length))
-  G['m'] = BERT_LONG_TF()
 
 def set_G(m, ld, testld, devld):
   G['ld'] = ld
@@ -132,3 +131,24 @@ def get_datas(index, epoch):
   G[f'testdic_{index}'] = runner.get_test_result_long(m, testld)
   G[f'devdic_{index}'] = runner.get_test_result_long(m, devld)
   return losses
+
+# 在len=6时候: 1) 测试pos vs no pos的性能差异；2) 对比head=8时候和head=1时候的性能差异
+def run_at_night():
+   init_G(6)
+   # head = 1, with pos
+   G['m'] = m = BERT_LONG_TF_POS()
+   m.self_att_layer = nn.TransformerEncoderLayer(d_model=m.bert_size, nhead=1, dim_feedforward=int(m.bert_size * 1.5), dropout=0)
+   get_datas(2, 2)
+   # head = 1, no pos
+   G['m'] = m = BERT_LONG_TF()
+   m.self_att_layer = nn.TransformerEncoderLayer(d_model=m.bert_size, nhead=1, dim_feedforward=int(m.bert_size * 1.5), dropout=0)
+   get_datas(2, 2)
+   # head = 8, with pos
+   G['m'] = m = BERT_LONG_TF_POS()
+   get_datas(0, 2)
+   # head = 8, no pos
+   G['m'] = m = BERT_LONG_TF()
+   get_datas(1, 2)
+
+
+
