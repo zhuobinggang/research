@@ -71,19 +71,21 @@ class BERT_LONG_TF(BERT_LONG_DEPEND):
 
 # =============== 
 
-def init_G():
-  G['ld'] = ld = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = length))
-  G['testld'] = testld = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = length))
-  G['devld'] = devld = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = length))
-  m = G['m'] = BERT_LONG_TF()
-  return m, ld, testld, devld
+def init_G(length):
+  G['ld'] = Loader_Long_Depend(Train_DS_Long_Depend(ss_len = length))
+  G['testld'] = Loader_Long_Depend(Test_DS_Long_Depend(ss_len = length))
+  G['devld'] = Loader_Long_Depend(Dev_DS_Long_Depend(ss_len = length))
+  G['m'] = BERT_LONG_TF()
+
+def read_G():
+  return G['m'], G['ld'], G['testld'], G['devld']
 
 def train_then_record(m, ld, testld, name, epoch = 1):
   losses = runner.train_simple(m, ld, epoch) # only one epoch for order matter model
   G[name] = runner.get_test_result_long(m, testld)
 
-def get_datas_long_tf(length = 4, index = 0):
-  m, ld, testld, devld = init_G()
+def get_datas_long_tf(index = 0):
+  m, ld, testld, devld = read_G()
   train_then_record(m, ld, testld,name=f'testdic_{index}', epoch=1)
   train_then_record(m, ld, devld,name=f'devdic_{index}', epoch=1)
   return losses
