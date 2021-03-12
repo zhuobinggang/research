@@ -78,12 +78,12 @@ def init_G():
   m = G['m'] = BERT_LONG_TF()
   return m, ld, testld, devld
 
-def train_then_record(m, ld, testld, epoch = 1, name):
+def train_then_record(m, ld, testld, name, epoch = 1):
   losses = runner.train_simple(m, ld, epoch) # only one epoch for order matter model
   G[name] = runner.get_test_result_long(m, testld)
 
 def get_datas_long_tf(length = 4, index = 0):
   m, ld, testld, devld = init_G()
-  train_then_record(m, ld, testld, epoch=1, name=f'testdic_{index}')
-  train_then_record(m, ld, devld, epoch=1, name=f'devdic_{index}')
+  train_then_record(m, ld, testld,name=f'testdic_{index}', epoch=1)
+  train_then_record(m, ld, devld,name=f'devdic_{index}', epoch=1)
   return losses
