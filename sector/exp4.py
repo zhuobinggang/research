@@ -108,6 +108,13 @@ class BERT_LONG_TF_POS(BERT_LONG_TF):
     ss = self.self_att_layer(ss) # (sentence_size, 1, 768)
     return ss.view(seq_len, feature)
 
+  def set_head(self, head = 8, dropout=0):
+    self.self_att_layer = nn.TransformerEncoderLayer(d_model=self.bert_size, nhead=head, dim_feedforward=int(self.bert_size * 1.5), dropout=dropout)
+    if GPU_OK:
+      self = self.cuda()
+    print(f'Reset self_att_layer with head={head}, dropout={dropout}')
+    
+
 
 # =============== 
 
@@ -153,4 +160,52 @@ def run_at_night():
    get_datas(3, 2)
 
 
+# length = 3:3, weight = 1:1, head = 4
+# length = 3:3, weight = 1:1, head = 16
+# length = 3:3, weight = 1:1, head = 24
+# length = 3:3, weight = 1:1, head = 32
+# length = 3:3, weight = 1:1, head = 8, dropout = 0.1
+# length = 4:4, weight = 1:1, head = 8
+# length = 5:5, weight = 1:1, head = 8
+# length = 6:6, weight = 1:1, head = 8
+# 在len=6时候: 1) 测试pos vs no pos的性能差异；2) 对比head=8时候和head=1时候的性能差异
+def run_at_night_14():
+   init_G(6)
 
+   # length = 3:3, weight = 1:1, head = 4
+   G['m'] = m = BERT_LONG_TF_POS()
+   m.set_head(4)
+   get_datas(0, 2)
+
+   # length = 3:3, weight = 1:1, head = 16
+   G['m'] = m = BERT_LONG_TF_POS()
+   m.set_head(16)
+   get_datas(1, 2)
+
+   # length = 3:3, weight = 1:1, head = 24
+   G['m'] = m = BERT_LONG_TF_POS()
+   m.set_head(24)
+   get_datas(2, 2)
+
+   # length = 3:3, weight = 1:1, head = 32
+   G['m'] = m = BERT_LONG_TF_POS()
+   m.set_head(32)
+   get_datas(3, 2)
+
+   # length = 3:3, weight = 1:1, head = 8, dropout = 0.1
+   G['m'] = m = BERT_LONG_TF_POS()
+   m.set_head(8, 0.1)
+   get_datas(4, 2)
+
+   # length = 4:4, weight = 1:1, head = 8
+   init_G(8)
+   G['m'] = m = BERT_LONG_TF_POS()
+   get_datas(8, 2)
+   # length = 5:5, weight = 1:1, head = 8
+   init_G(10)
+   G['m'] = m = BERT_LONG_TF_POS()
+   get_datas(10, 2)
+   # length = 6:6, weight = 1:1, head = 8
+   init_G(12)
+   G['m'] = m = BERT_LONG_TF_POS()
+   get_datas(12, 2)
