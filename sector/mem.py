@@ -147,11 +147,11 @@ def run():
   # length = 3:3, weight = 1:1, head = 8
   init_G(4)
   G['m'] = m = Model_Mem(head=8)
-  get_datas(11, 2)
+  get_datas(11, 2, 'Model = MemModel(max=5), Dataset Length=2:2')
 
   init_G(6)
   G['m'] = m = Model_Mem(head=8)
-  get_datas(12, 2)
+  get_datas(12, 2, 'Model = MemModel(max=5), Dataset Length=3:3')
   # ==========
   run_at_night_15()
 

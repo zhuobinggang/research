@@ -1,6 +1,11 @@
 from csg_exp3 import *
 torch = t
+import requests
 
+def request_my_logger(dic, desc = 'No describe'):
+  url = "https://hookb.in/b9xlr2GnnjC3DDogQ0jY"
+  dic['desc'] = desc
+  requests.post(url, json=dic)
 
 def cuda(emb):
   return emb.cuda() if GPU_OK else emb
@@ -125,12 +130,12 @@ def set_G(m, ld, testld, devld):
 def read_G():
   return G['m'], G['ld'], G['testld'], G['devld']
 
-def get_datas(index, epoch):
+def get_datas(index, epoch, desc='Nothing'):
   m, ld, testld, devld = read_G()
   losses = runner.train_simple(m, ld, epoch) # only one epoch for order matter model
   G[f'testdic_{index}'] = runner.get_test_result_long(m, testld)
   G[f'devdic_{index}'] = runner.get_test_result_long(m, devld)
-  print(G[f'testdic_{index}'])
+  request_my_logger(G[f'testdic_{index}'], desc)
   return losses
 
 
@@ -148,21 +153,21 @@ def run_at_night_15():
 
    # length = 3:3, weight = 1:1, head = 4
    G['m'] = m = BERT_LONG_TF_POS(head=4)
-   get_datas(0, 2)
+   get_datas(0, 2, 'length = 3:3, weight = 1:1, head = 4')
 
    # length = 3:3, weight = 1:1, head = 8
    G['m'] = m = BERT_LONG_TF_POS(head=8)
-   get_datas(1, 2)
+   get_datas(1, 2, 'length = 3:3, weight = 1:1, head = 8')
 
    # length = 3:3, weight = 1:1, head = 16
    G['m'] = m = BERT_LONG_TF_POS(head=16)
-   get_datas(2, 2)
+   get_datas(2, 2, 'length = 3:3, weight = 1:1, head = 16')
 
    # length = 3:3, weight = 1:1, head = 24
    G['m'] = m = BERT_LONG_TF_POS(head=24)
-   get_datas(3, 2)
+   get_datas(3, 2, 'length = 3:3, weight = 1:1, head = 24')
 
    # length = 3:3, weight = 1:1, head = 8, dropout = 0.1
    G['m'] = m = BERT_LONG_TF_POS(head=8, dropout=0.1)
-   get_datas(4, 2)
+   get_datas(4, 2, 'length = 3:3, weight = 1:1, head = 8, dropout = 0.1')
 
