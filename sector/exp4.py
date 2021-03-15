@@ -3,9 +3,12 @@ torch = t
 import requests
 
 def request_my_logger(dic, desc = 'No describe'):
-  url = "https://hookb.in/b9xlr2GnnjC3DDogQ0jY"
-  dic['desc'] = desc
-  requests.post(url, json=dic)
+  try:
+    url = "https://hookb.in/b9xlr2GnnjC3DDogQ0jY"
+    dic['desc'] = desc
+    requests.post(url, json=dic)
+  except:
+    print('Something went wrong in request_my_logger()')
 
 def cuda(emb):
   return emb.cuda() if GPU_OK else emb
