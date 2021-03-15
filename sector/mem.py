@@ -26,11 +26,11 @@ class Self_Att(nn.Module):
 class Model_Mem(BERT_LONG_TF_POS):
   def init_hook(self):
     self.self_att_layer = nn.TransformerEncoderLayer(d_model=self.bert_size, nhead=8, dim_feedforward=int(self.bert_size * 1.5), dropout=0)
-    self.self_att_output_scores = Self_Att(self.bert_size)
+    self.self_att_output_scores = Self_Att(self.bert_size) # For working memory
     self.working_memory = []
     self.working_memory_max_len = 5
     self.classifier = nn.Sequential( # (1, 768) => (1, 2)
-      nn.Linear(self.bert_size, 2),
+      nn.Linear(self.bert_size * 2, 2),
     )
     # self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 3]))
     self.CEL = nn.CrossEntropyLoss()
@@ -58,8 +58,8 @@ class Model_Mem(BERT_LONG_TF_POS):
     token_ids = []
     attend_marks = []
     for item in self.working_memory:
-      token_ids.append(item.token_id)
-      attend_marks.append(item.attend_mark)
+      token_ids.append(item['token_id'])
+      attend_marks.append(item['attend_mark'])
     token_ids = t.stack(token_ids) # (seq_len, max_id_len)
     attend_marks = t.stack(attend_marks) # (seq_len, max_id_len)
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (seq_len, 768)
@@ -71,9 +71,23 @@ class Model_Mem(BERT_LONG_TF_POS):
   def arrange_working_memory_by_score(self, score):
     if len(self.working_memory) > self.working_memory_max_len: # remove item if out of length
       pos_to_remove = score.argmin().item()
-      _ = self.working_memory.pop(pos_to_remove)
+      pop_guy = self.working_memory.pop(pos_to_remove)
+      # print info interesting
+      # decode = G['ld'].ds.toker.decode
+      # last_guy = self.working_memory[-1]
+      # print(f'current: {decode(last_guy["token_id"])} \ntopop: {decode(pop_guy["token_id"])}')
     else:
       pass  # Do nothing
+
+  def get_recall_info_then_update_working_memory(self, token_ids, attend_marks, pos):
+    # Fill working memory with current item
+    item = {'token_id': token_ids[pos], 'attend_mark': attend_marks[pos]}
+    self.fill_working_memory(item) 
+    recall_infos, scores = self.working_memory_self_att()
+    recall_info = recall_infos[-1] # (768)
+    score = scores[-1] # (seq_len)
+    self.arrange_working_memory_by_score(score) # 如果满了就删除权重最低的
+    return recall_info
 
   # inpts: token_ids, attend_marks
   # token_ids: (sentence_size, max_id_len)
@@ -87,24 +101,17 @@ class Model_Mem(BERT_LONG_TF_POS):
       attend_marks = attend_marks.cuda()
       label = label.cuda()
 
-    item = {'token_id': token_ids[pos], 'attend_mark': attend_marks[pos]}
-    # Fill working memory with current item
-    self.fill_working_memory(item) 
-    recall_infos, scores = self.working_memory_self_att()
-    recall_info = recall_infos[-1] # (768)
-    score = scores[-1] # (seq_len)
-    self.arrange_working_memory_by_score(score) # 如果满了就删除权重最低的
-
     embs = self.get_batch_cls_emb(token_ids, attend_marks) # (sentence_size, 768)
     embs = self.processed_embs(embs) # (sentence_size, 768)
+
+    recall_info = self.get_recall_info_then_update_working_memory(token_ids, attend_marks, pos)
 
     now_info = self.integrate_sentences_info(embs) # (sentence_size, 768)
     now_info = now_info[pos] # (768)
 
-    
     o = t.cat([recall_info, now_info]) # (768 * 2)
 
-    o = o.view(1, self.bert_size * 2) # (1, 768)
+    o = o.view(1, self.bert_size * 2) # (1, 768 * 2)
     o = self.classifier(o) # (1, 2)
     loss = self.CEL(o, label)
 
@@ -113,5 +120,31 @@ class Model_Mem(BERT_LONG_TF_POS):
     self.optim.step()
     self.print_train_info(o, label, loss.detach().item())
 
-
     return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, inpts, labels=None):
+    token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
+    label, pos = labels # LongTensor([label/pos])
+    pos = pos.item()
+    if GPU_OK:
+      token_ids = token_ids.cuda()
+      attend_marks = attend_marks.cuda()
+      label = label.cuda()
+    embs = self.get_batch_cls_emb(token_ids, attend_marks) # (sentence_size, 768)
+    embs = self.processed_embs(embs) # (sentence_size, 768)
+    recall_info = self.get_recall_info_then_update_working_memory(token_ids, attend_marks, pos)
+    now_info = self.integrate_sentences_info(embs) # (sentence_size, 768)
+    now_info = now_info[pos] # (768)
+    o = t.cat([recall_info, now_info]) # (768 * 2)
+    o = o.view(1, self.bert_size * 2) # (1, 768 * 2)
+    o = self.classifier(o) # (1, 2)
+    self.print_train_info(o, label, loss.detach().item())
+    return o.view(-1).argmax().item()
+
+def run():
+   init_G(6)
+
+   # length = 3:3, weight = 1:1, head = 4
+   G['m'] = m = Model_Mem(head=8)
+   get_datas(0, 1)
