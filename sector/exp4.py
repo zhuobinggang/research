@@ -209,3 +209,11 @@ def run_at_night_14():
    init_G(12)
    G['m'] = m = BERT_LONG_TF_POS()
    get_datas(12, 2)
+
+def last_check():
+   init_G(6)
+   G['m'] = m = BERT_LONG_TF_POS()
+   m.set_head(8)
+   get_datas(0, 2)
+
+
