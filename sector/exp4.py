@@ -166,5 +166,3 @@ def run_at_night_15():
    G['m'] = m = BERT_LONG_TF_POS(head=8, dropout=0.1)
    get_datas(4, 2)
 
-
-

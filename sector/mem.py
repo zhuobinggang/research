@@ -143,8 +143,16 @@ class Model_Mem(BERT_LONG_TF_POS):
     return o.view(-1).argmax().item()
 
 def run():
-   init_G(6)
+  # ==========
+  # length = 3:3, weight = 1:1, head = 8
+  init_G(4)
+  G['m'] = m = Model_Mem(head=8)
+  get_datas(11, 2)
 
-   # length = 3:3, weight = 1:1, head = 4
-   G['m'] = m = Model_Mem(head=8)
-   get_datas(0, 1)
+  init_G(6)
+  G['m'] = m = Model_Mem(head=8)
+  get_datas(12, 2)
+  # ==========
+  run_at_night_15()
+
+
