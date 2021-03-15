@@ -222,10 +222,12 @@ class Loader(LoaderAbstract):
 # ==========
 
 class Model(nn.Module):
-  def __init__(self, weight_one = 1, hidden_size = 256):
+  def __init__(self, weight_one = 1, hidden_size = 256, head = 8, dropout=0):
     super().__init__()
     self.max_memory_batch = 6
     self.hidden_size = hidden_size
+    self.head = head
+    self.dropout = dropout
     self.bert_size = 768
     self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, weight_one]))
     self.verbose = False
