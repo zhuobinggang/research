@@ -139,7 +139,7 @@ class Model_Mem(BERT_LONG_TF_POS):
     o = t.cat([recall_info, now_info]) # (768 * 2)
     o = o.view(1, self.bert_size * 2) # (1, 768 * 2)
     o = self.classifier(o) # (1, 2)
-    self.print_train_info(o, label, loss.detach().item())
+    self.print_train_info(o, label, -1)
     return o.view(-1).argmax().item()
 
 def run():
