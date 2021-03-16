@@ -21,6 +21,7 @@ for _ in range(3):
 4. Encoder: Embedding, Decoder: TF(no pos encoding) (fw = 96) (head = 16):  0.736
 5. Encoder: Embedding, Decoder: TF(with pos encoding) (fw = 96): 0.691 -> 0.848
 6. Encoder: Embedding, Decoder: TF(with pos encoding) (fw = 32): 0.636 -> 0.831
+7. Encoder: Embedding, Decoder: MyTF(with pos encoding): 0.792 -> 0.861 
 
 
 ## Analysis

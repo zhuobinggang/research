@@ -1,6 +1,7 @@
 import data
 D = data
-import model_new as M
+import myTF as M
+from importlib import reload
 
 def train_ld():
   ds = data.Dataset()

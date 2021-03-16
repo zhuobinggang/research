@@ -36,6 +36,7 @@ Setting:
   - [X] # length = 4:4, weight = 1:1, head = 8
   - [X] # length = 5:5, weight = 1:1, head = 8
   - [X] # length = 6:6, weight = 1:1, head = 8
+- [ ] #15 Memnet
 
 #### 分析
 
@@ -273,4 +274,12 @@ length = 6
 # length = 5:5, weight = 1:1, head = 8
 ```
 
+#### #15 Memnet
 
+```
+length=4, weight=1, maxlen = 5, epoch = 1
+>>> G['testdic11']
+{'prec': 0.843859649122807, 'rec': 0.7222222222222222, 'f1': 0.7783171521035599, 'bacc': 0.8466708731446427, 'desc': 'Model = MemModel(max=5), Dataset Length=2:2'}
+>>> G['devdic11']
+{'prec': 0.8149253731343283, 'rec': 0.4026548672566372, 'f1': 0.5389930898321816, 'bacc': 0.6942449570461847}
+```

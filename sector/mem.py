@@ -142,16 +142,37 @@ class Model_Mem(BERT_LONG_TF_POS):
     self.print_train_info(o, label, -1)
     return o.view(-1).argmax().item()
 
+
+class Model_Mem_Pos(Model_Mem):
+  def working_memory_self_att(self):
+    token_ids = []
+    attend_marks = []
+    for item in self.working_memory:
+      token_ids.append(item['token_id'])
+      attend_marks.append(item['attend_mark'])
+    token_ids = t.stack(token_ids) # (seq_len, max_id_len)
+    attend_marks = t.stack(attend_marks) # (seq_len, max_id_len)
+    embs = self.get_batch_cls_emb(token_ids, attend_marks) # (seq_len, 768)
+    embs = self.processed_embs(embs) # (seq_len, 768)
+    pos = position_encoding(embs)
+    embs = (embs + pos).float()
+    embs, scores = self.self_att_output_scores(embs)
+    return embs, scores
+
+
 def run():
   # ==========
   # length = 3:3, weight = 1:1, head = 8
   init_G(4)
-  G['m'] = m = Model_Mem(head=8)
+  G['m'] = m = Model_Mem_Pos(head=8)
   get_datas(11, 2, 'Model = MemModel(max=5), Dataset Length=2:2')
 
-  init_G(6)
-  G['m'] = m = Model_Mem(head=8)
-  get_datas(12, 2, 'Model = MemModel(max=5), Dataset Length=3:3')
+  G['m'] = m = Model_Mem_Pos(head=8, dropout=0.1)
+  get_datas(12, 2, 'Model = MemModel(max=5), Dataset Length=2:2, dropout=0.1')
+
+  G['m'] = m = Model_Mem_Pos(head=8)
+  m.working_memory_max_len = 6
+  get_datas(12, 2, 'Model = MemModel(max=6), Dataset Length=2:2')
   # ==========
   run_at_night_15()
 

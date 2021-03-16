@@ -51,12 +51,14 @@ class Model(nn.Module):
     self.embedding_layer = nn.Embedding(102, feature)
     self.id_EOS = t.LongTensor([100])
     self.id_SOF = t.LongTensor([101])
-    self.selfatt_layer = nn.TransformerEncoderLayer(d_model=feature, nhead=16, dim_feedforward = int(feature * 1.5), dropout = 0)
+    self.init_layers()
     self.gru = nn.GRU(self.feature, self.feature, batch_first=True, bidirectional=False)
     self.CEL = nn.CrossEntropyLoss()
     self.optim = optim.AdamW(self.get_should_update(), 1e-3)
     self.verbose = False
 
+  def init_layers(self):
+    self.selfatt_layer = nn.TransformerEncoderLayer(d_model=feature, nhead=16, dim_feedforward = int(feature * 1.5), dropout = 0)
 
   def get_should_update(self):
     return chain(self.embedding_layer.parameters(), self.selfatt_layer.parameters(), self.gru.parameters())
