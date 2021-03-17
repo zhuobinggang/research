@@ -83,11 +83,10 @@ def w2v(ss, max_len):
   for s in ss:
     wordvecs = W.sentence_to_wordvecs(s, max_len)
     if len(wordvecs) > 0:
-      results.append(wordvecs)
+      results.append(t.tensor(wordvecs))
     else:
       print('Waring: sentence to a empty wordvecs')
-      wordvecs = t.zeros(1, 300)
-      results.append(wordvecs)
+      results.append(t.zeros(1, 300))
   return results
 
 class Loader_Pos():
