@@ -36,7 +36,9 @@ Setting:
   - [X] # length = 4:4, weight = 1:1, head = 8
   - [X] # length = 5:5, weight = 1:1, head = 8
   - [X] # length = 6:6, weight = 1:1, head = 8
-- [ ] #15 Memnet
+- [X] #15 Memnet
+- [ ] #16 Wiki2vec based Memnet
+  - [X] Wiki2vec (length = 1:1)
 
 #### 分析
 
@@ -300,4 +302,10 @@ length=4, weight=1, maxlen = 5, epoch = 2
 >>> G['devdic']
 {'prec': 0.689453125, 'rec': 0.5206489675516224, 'f1': 0.5932773109243696, 'bacc': 0.7421613583474356}
 
+
 ```
+
+#### #16 
+  
+- [ ] #16 Wiki2vec based Memnet
+  - [X] Wiki2vec (length = 1:1)

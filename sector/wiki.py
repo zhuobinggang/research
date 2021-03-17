@@ -245,7 +245,11 @@ def get_datas(index, epoch, desc):
   losses = R.get_datas(m, ld, testld, devld, index, epoch, desc)
 
 def run():
-  init_G(2)
+  init_G(4)
+  G['m'] = m = WikiSector(hidden_size = 256)
+  get_datas(0, 1, 'dd')
+  print(R.G)
+  init_G(6)
   G['m'] = m = WikiSector(hidden_size = 256)
   get_datas(0, 1, 'dd')
   print(R.G)
