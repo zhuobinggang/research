@@ -4,9 +4,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch as t
 import time
+import requests
 
 # testld = data.Loader(data.Test_DS(), 1)
 # ld = data.Loader(data.Train_DS(), 8)
+
+G = {}
+
+def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing'):
+  losses = train_simple(m, ld, epoch) # only one epoch for order matter model
+  G[f'testdic_{index}'] = get_test_result_long(m, testld)
+  G[f'devdic_{index}'] = get_test_result_long(m, devld)
+  request_my_logger(G[f'testdic_{index}'], desc)
+  return losses
+
+def request_my_logger(dic, desc = 'No describe'):
+  try:
+    url = "https://hookb.in/b9xlr2GnnjC3DDogQ0jY"
+    dic['desc'] = desc
+    requests.post(url, json=dic)
+  except:
+    print('Something went wrong in request_my_logger()')
+
 
 def plot_loss(epoch, train_loss, test_loss):
   xs = [x+1 for x in list(range(epoch))]
