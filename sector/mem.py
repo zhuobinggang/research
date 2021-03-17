@@ -166,17 +166,18 @@ class Model_Mem_Pos(Model_Mem):
 def run():
   # ==========
   # length = 3:3, weight = 1:1, head = 8
-  init_G(4)
+  init_G(2)
   G['m'] = m = Model_Mem_Pos(head=8)
-  get_datas(11, 2, 'Model = MemModel(max=5), Dataset Length=2:2')
-
-  G['m'] = m = Model_Mem_Pos(head=8, dropout=0.1)
-  get_datas(12, 2, 'Model = MemModel(max=5), Dataset Length=2:2, dropout=0.1')
+  m.working_memory_max_len = 5
+  get_datas(0, 2, 'Epoch 2, Model = MemModel(max=5), Dataset Length=1:1, No pop last guy')
+  get_datas(1, 1, 'Continue for epoch 3')
+  get_datas(2, 1, 'Continue for epoch 4')
+  get_datas(3, 1, 'Continue for epoch 5')
+  get_datas(4, 1, 'Continue for epoch 6')
 
   G['m'] = m = Model_Mem_Pos(head=8)
-  m.working_memory_max_len = 6
-  get_datas(12, 2, 'Model = MemModel(max=6), Dataset Length=2:2')
+  m.working_memory_max_len = 7
+  get_datas(11, 2, 'Epoch 2, Model = MemModel(max=7), Dataset Length=1:1, No pop last guy')
   # ==========
-  run_at_night_15()
 
 
