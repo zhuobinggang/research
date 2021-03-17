@@ -46,7 +46,6 @@ class MemNet(WikiSector):
     self.working_memory.append(item)
 
   def working_memory_self_att(self):
-    self.working_memory # (len, ?, feature)
     mems = pad(self.working_memory) # (seq_len, max_len, feature)
     mems = self.cls(mems) # (seq_len, hidden_size)
     mems, scores = self.self_att_output_scores(mems) # (seq_len, hidden_size)
@@ -56,9 +55,14 @@ class MemNet(WikiSector):
   def arrange_working_memory_by_score(self, score):
     if len(self.working_memory) > self.working_memory_max_len: # remove item if out of length
       pos_to_remove = score.argmin().item()
+      # print(f'pop: {pos_to_remove}')
       pop_guy = self.working_memory.pop(pos_to_remove)
     else:
       pass  # Do nothing
+
+  # 不该弹出刚刚放进来的
+  def arrange_working_memory_by_score_except_last(self, score):
+    self.arrange_working_memory_by_score(score[:-1])
 
   # inpts: (seq_len, words_padded, feature)
   def get_recall_info_then_update_working_memory(self, current_item):
@@ -67,7 +71,8 @@ class MemNet(WikiSector):
     self_att_mems, scores = self.working_memory_self_att() # (?, hidden_size)
     recall_info = self_att_mems[-1] # (hidden_size)
     score = scores[-1] # (seq_len)
-    self.arrange_working_memory_by_score(score) # 如果满了就删除权重最低的
+    # print(score)
+    self.arrange_working_memory_by_score_except_last(score) # 如果满了就删除权重最低的
     return recall_info
 
   # inpts: (seq_len, words_padded, feature)

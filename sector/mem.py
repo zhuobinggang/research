@@ -79,6 +79,9 @@ class Model_Mem(BERT_LONG_TF_POS):
     else:
       pass  # Do nothing
 
+  def arrange_working_memory_by_score_except_last(self, score):
+    self.arrange_working_memory_by_score(score[:-1])
+
   def get_recall_info_then_update_working_memory(self, token_ids, attend_marks, pos):
     # Fill working memory with current item
     item = {'token_id': token_ids[pos], 'attend_mark': attend_marks[pos]}
@@ -86,7 +89,7 @@ class Model_Mem(BERT_LONG_TF_POS):
     recall_infos, scores = self.working_memory_self_att()
     recall_info = recall_infos[-1] # (768)
     score = scores[-1] # (seq_len)
-    self.arrange_working_memory_by_score(score) # 如果满了就删除权重最低的
+    self.arrange_working_memory_by_score_except_last(score) # 如果满了就删除权重最低的
     return recall_info
 
   # inpts: token_ids, attend_marks
