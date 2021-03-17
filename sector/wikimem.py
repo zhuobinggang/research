@@ -27,9 +27,17 @@ def pad(the_list):
 class MemNet(WikiSector):
   def init_hook(self):
     self.self_att_output_scores = Self_Att(self.hidden_size) # For working memory
+    self.minify_to_cat = nn.Linear(self.hidden_size * 2, self.hidden_size) # For working memory
+    self.gru_batch_first_word_compressor = t.nn.GRU(self.wordvec_size, self.hidden_size, batch_first=True)
+    self.bi_gru_batch_first_integrator = t.nn.GRU(self.hidden_size, self.hidden_size, batch_first=True, bidirectional=True)
+    self.classifier = nn.Sequential(
+      nn.Linear(self.hidden_size * 2, self.hidden_size),
+      nn.LeakyReLU(0.1),
+      nn.Linear(self.hidden_size, 2),
+    )
 
   def get_should_update(self):
-    return chain(self.bi_gru_batch_first_integrator.parameters(), self.classifier.parameters(), self.gru_batch_first_word_compressor.parameters(), self.self_att_output_scores.parameters())
+    return chain(self.bi_gru_batch_first_integrator.parameters(), self.classifier.parameters(), self.gru_batch_first_word_compressor.parameters(), self.self_att_output_scores.parameters(), self.minify_to_cat.parameters())
 
   # item: {'token_id': (max_id_len), 'attend_mark': (max_id_len)}, LongTensor
   def fill_working_memory(self, item):
