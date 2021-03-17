@@ -26,6 +26,8 @@ def pad(the_list):
 
 class MemNet(WikiSector):
   def init_hook(self):
+    self.working_memory = []
+    self.working_memory_max_len = 5
     self.self_att_output_scores = Self_Att(self.hidden_size) # For working memory
     self.minify_to_cat = nn.Linear(self.hidden_size * 2, self.hidden_size) # For working memory
     self.gru_batch_first_word_compressor = t.nn.GRU(self.wordvec_size, self.hidden_size, batch_first=True)
@@ -78,11 +80,11 @@ class MemNet(WikiSector):
     embs = self.cls(inpts) # (seq_len, hidden_size)
     embs = self.integrate_sentences_info(embs) # (seq_len, hidden_size * 2)
     emb = embs[pos] # (hidden_size * 2)
-    emb = emb.view(1, self.hidden_size * 2)
-    emb = self.minify_to_cat(emb) # (1, hidden_size)
+    emb = self.minify_to_cat(emb) # (hidden_size)
     recall_info = self.get_recall_info_then_update_working_memory(inpts[pos]) # (hidden_size)
     o = t.cat([recall_info, emb]) # (hidden_size * 2)
-    o = self.classifier(emb) # (1, 2)
+    o = o.view(1, self.hidden_size * 2)
+    o = self.classifier(o) # (1, 2)
     loss = self.CEL(o, label)
     self.zero_grad()
     loss.backward()
@@ -108,3 +110,8 @@ class MemNet(WikiSector):
     self.print_train_info(o, label, -1)
     return o.argmax(1)
 
+
+def run():
+  init_G(2)
+  G['m'] = m = MemNet(hidden_size = 256)
+  get_datas(0, 1, 'dd')
