@@ -232,9 +232,9 @@ class WikiSector(nn.Module):
 G = {}
 
 def init_G(length):
-  G['ld'] = ld(ss_len = 2, max_len = 64)
-  G['testld'] = tld(ss_len = 2, max_len = 64)
-  G['devld'] = dld(ss_len = 2, max_len = 64)
+  G['ld'] = ld(ss_len = length, max_len = 64)
+  G['testld'] = tld(ss_len = length, max_len = 64)
+  G['devld'] = dld(ss_len = length, max_len = 64)
 
 def read_G():
   return G['m'], G['ld'], G['testld'], G['devld']
@@ -245,11 +245,15 @@ def get_datas(index, epoch, desc):
   losses = R.get_datas(m, ld, testld, devld, index, epoch, desc)
 
 def run():
+  init_G(2)
+  G['m'] = m = WikiSector(hidden_size = 256)
+  get_datas(0, 1, 'wiki2vec, 1:1')
+  print(R.G)
   init_G(4)
   G['m'] = m = WikiSector(hidden_size = 256)
-  get_datas(0, 1, 'dd')
+  get_datas(0, 1, 'wiki2vec, 2:2')
   print(R.G)
   init_G(6)
   G['m'] = m = WikiSector(hidden_size = 256)
-  get_datas(0, 1, 'dd')
+  get_datas(0, 1, 'wiki2vec, 3:3')
   print(R.G)

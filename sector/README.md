@@ -37,6 +37,7 @@ Setting:
   - [X] # length = 5:5, weight = 1:1, head = 8
   - [X] # length = 6:6, weight = 1:1, head = 8
 - [X] #15 Memnet
+  - [X] 1:1, mem length = 5, no pop last
 - [ ] #16 Wiki2vec based Memnet
   - [X] Wiki2vec (length = 1:1)
 
@@ -302,6 +303,13 @@ length=4, weight=1, maxlen = 5, epoch = 2
 >>> G['devdic']
 {'prec': 0.689453125, 'rec': 0.5206489675516224, 'f1': 0.5932773109243696, 'bacc': 0.7421613583474356}
 
+1:1, max=5, no pop last guy, epoch = 2
+{'prec': 0.9064535227945529, 'rec': 0.7662662662662663, 'f1': 0.8304854895579061, 'bacc': 0.8745879735874327, 'desc': 'Epoch 2, Model = MemModel(max=5), Dataset Length=1:1, No pop last guy'}
+{'prec': 0.7134387351778656, 'rec': 0.532448377581121, 'f1': 0.6097972972972973, 'bacc': 0.749660332267828}
+
+1:1, max=7, no pop last guy, epoch = 2
+{'prec': 0.9194837123540258, 'rec': 0.7487487487487487, 'f1': 0.8253793103448277, 'bacc': 0.8672894636118, 'desc': 'Epoch 2, Model = MemModel(max=7), Dataset Length=1:1, No pop last guy'}
+{'prec': 0.7451403887688985, 'rec': 0.5088495575221239, 'f1': 0.6047326906222612, 'bacc': 0.7409452265563555}
 
 ```
 
