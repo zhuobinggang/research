@@ -118,15 +118,33 @@ class MemNet(WikiSector):
     return o.argmax(1)
 
 
+class MemNet_Queue(MemNet):
+  # Pop first one as queue
+  def arrange_working_memory_by_score(self, _):
+    if len(self.working_memory) > self.working_memory_max_len: # remove item if out of length
+      pos_to_remove = 0 # NOTE
+      pop_guy = self.working_memory.pop(pos_to_remove)
+    else:
+      pass  # Do nothing
+
+  def arrange_working_memory_by_score_except_last(self, score):
+    self.arrange_working_memory_by_score(-1)
+
+
 # 确认memnet真的有增幅效果
 def run():
   init_G(2)
+  for i in range(3):
+    G['m'] = m = WikiSector(hidden_size = 256)
+    get_datas(i, 1, 'dd')
   for i in range(3):
     G['m'] = m = MemNet(hidden_size = 256)
     m.working_memory_max_len = 5
     get_datas(i+10, 1, 'dd')
   for i in range(3):
-    G['m'] = m = WikiSector(hidden_size = 256)
-    get_datas(i, 1, 'dd')
+    G['m'] = m = MemNet_Queue(hidden_size = 256)
+    m.working_memory_max_len = 5
+    get_datas(i+20, 1, 'dd')
+    
 
 
