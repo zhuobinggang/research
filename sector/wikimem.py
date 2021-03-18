@@ -28,6 +28,7 @@ class MemNet(WikiSector):
   def init_hook(self):
     self.working_memory = []
     self.working_memory_max_len = 5
+    self.memory_checking = False
     self.self_att_output_scores = Self_Att(self.hidden_size) # For working memory
     self.minify_to_cat = nn.Linear(self.hidden_size * 2, self.hidden_size) # For working memory
     self.gru_batch_first_word_compressor = t.nn.GRU(self.wordvec_size, self.hidden_size, batch_first=True)
@@ -71,7 +72,8 @@ class MemNet(WikiSector):
     self_att_mems, scores = self.working_memory_self_att() # (?, hidden_size)
     recall_info = self_att_mems[-1] # (hidden_size)
     score = scores[-1] # (seq_len)
-    # print(score)
+    if self.memory_checking:
+      print(score)
     self.arrange_working_memory_by_score_except_last(score) # 如果满了就删除权重最低的
     return recall_info
 
