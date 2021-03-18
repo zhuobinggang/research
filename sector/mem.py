@@ -164,20 +164,13 @@ class Model_Mem_Pos(Model_Mem):
 
 
 def run():
-  # ==========
-  # length = 3:3, weight = 1:1, head = 8
+  # 对比有mem和没有
   init_G(2)
-  G['m'] = m = Model_Mem_Pos(head=8)
-  m.working_memory_max_len = 5
-  get_datas(0, 2, 'Epoch 2, Model = MemModel(max=5), Dataset Length=1:1, No pop last guy')
-  get_datas(1, 1, 'Continue for epoch 3')
-  get_datas(2, 1, 'Continue for epoch 4')
-  get_datas(3, 1, 'Continue for epoch 5')
-  get_datas(4, 1, 'Continue for epoch 6')
-
-  G['m'] = m = Model_Mem_Pos(head=8)
-  m.working_memory_max_len = 7
-  get_datas(11, 2, 'Epoch 2, Model = MemModel(max=7), Dataset Length=1:1, No pop last guy')
-  # ==========
+  for i in range(3):
+    G['m'] = m = Model_Mem_Pos(head=8)
+    m.working_memory_max_len = 5
+    get_datas(i, 2, f'No.{i} Epoch 2, Model = MemModel(max=5), Dataset Length=1:1, No pop last guy')
+    G['m'] = m = BERT_LONG_TF_POS(head=8)
+    get_datas(i + 100, 2, f'No.{i} BERT_LONG_TF_POS length = 1:1, weight = 1:1, head = 8')
 
 
