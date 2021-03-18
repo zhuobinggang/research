@@ -244,7 +244,8 @@ def get_datas(index, epoch, desc):
   m, ld , testld, devld = read_G()
   losses = R.get_datas(m, ld, testld, devld, index, epoch, desc)
 
-def run():
+# 确认两边长度1,2,3对结果的影响
+def run_wiki():
   init_G(2)
   G['m'] = m = WikiSector(hidden_size = 256)
   get_datas(0, 1, 'wiki2vec, 1:1')

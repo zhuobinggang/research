@@ -116,7 +116,15 @@ class MemNet(WikiSector):
     return o.argmax(1)
 
 
+# 确认memnet真的有增幅效果
 def run():
   init_G(2)
-  G['m'] = m = MemNet(hidden_size = 256)
-  get_datas(0, 1, 'dd')
+  for i in range(3):
+    G['m'] = m = MemNet(hidden_size = 256)
+    m.working_memory_max_len = 5
+    get_datas(i+10, 1, 'dd')
+  for i in range(3):
+    G['m'] = m = WikiSector(hidden_size = 256)
+    get_datas(i, 1, 'dd')
+
+
