@@ -76,7 +76,8 @@ class WikiAtt(WikiSector):
     return integrated
 
   def cls_embedding(self):
-    return self.ember(t.LongTensor([0]))
+    idx = t.LongTensor([0])
+    return self.ember(idx.cuda() if GPU_OK else idx)
 
   # inpts: [seq_len, (?, feature)], 不定长复数句子
   # return: (seq_len, feature)
