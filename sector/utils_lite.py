@@ -4,7 +4,7 @@ t = torch
 import functools
 GPU_OK = t.cuda.is_available()
 
-@functools.lru_cache(maxsize=256)
+@functools.lru_cache(maxsize=1024)
 def position_encoding_ddd(t, i, d):
   k = int(i/2)
   omiga = 1 / np.power(10000, 2 * k / d)

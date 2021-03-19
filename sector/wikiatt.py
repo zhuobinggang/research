@@ -1,5 +1,5 @@
 from wiki import *
-from self_attention import Self_Att
+from self_attention import Self_Att2
 import utils_lite as U
 
 # 可变长inpts (seq_len, ?, 300)
@@ -62,8 +62,14 @@ class WikiAtt(WikiSector):
       nn.LeakyReLU(0.1),
       nn.Linear(int(self.feature / 2), 2),
     )
-    self.sentence_compressor = Self_Att(self.feature)
-    self.sentence_integrator = Self_Att(self.feature)
+    self.sentence_compressor = nn.Sequential(
+      Self_Att2(self.feature),
+      Self_Att2(self.feature),
+    )
+    self.sentence_integrator = nn.Sequential(
+      Self_Att2(self.feature),
+      Self_Att2(self.feature),
+    )
     self.ember = nn.Embedding(3, self.feature)
 
   def get_should_update(self):
@@ -88,8 +94,8 @@ class WikiAtt(WikiSector):
     for inpt in inpts: # (?, feature)
       cls = self.cls_embedding()
       inpt = t.cat([cls, inpt])
-      pos = U.position_encoding(inpt) # NOTE: pos encoding
-      inpt = (inpt + pos).float()
+      # pos = U.position_encoding(inpt) # NOTE: pos encoding
+      # inpt = (inpt + pos).float()
       embs, scores = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
       cls_pool = embs[0] # (feature)
       results.append(cls_pool) # mean pool
@@ -105,6 +111,8 @@ class WikiAtt(WikiSector):
       results.append(embs.mean(0)) # mean pool
     return t.stack(results) # (seq_len, feature)
 
+  def learning_rate(self):
+    return 1e-3
 
   # inpts: [seq_len, (?, feature)], 不定长复数句子
   # labels: (label, pos)
