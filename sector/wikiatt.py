@@ -57,13 +57,13 @@ class WikiAtt(WikiSector):
     self.feature = 300
     self.max_seq_len = 64
     self.classifier = nn.Sequential(
-      nn.Linear(self.feature, int(self.feature * 1.5)), 
-      nn.LeakyReLU(0.1),
-      nn.Linear(int(self.feature * 1.5), int(self.feature / 2)),
+      nn.Linear(self.feature, int(self.feature / 2)),
       nn.LeakyReLU(0.1),
       nn.Linear(int(self.feature / 2), 2),
     )
     self.sentence_compressor = nn.Sequential(
+      Multihead_SelfAtt(self.feature, 4),
+      Multihead_SelfAtt(self.feature, 4),
       Multihead_SelfAtt(self.feature, 4),
     )
     self.sentence_integrator = nn.Sequential(
@@ -71,7 +71,6 @@ class WikiAtt(WikiSector):
     )
     self.ember = nn.Embedding(3, self.feature)
     self.pos_matrix = U.position_matrix(self.max_seq_len + 10, self.feature).float()
-    # self.pos_embedding = nn.Embedding(20, self.feature)
 
   def get_pos_encoding(self, emb):
     seq_len = emb.shape[0]
