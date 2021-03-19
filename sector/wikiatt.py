@@ -1,5 +1,5 @@
 from wiki import *
-from self_attention import Self_Att2
+from self_attention import Multihead_SelfAtt
 import utils_lite as U
 
 # 可变长inpts (seq_len, ?, 300)
@@ -63,12 +63,10 @@ class WikiAtt(WikiSector):
       nn.Linear(int(self.feature / 2), 2),
     )
     self.sentence_compressor = nn.Sequential(
-      Self_Att2(self.feature),
-      Self_Att2(self.feature),
+      Multihead_SelfAtt(self.feature, 4),
     )
     self.sentence_integrator = nn.Sequential(
-      Self_Att2(self.feature),
-      Self_Att2(self.feature),
+      Multihead_SelfAtt(self.feature, 4),
     )
     self.ember = nn.Embedding(3, self.feature)
 
@@ -94,8 +92,8 @@ class WikiAtt(WikiSector):
     for inpt in inpts: # (?, feature)
       cls = self.cls_embedding()
       inpt = t.cat([cls, inpt])
-      pos = U.position_encoding(inpt) # NOTE: pos encoding
-      inpt = (inpt + pos).float()
+      # pos = U.position_encoding(inpt) # NOTE: pos encoding
+      # inpt = (inpt + pos).float()
       embs = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
       cls_pool = embs[0] # (feature)
       results.append(cls_pool) # mean pool
