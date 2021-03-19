@@ -65,8 +65,14 @@ class WikiAtt(WikiSector):
       Multihead_SelfAtt(self.feature, 4),
       Multihead_SelfAtt(self.feature, 4),
       Multihead_SelfAtt(self.feature, 4),
+      Multihead_SelfAtt(self.feature, 4),
+      Multihead_SelfAtt(self.feature, 4),
+      Multihead_SelfAtt(self.feature, 4),
+      Multihead_SelfAtt(self.feature, 4),
+      Multihead_SelfAtt(self.feature, 4),
     )
     self.sentence_integrator = nn.Sequential(
+      Multihead_SelfAtt(self.feature, 4),
       Multihead_SelfAtt(self.feature, 4),
     )
     self.ember = nn.Embedding(3, self.feature)
@@ -116,7 +122,7 @@ class WikiAtt(WikiSector):
     return t.stack(results) # (seq_len, feature)
 
   def learning_rate(self):
-    return 1e-3
+    return 1e-4
 
   # inpts: [seq_len, (?, feature)], 不定长复数句子
   # labels: (label, pos)
