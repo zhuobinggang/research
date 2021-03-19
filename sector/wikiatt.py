@@ -93,6 +93,17 @@ class WikiAtt(WikiSector):
     return t.stack(results) # (seq_len, feature)
 
   # inpts: [seq_len, (?, feature)], 不定长复数句子
+  # return: (seq_len, feature)
+  # method: mean pool
+  def cls_mean_pool(self, inpts):
+    results = []
+    for inpt in inpts: # (?, feature)
+      embs, scores = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
+      results.append(embs.mean(0)) # mean pool
+    return t.stack(results) # (seq_len, feature)
+
+
+  # inpts: [seq_len, (?, feature)], 不定长复数句子
   # labels: (label, pos)
   def train(self, inpts, labels):
     label, pos = labels # (1), LongTensor
@@ -100,7 +111,7 @@ class WikiAtt(WikiSector):
     if GPU_OK:
       inpts = [item.cuda() for item in inpts]
       label = label.cuda()
-    embs = self.cls(inpts) # (seq_len, feature)
+    embs = self.cls_mean_pool(inpts) # (seq_len, feature)
     embs = self.integrate_sentences_info(embs) # (seq_len, hidden_size * 2)
     emb = embs[pos] # (feature)
     emb = emb.view(1, self.feature)
@@ -119,7 +130,7 @@ class WikiAtt(WikiSector):
     if GPU_OK:
       inpts = [item.cuda() for item in inpts]
       label = label.cuda()
-    embs = self.cls(inpts) # (seq_len, feature)
+    embs = self.cls_mean_pool(inpts) # (seq_len, feature)
     embs = self.integrate_sentences_info(embs) # (seq_len, hidden_size * 2)
     emb = embs[pos] # (feature)
     emb = emb.view(1, self.feature)
