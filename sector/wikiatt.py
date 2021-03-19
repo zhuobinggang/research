@@ -79,7 +79,7 @@ class WikiAtt(WikiSector):
   # return: (seq_len, feature)
   def integrate_sentences_info(self, ss):
     seq_len, feature = ss.shape
-    integrated, scores = self.sentence_integrator(ss) # (seq_len, feature), (seq_len, seq_len)
+    integrated = self.sentence_integrator(ss) # (seq_len, feature), (seq_len, seq_len)
     return integrated
 
   def cls_embedding(self):
