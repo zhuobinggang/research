@@ -55,6 +55,7 @@ def init_G(length):
 class WikiAtt(WikiSector):
   def init_hook(self):
     self.feature = 300
+    self.max_seq_len = 64
     self.classifier = nn.Sequential(
       nn.Linear(self.feature, int(self.feature * 1.5)), 
       nn.LeakyReLU(0.1),
@@ -69,8 +70,13 @@ class WikiAtt(WikiSector):
       Multihead_SelfAtt(self.feature, 4),
     )
     self.ember = nn.Embedding(3, self.feature)
+    self.pos_matrix = U.position_matrix(self.max_seq_len + 10, self.feature).float()
     # self.pos_embedding = nn.Embedding(20, self.feature)
 
+  def get_pos_encoding(self, emb):
+    seq_len = emb.shape[0]
+    return self.pos_matrix[:seq_len].detach()
+    
   def get_should_update(self):
     return chain(self.classifier.parameters(), self.sentence_compressor.parameters(), self.sentence_integrator.parameters(), self.ember.parameters())
 
@@ -78,8 +84,7 @@ class WikiAtt(WikiSector):
   # return: (seq_len, feature)
   def integrate_sentences_info(self, ss):
     seq_len, feature = ss.shape
-    pos = U.position_encoding(ss) # NOTE: pos encoding
-    ss = (ss + pos).float()
+    ss = ss + self.get_pos_encoding(ss)# NOTE: pos encoding
     integrated = self.sentence_integrator(ss) # (seq_len, feature), (seq_len, seq_len)
     return integrated
 
@@ -95,8 +100,7 @@ class WikiAtt(WikiSector):
     for inpt in inpts: # (?, feature)
       cls = self.cls_embedding()
       inpt = t.cat([cls, inpt])
-      pos = U.position_encoding(inpt) # NOTE: pos encoding
-      inpt = (inpt + pos).float()
+      inpt = inpt + self.get_pos_encoding(inpt)# NOTE: pos encoding
       embs = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
       cls_pool = embs[0] # (feature)
       results.append(cls_pool) # mean pool

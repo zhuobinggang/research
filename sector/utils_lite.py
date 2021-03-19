@@ -22,3 +22,14 @@ def position_encoding(seq):
     embs.append(pos_emb)
   embs = torch.stack(embs)
   return embs.cuda() if GPU_OK else embs
+
+def position_matrix(seq_len, feature):
+  d = feature
+  embs = []
+  for j in range(seq_len):
+    pos_emb = [position_encoding_ddd(j, i, d) for i in range(d)]
+    pos_emb = torch.tensor(pos_emb)
+    embs.append(pos_emb)
+  embs = torch.stack(embs)
+  return embs.cuda() if GPU_OK else embs
+
