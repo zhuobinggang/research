@@ -77,6 +77,8 @@ class WikiAtt(WikiSector):
   # return: (seq_len, feature)
   def integrate_sentences_info(self, ss):
     seq_len, feature = ss.shape
+    pos = U.position_encoding(ss) # NOTE: pos encoding
+    ss = (ss + pos).float()
     integrated = self.sentence_integrator(ss) # (seq_len, feature), (seq_len, seq_len)
     return integrated
 
