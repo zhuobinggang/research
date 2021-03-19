@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 t = torch
+GPU_OK = t.cuda.is_available()
 
 
 def position_encoding_ddd(t, i, d):
@@ -19,4 +20,4 @@ def position_encoding(seq):
     pos_emb = torch.tensor(pos_emb)
     embs.append(pos_emb)
   embs = torch.stack(embs)
-  return embs
+  return embs.cuda() if GPU_OK else embs
