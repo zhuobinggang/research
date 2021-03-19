@@ -1,5 +1,6 @@
 from wiki import *
 from self_attention import Self_Att
+import utils_lite as U
 
 # 可变长inpts (seq_len, ?, 300)
 class Loader_Var_Len():
@@ -87,6 +88,8 @@ class WikiAtt(WikiSector):
     for inpt in inpts: # (?, feature)
       cls = self.cls_embedding()
       inpt = t.cat([cls, inpt])
+      pos = U.position_encoding(inpt) # NOTE: pos encoding
+      inpt = (inpt + pos).float()
       embs, scores = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
       cls_pool = embs[0] # (feature)
       results.append(cls_pool) # mean pool
@@ -111,7 +114,7 @@ class WikiAtt(WikiSector):
     if GPU_OK:
       inpts = [item.cuda() for item in inpts]
       label = label.cuda()
-    embs = self.cls_mean_pool(inpts) # (seq_len, feature)
+    embs = self.cls(inpts) # (seq_len, feature)
     embs = self.integrate_sentences_info(embs) # (seq_len, hidden_size * 2)
     emb = embs[pos] # (feature)
     emb = emb.view(1, self.feature)
@@ -130,7 +133,7 @@ class WikiAtt(WikiSector):
     if GPU_OK:
       inpts = [item.cuda() for item in inpts]
       label = label.cuda()
-    embs = self.cls_mean_pool(inpts) # (seq_len, feature)
+    embs = self.cls(inpts) # (seq_len, feature)
     embs = self.integrate_sentences_info(embs) # (seq_len, hidden_size * 2)
     emb = embs[pos] # (feature)
     emb = emb.view(1, self.feature)
