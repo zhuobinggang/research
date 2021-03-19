@@ -96,7 +96,7 @@ class WikiAtt(WikiSector):
       inpt = t.cat([cls, inpt])
       # pos = U.position_encoding(inpt) # NOTE: pos encoding
       # inpt = (inpt + pos).float()
-      embs, scores = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
+      embs = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
       cls_pool = embs[0] # (feature)
       results.append(cls_pool) # mean pool
     return t.stack(results) # (seq_len, feature)
@@ -107,7 +107,7 @@ class WikiAtt(WikiSector):
   def cls_mean_pool(self, inpts):
     results = []
     for inpt in inpts: # (?, feature)
-      embs, scores = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
+      embs = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
       results.append(embs.mean(0)) # mean pool
     return t.stack(results) # (seq_len, feature)
 
