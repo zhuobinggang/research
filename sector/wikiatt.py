@@ -97,7 +97,7 @@ class WikiAtt(WikiSector):
     label, pos = labels # (1), LongTensor
     pos = pos.item()
     if GPU_OK:
-      inpts = inpts.cuda()
+      inpts = [item.cuda() for item in inpts]
       label = label.cuda()
     embs = self.cls(inpts) # (seq_len, feature)
     embs = self.integrate_sentences_info(embs) # (seq_len, hidden_size * 2)
@@ -116,7 +116,7 @@ class WikiAtt(WikiSector):
     label, pos = labels # (1), LongTensor
     pos = pos.item()
     if GPU_OK:
-      inpts = inpts.cuda()
+      inpts = [item.cuda() for item in inpts]
       label = label.cuda()
     embs = self.cls(inpts) # (seq_len, feature)
     embs = self.integrate_sentences_info(embs) # (seq_len, hidden_size * 2)
