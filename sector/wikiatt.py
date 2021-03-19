@@ -69,6 +69,7 @@ class WikiAtt(WikiSector):
       Multihead_SelfAtt(self.feature, 4),
     )
     self.ember = nn.Embedding(3, self.feature)
+    # self.pos_embedding = nn.Embedding(20, self.feature)
 
   def get_should_update(self):
     return chain(self.classifier.parameters(), self.sentence_compressor.parameters(), self.sentence_integrator.parameters(), self.ember.parameters())
