@@ -94,7 +94,23 @@ class AttMemNet(WikiAttOfficial):
 def run():
   init_G(4)
   head = 6
-  for i in range(1):
-    # G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
-    G['m'] = m = AttMemNet(hidden_size = 256, head=head)
-    get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
+  size = 5
+  for i in range(9):
+    G['m'] = m = AttMemNet(hidden_size = 256, head=head, memory_size = size)
+    get_datas(i, 1, f'WikiAttMem length=2:2 epoch = {i}, head = {head}, size = {size}')
+  size = 0
+  for i in range(5):
+    G['m'] = m = AttMemNet(hidden_size = 256, head=head, memory_size = size)
+    get_datas(i + 10, 1, f'WikiAttMem length=2:2 epoch = {i}, head = {head}, size = {size}')
+  size = 2
+  for i in range(5):
+    G['m'] = m = AttMemNet(hidden_size = 256, head=head, memory_size = size)
+    get_datas(i + 20, 1, f'WikiAttMem length=2:2 epoch = {i}, head = {head}, size = {size}')
+
+  init_G(2)
+  size = 5
+  for i in range(9):
+    G['m'] = m = AttMemNet(hidden_size = 256, head=head, memory_size = size)
+    get_datas(i + 30, 1, f'WikiAttMem length=1:1 epoch = {i}, head = {head}, size = {size}')
+
+

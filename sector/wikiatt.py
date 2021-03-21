@@ -50,7 +50,7 @@ def init_G(length):
   G['ld'] = the_ld = ld(ss_len = length, max_len = 64)
   G['testld'] = tld(ss_len = length, max_len = 64)
   G['devld'] = dld(ss_len = length, max_len = 64)
-  print(f'Init loaders with length={the_ld.ss_len}')
+  print(f'Init loaders with length={the_ld.ds.ss_len}')
 
 
 class WikiAtt(WikiSector):
