@@ -188,5 +188,6 @@ def run():
   #   get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
   head = 10
   for i in range(1):
-    G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
-    get_datas(i, 1, f'WikiAttOfficial epoch = {i}, head = {head}')
+    # G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
+    G['m'] = m = WikiAtt(hidden_size = 256, head=head)
+    get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
