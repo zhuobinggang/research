@@ -64,7 +64,8 @@ class Multihead_SelfAtt(nn.Module):
     results = []
     for qi,ki,vi in zip(qss, kss, vss):
       score = t.mm(qi, ki.transpose(0, 1)) # (seq_len, seq_len)
-      score = t.softmax(score / self.squre_dk, 1) # (seq_len, seq_len)
+      # score = t.softmax(score / self.squre_dk, 1) # (seq_len, seq_len)
+      score = t.softmax(score, 1) # (seq_len, seq_len)
       result = t.mm(score, vi) # (seq_len, feature / head)
       scores.append(score.detach())
       results.append(result)
