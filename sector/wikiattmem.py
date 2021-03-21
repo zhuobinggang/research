@@ -43,7 +43,7 @@ class AttMemNet(WikiAttOfficial):
       self.working_memory = [m for m in self.working_memory if m is not None]
       # print(len(self.working_memory))
     if self.memory_checking:
-      print(score)
+      print([round(item, 5) for item in score.tolist()])
     
   # inpts: [seq_len, (?, feature)], 不定长复数句子
   # labels: (label, pos)
@@ -92,7 +92,7 @@ class AttMemNet(WikiAttOfficial):
 
 
 def run():
-  init_G(2)
+  init_G(4)
   head = 6
   for i in range(1):
     # G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
