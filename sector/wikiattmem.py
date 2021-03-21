@@ -55,8 +55,8 @@ class AttMemNet(WikiAttOfficial):
     seq_len = len(inpts)
     self.cat2memory(inpts)
     out, scores = self.memory_self_attention() # (seq_len + current_memory_size, feature), (seq_len + current_memory_size, seq_len + current_memory_size)
-    out = [-seq_len:] # 剪掉记忆储存部分
-    scores = [-seq_len:]
+    out = out[-seq_len:] # 剪掉记忆储存部分
+    scores = scores[-seq_len:]
     self.memory_arrange(scores[pos])
     o = out[pos] # (feature)
     o = o.view(1, self.feature)
@@ -79,8 +79,8 @@ class AttMemNet(WikiAttOfficial):
     seq_len = len(inpts)
     self.cat2memory(inpts)
     out, scores = self.memory_self_attention() # (seq_len + current_memory_size, feature), (seq_len + current_memory_size, seq_len + current_memory_size)
-    out = [-seq_len:] # 剪掉记忆储存部分
-    scores = [-seq_len:]
+    out = out[-seq_len:] # 剪掉记忆储存部分
+    scores = scores[-seq_len:]
     self.memory_arrange(scores[pos])
     o = out[pos] # (feature)
     o = o.view(1, self.feature)
@@ -94,5 +94,5 @@ def run():
   head = 6
   for i in range(1):
     # G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
-    G['m'] = m = WikiAtt(hidden_size = 256, head=head)
+    G['m'] = m = AttMemNet(hidden_size = 256, head=head)
     get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
