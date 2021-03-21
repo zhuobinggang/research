@@ -76,6 +76,9 @@ class WikiAtt(WikiSector):
       Multihead_SelfAtt(self.feature, self.head),
     )
 
+  def init_working_memory(self):
+    pass
+
   def get_pos_encoding(self, emb):
     seq_len = emb.shape[0]
     return self.pos_matrix[:seq_len].detach()
