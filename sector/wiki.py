@@ -144,6 +144,7 @@ class WikiSector(nn.Module):
     self.dropout = dropout
     self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, weight_one]))
     self.verbose = False
+    self.memory_checking = False
     self.wordvec_size = 300
     self.init_hook()
     self.optim = optim.AdamW(self.get_should_update(), self.learning_rate())

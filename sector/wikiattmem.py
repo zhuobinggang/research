@@ -42,6 +42,8 @@ class AttMemNet(WikiAttOfficial):
         self.working_memory[idx] = None
       self.working_memory = [m for m in self.working_memory if m is not None]
       # print(len(self.working_memory))
+    if self.memory_checking:
+      print(score)
     
   # inpts: [seq_len, (?, feature)], 不定长复数句子
   # labels: (label, pos)
