@@ -1,10 +1,9 @@
 import numpy as np
 import torch
+import requests
 t = torch
-import functools
 GPU_OK = t.cuda.is_available()
 
-@functools.lru_cache(maxsize=1024 * 4)
 def position_encoding_ddd(t, i, d):
   k = int(i/2)
   omiga = 1 / np.power(10000, 2 * k / d)
@@ -33,3 +32,10 @@ def position_matrix(seq_len, feature):
   embs = torch.stack(embs)
   return embs.cuda() if GPU_OK else embs
 
+def request_my_logger(dic, desc = 'No describe'):
+  try:
+    url = "https://hookb.in/b9xlr2GnnjC3DDogQ0jY"
+    dic['desc'] = desc
+    requests.post(url, json=dic)
+  except:
+    print('Something went wrong in request_my_logger()')

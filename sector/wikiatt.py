@@ -62,18 +62,10 @@ class WikiAtt(WikiSector):
       nn.Linear(int(self.feature / 2), 2),
     )
     self.sentence_compressor = nn.Sequential(
-      Multihead_SelfAtt(self.feature, 4),
-      Multihead_SelfAtt(self.feature, 4),
-      Multihead_SelfAtt(self.feature, 4),
-      Multihead_SelfAtt(self.feature, 4),
-      Multihead_SelfAtt(self.feature, 4),
-      Multihead_SelfAtt(self.feature, 4),
-      Multihead_SelfAtt(self.feature, 4),
-      Multihead_SelfAtt(self.feature, 4),
+      Multihead_SelfAtt(self.feature, 6),
     )
     self.sentence_integrator = nn.Sequential(
-      Multihead_SelfAtt(self.feature, 4),
-      Multihead_SelfAtt(self.feature, 4),
+      Multihead_SelfAtt(self.feature, 6),
     )
     self.ember = nn.Embedding(3, self.feature)
     self.pos_matrix = U.position_matrix(self.max_seq_len + 10, self.feature).float()
@@ -165,12 +157,7 @@ def run():
   init_G(2)
   G['m'] = m = WikiAtt(hidden_size = 256)
   get_datas(0, 1, 'epoch = 1')
-  get_datas(0, 1, 'epoch = 2')
-  get_datas(0, 1, 'epoch = 3')
-  get_datas(0, 1, 'epoch = 4')
-  get_datas(0, 1, 'epoch = 5')
-  get_datas(0, 1, 'epoch = 6')
-  get_datas(0, 1, 'epoch = 7')
-  get_datas(0, 1, 'epoch = 8')
-  get_datas(0, 1, 'epoch = 9')
-  get_datas(0, 1, 'epoch = 10')
+  get_datas(1, 1, 'epoch = 1')
+  get_datas(2, 1, 'epoch = 1')
+  get_datas(3, 1, 'epoch = 1')
+  get_datas(4, 1, 'epoch = 1')
