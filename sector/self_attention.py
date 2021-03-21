@@ -78,3 +78,25 @@ class Multihead_SelfAtt(nn.Module):
     res, scores = self.with_score(embs)
     return res
 
+
+class Multihead_Official(nn.Module):
+  def __init__(self, feature, head):
+    super().__init__()
+    self.feature = feature
+    self.head = head
+    self.main = nn.MultiheadAttention(feature, head),
+
+  # return:
+  # results: (seq_len, feature)
+  # scores: (heads, seq_len, seq_len)
+  def with_score(self, embs):
+    embs = embs.view(-1, 1, self.feature)
+    out, scores = self.main(embs)
+    return out.view(-1, self.feature), scores
+
+  # return: (seq_len, feature)
+  def forward(self, embs):
+    embs = embs.view(-1, 1, self.feature)
+    out, scores = self.main(embs)
+    return out.view(-1, self.feature)
+

@@ -32,10 +32,10 @@ def position_matrix(seq_len, feature):
   embs = torch.stack(embs)
   return embs.cuda() if GPU_OK else embs
 
-def request_my_logger(dic, desc = 'No describe'):
-  try:
-    url = "https://hookb.in/b9xlr2GnnjC3DDogQ0jY"
-    dic['desc'] = desc
-    requests.post(url, json=dic)
-  except:
-    print('Something went wrong in request_my_logger()')
+# def request_my_logger(dic, desc = 'No describe'):
+#   try:
+#     url = "https://hookb.in/b9xlr2GnnjC3DDogQ0jY"
+#     dic['desc'] = desc
+#     requests.post(url, json=dic)
+#   except:
+#     print('Something went wrong in request_my_logger()')

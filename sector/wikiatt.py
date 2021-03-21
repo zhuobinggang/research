@@ -1,5 +1,5 @@
 from wiki import *
-from self_attention import Multihead_SelfAtt
+from self_attention import Multihead_SelfAtt, Multihead_Official
 import utils_lite as U
 
 # 可变长inpts (seq_len, ?, 300)
@@ -53,6 +53,7 @@ def init_G(length):
 
 
 class WikiAtt(WikiSector):
+
   def init_hook(self):
     self.feature = 300
     self.max_seq_len = 64
@@ -61,14 +62,18 @@ class WikiAtt(WikiSector):
       nn.LeakyReLU(0.1),
       nn.Linear(int(self.feature / 2), 2),
     )
-    self.sentence_compressor = nn.Sequential(
-      Multihead_SelfAtt(self.feature, 6),
-    )
-    self.sentence_integrator = nn.Sequential(
-      Multihead_SelfAtt(self.feature, 6),
-    )
+    self.init_selfatt_layers()
     self.ember = nn.Embedding(3, self.feature)
     self.pos_matrix = U.position_matrix(self.max_seq_len + 10, self.feature).float()
+
+  def init_selfatt_layers(self):
+    print(f'init_selfatt_layers: with head = {self.head}')
+    self.sentence_compressor = nn.Sequential(
+      Multihead_SelfAtt(self.feature, self.head),
+    )
+    self.sentence_integrator = nn.Sequential(
+      Multihead_SelfAtt(self.feature, self.head),
+    )
 
   def get_pos_encoding(self, emb):
     seq_len = emb.shape[0]
@@ -152,12 +157,30 @@ class WikiAtt(WikiSector):
     return o.argmax(1)
 
 
-# 确认两边长度1,2,3对结果的影响
+# 使用官方self att layer
+class WikiAttOfficial(WikiAtt):
+  def init_selfatt_layers(self):
+    print(f'init_selfatt_layers: with head = {self.head}')
+    self.sentence_compressor = nn.Sequential(
+      Multihead_Official(self.feature, self.head),
+    )
+    self.sentence_integrator = nn.Sequential(
+      Multihead_Official(self.feature, self.head),
+    )
+
+
+
+# 确认单层selfatt多少个epoch能够交汇
 def run():
   init_G(2)
-  G['m'] = m = WikiAtt(hidden_size = 256)
-  get_datas(0, 1, 'epoch = 1')
-  get_datas(1, 1, 'epoch = 1')
-  get_datas(2, 1, 'epoch = 1')
-  get_datas(3, 1, 'epoch = 1')
-  get_datas(4, 1, 'epoch = 1')
+  head = 6
+  for i in range(2):
+    G['m'] = m = WikiAtt(hidden_size = 256, head=head)
+    get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
+  for i in range(2):
+    G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
+    get_datas(i, 1, f'WikiAttOfficial epoch = {i}, head = {head}')
+  head = 4
+  for i in range(2):
+    G['m'] = m = WikiAtt(hidden_size = 256, head=head)
+    get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
