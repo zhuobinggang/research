@@ -97,6 +97,6 @@ class Multihead_Official(nn.Module):
   # return: (seq_len, feature)
   def forward(self, embs):
     embs = embs.view(-1, 1, self.feature)
-    out, scores = self.main(embs)
+    out, scores = self.main(embs, embs, embs)
     return out.view(-1, self.feature)
 
