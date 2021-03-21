@@ -175,10 +175,17 @@ def run():
   # for i in range(2):
   #   G['m'] = m = WikiAtt(hidden_size = 256, head=head)
   #   get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
+  # for i in range(2):
+  #   G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
+  #   get_datas(i, 1, f'WikiAttOfficial epoch = {i}, head = {head}')
+  head = 4
+  # for i in range(2):
+  #   G['m'] = m = WikiAtt(hidden_size = 256, head=head)
+  #   get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
   for i in range(2):
     G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
     get_datas(i, 1, f'WikiAttOfficial epoch = {i}, head = {head}')
-  head = 4
+  head = 1
   for i in range(2):
-    G['m'] = m = WikiAtt(hidden_size = 256, head=head)
-    get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
+    G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
+    get_datas(i + 10, 1, f'WikiAttOfficial epoch = {i}, head = {head}')
