@@ -47,9 +47,10 @@ def dld(ss_len = 2, max_len = 64):
   return Loader_Var_Len(ds, max_len)
 
 def init_G(length):
-  G['ld'] = ld(ss_len = length, max_len = 64)
+  G['ld'] = the_ld = ld(ss_len = length, max_len = 64)
   G['testld'] = tld(ss_len = length, max_len = 64)
   G['devld'] = dld(ss_len = length, max_len = 64)
+  print(f'Init loaders with length={the_ld.ss_len}')
 
 
 class WikiAtt(WikiSector):
