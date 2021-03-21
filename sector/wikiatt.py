@@ -63,6 +63,7 @@ class WikiAtt(WikiSector):
       nn.Linear(int(self.feature / 2), 2),
     )
     self.init_selfatt_layers()
+    self.init_working_memory()
     self.ember = nn.Embedding(3, self.feature)
     self.pos_matrix = U.position_matrix(self.max_seq_len + 10, self.feature).float()
 
@@ -182,10 +183,7 @@ def run():
   # for i in range(2):
   #   G['m'] = m = WikiAtt(hidden_size = 256, head=head)
   #   get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
-  for i in range(2):
+  head = 10
+  for i in range(1):
     G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
     get_datas(i, 1, f'WikiAttOfficial epoch = {i}, head = {head}')
-  head = 1
-  for i in range(2):
-    G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
-    get_datas(i + 10, 1, f'WikiAttOfficial epoch = {i}, head = {head}')

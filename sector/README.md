@@ -38,8 +38,10 @@ Setting:
   - [X] # length = 6:6, weight = 1:1, head = 8
 - [X] #15 Memnet
   - [X] 1:1, mem length = 5, no pop last
-- [ ] #16 Wiki2vec based Memnet
+- [X] #16 Wiki2vec based Memnet
   - [X] Wiki2vec (length = 1:1)
+- [X] #17 Attention & wiki2vec based sector (从结论来说，head很重要，1个头没办法converge，4个头效果较差，6个头能够匹敌RNN; 然后自己手写的TF比起official差上2个点，以后用official即可)
+  - [ ] 10个头试试
 
 #### 分析
 
