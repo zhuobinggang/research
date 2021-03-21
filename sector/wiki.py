@@ -135,8 +135,9 @@ def dld(ss_len = 2, max_len = 64):
 
 
 class WikiSector(nn.Module):
-  def __init__(self, hidden_size = 256, weight_one = 1,  head = 8, dropout=0):
+  def __init__(self, hidden_size = 256, weight_one = 1,  head = 8, dropout=0, memory_size = 5):
     super().__init__()
+    self.memory_size = memory_size
     self.max_memory_batch = 6
     self.hidden_size = hidden_size
     self.head = head
