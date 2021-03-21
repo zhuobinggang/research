@@ -84,7 +84,7 @@ class Multihead_Official(nn.Module):
     super().__init__()
     self.feature = feature
     self.head = head
-    self.main = nn.MultiheadAttention(feature, head),
+    self.main = nn.MultiheadAttention(feature, head)
 
   # return:
   # results: (seq_len, feature)

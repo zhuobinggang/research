@@ -168,15 +168,13 @@ class WikiAttOfficial(WikiAtt):
       Multihead_Official(self.feature, self.head),
     )
 
-
-
 # 确认单层selfatt多少个epoch能够交汇
 def run():
   init_G(2)
   head = 6
-  for i in range(2):
-    G['m'] = m = WikiAtt(hidden_size = 256, head=head)
-    get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
+  # for i in range(2):
+  #   G['m'] = m = WikiAtt(hidden_size = 256, head=head)
+  #   get_datas(i, 1, f'WikiAtt epoch = {i}, head = {head}')
   for i in range(2):
     G['m'] = m = WikiAttOfficial(hidden_size = 256, head=head)
     get_datas(i, 1, f'WikiAttOfficial epoch = {i}, head = {head}')
