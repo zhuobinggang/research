@@ -90,7 +90,7 @@ class AttMemNet(WikiAttOfficial):
     self.print_train_info(o, label, -1)
     return o.argmax(1)
 
-def AttMemNet_Parameter1(AttMemNet):
+class AttMemNet_Parameter1(AttMemNet):
   def init_selfatt_layers(self):
     print(f'双层sentence compressor')
     self.sentence_compressor = nn.Sequential(
@@ -99,7 +99,7 @@ def AttMemNet_Parameter1(AttMemNet):
     )
     self.sentence_integrator = Multihead_Official_Scores(self.feature, self.head)
 
-def AttMemNet_Parameter2(AttMemNet):
+class AttMemNet_Parameter2(AttMemNet):
   def init_selfatt_layers(self):
     print(f'双层sentence integrator')
     self.sentence_compressor = Multihead_Official(self.feature, self.head)
