@@ -90,27 +90,37 @@ class AttMemNet(WikiAttOfficial):
     self.print_train_info(o, label, -1)
     return o.argmax(1)
 
+def AttMemNet_Parameter1(AttMemNet):
+  def init_selfatt_layers(self):
+    print(f'双层sentence compressor')
+    self.sentence_compressor = nn.Sequential(
+      Multihead_Official(self.feature, self.head), 
+      Multihead_Official(self.feature, self.head), 
+    )
+    self.sentence_integrator = Multihead_Official_Scores(self.feature, self.head)
+
+def AttMemNet_Parameter2(AttMemNet):
+  def init_selfatt_layers(self):
+    print(f'双层sentence integrator')
+    self.sentence_compressor = Multihead_Official(self.feature, self.head)
+    self.sentence_integrator = nn.Sequential(
+      Multihead_Official(self.feature, self.head), 
+      Multihead_Official_Scores(self.feature, self.head)
+    )
 
 def run():
-  init_G(4)
+  init_G(2)
   head = 6
   size = 5
-  for i in range(9):
-    G['m'] = m = AttMemNet(hidden_size = 256, head=head, memory_size = size)
-    get_datas(i, 1, f'WikiAttMem length=2:2 epoch = {i}, head = {head}, size = {size}')
-  size = 0
   for i in range(5):
-    G['m'] = m = AttMemNet(hidden_size = 256, head=head, memory_size = size)
-    get_datas(i + 10, 1, f'WikiAttMem length=2:2 epoch = {i}, head = {head}, size = {size}')
-  size = 2
-  for i in range(5):
-    G['m'] = m = AttMemNet(hidden_size = 256, head=head, memory_size = size)
-    get_datas(i + 20, 1, f'WikiAttMem length=2:2 epoch = {i}, head = {head}, size = {size}')
+    G['m'] = m = AttMemNet_Parameter2(hidden_size = 256, head=head, memory_size = size)
+    G[f'm1_epoch{i}'] = m
+    get_datas(i, 1, f'双层sentence integrator length=1:1 epoch = {i}, head = {head}, size = {size}')
 
-  init_G(2)
-  size = 5
-  for i in range(9):
-    G['m'] = m = AttMemNet(hidden_size = 256, head=head, memory_size = size)
-    get_datas(i + 30, 1, f'WikiAttMem length=1:1 epoch = {i}, head = {head}, size = {size}')
+  for i in range(5):
+    G['m'] = m = AttMemNet_Parameter1(hidden_size = 256, head=head, memory_size = size)
+    G[f'm2_epoch{i}'] = m
+    get_datas(i, 1, f'双层sentence compressor length=1:1 epoch = {i}, head = {head}, size = {size}')
+
 
 
