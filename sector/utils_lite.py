@@ -1,6 +1,9 @@
 import numpy as np
 import torch
 import requests
+import matplotlib.pyplot as plt
+import seaborn as sns # for data visualization
+plt.rcParams['font.family'] = 'Noto Sans CJK JP'
 t = torch
 GPU_OK = t.cuda.is_available()
 
@@ -39,3 +42,33 @@ def position_matrix(seq_len, feature):
 #     requests.post(url, json=dic)
 #   except:
 #     print('Something went wrong in request_my_logger()')
+
+
+# head_scores: (batch, head, seq_len, seq_len)
+# info: (seq_len)
+def draw_head_attention(head_scores, info, cls_pos = 0, path='dd.png'):
+  mat = []
+  head_scores = head_scores[0]
+  head, seq_len, _ = head_scores.shape
+  avg_scores = head_scores.sum(dim=0) / head # (seq_len, seq_len)
+  avg_scores = avg_scores[cls_pos] # (seq_len)
+  mat.append(avg_scores)
+  xs = info
+  ys = ['avg']
+  for i in range(head):
+    ys.append(f'head_{i}')
+    score = head_scores[i] # (seq_len, seq_len)
+    score = score[cls_pos] # (seq_len)
+    mat.append(score) 
+  mat = [row.tolist() for row in mat]
+  for row in mat:
+    row.pop(cls_pos)
+  output_heatmap(np.transpose(mat), ys, xs, path)
+
+def output_heatmap(mat, xs, ys, path = 'dd.png'):
+  plt.clf()
+  sns.heatmap(mat, xticklabels=xs, yticklabels=ys)
+  plt.savefig(path)
+
+
+

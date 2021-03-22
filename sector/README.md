@@ -1,6 +1,6 @@
 # 新的规划
 
-实验了wiki2vec & attention memnet based sector
+## 实验了wiki2vec & attention memnet based sector
 
 ### 首先作为baseline的2:2 & 0 memsize
 1. epoch = 0时候f1为0.51左右，还没有训练好
@@ -11,5 +11,23 @@
 ### 2:2 & memsize = 5效果正常水准
 ### 2:2 & memsize = 2效果正常水准
 
+## 试验了双层sentence compressor & 双层sentence integrator
+
+性能不升反降
 
 
+## 对分割进行分析
+
+使用方法:
+
+```py
+from wikiattmem import *
+import utils_lite as U
+m = AttMemNet(head = 6, memory_size = 0)
+inpts = labels = None # Get inpts & labels by yourself
+o, sentence_scores, word_scores_per_sentence, memory_info = m.dry_run(inpts, labels, checking = True)
+pos = 0 # Sentence index
+U.draw_head_attention(word_scores_per_sentence[pos], memory_info[pos], path='out.png')
+```
+
+![heatmap](out.png)
