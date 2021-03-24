@@ -56,6 +56,13 @@ class BERT_LONG_TF(BERT_LONG_DEPEND):
     ss = self.self_att_layer(ss) # (sentence_size, 1, 768)
     return ss.view(seq_len, feature)
 
+  def cal_loss(self, out, label):
+    assert len(label.shape) == 1
+    assert len(out.shape) == 2
+    assert (out.shape[0] == 1 and out.shape[1] == 2)
+    loss = self.CEL(o, label)
+    return loss
+
   # inpts: token_ids, attend_marks
   # token_ids: (sentence_size, max_id_len)
   # labels: (sentence_size), zero/one
@@ -75,7 +82,7 @@ class BERT_LONG_TF(BERT_LONG_DEPEND):
     o = o[pos] # (768)
     o = o.view(1, self.bert_size) # (1, 768)
     o = self.classifier(o) # (1, 2)
-    loss = self.CEL(o, label)
+    loss = self.cal_loss(o, label)
 
     self.zero_grad()
     loss.backward()
@@ -132,6 +139,58 @@ class BERT_LONG_TF_POS(BERT_LONG_TF):
     ss = self.self_att_layer(ss) # (seq_len, feature)
     return ss
 
+class BERT_LONG_TF_POS_FL(BERT_LONG_TF_POS):
+  def init_hook(self):
+    self.fl_rate = 5
+    self.feature = self.bert_size
+    self.self_att_layer = Multihead_Official(feature = self.feature, head = self.head)
+    print(f'Init BERT_LONG_TF_POS with head = {self.head}')
+    self.classifier = nn.Sequential( # (1, 768) => (1, 2)
+      nn.Linear(self.bert_size, 1), # NOTE: 只输出一个概率
+      nn.Sigmoid()
+    )
+    self.CEL = nn.CrossEntropyLoss()
+    # self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 4])) # LSTM比较难训练，试着
+    self.pos_matrix = utils_lite.position_matrix(99, self.feature).float()
+
+  def cal_loss(self, out, label):
+    assert len(label.shape) == 1
+    assert len(out.shape) == 2
+    assert (out.shape[0] == 1 and out.shape[1] == 1)
+    # loss = self.CEL(o, label)
+    pt = out if (label == 1) else (1 - out)
+    loss = (-1) * t.log(pt) * t.pow((1 - pt), self.fl_rate)
+    return loss
+
+  @t.no_grad()
+  def dry_run(self, inpts, labels=None):
+    token_ids, attend_marks = inpts # token_ids = attend_marks: (sentence_size, max_id_len)
+    # labels = self.preprocess_labels(labels)
+    label, pos = labels # LongTensor([label/pos])
+    pos = pos.item()
+    if GPU_OK:
+      token_ids = token_ids.cuda()
+      attend_marks = attend_marks.cuda()
+      label = label.cuda()
+    embs = self.get_batch_cls_emb(token_ids, attend_marks) # (sentence_size, 768)
+    embs = self.processed_embs(embs) # (sentence_size, 768)
+
+    o = self.integrate_sentences_info(embs) # (sentence_size, 768)
+    o = o[pos] # (768)
+    o = o.view(1, self.bert_size) # (1, 768)
+    o = self.classifier(o) # (1, 1)
+    self.print_train_info(o, label, -1)
+    result = 0 if o < 0.5 else 1
+    return result
+
+  def print_train_info(self, o, labels=None, loss=-1):
+    if self.verbose:
+      result = 0 if o < 0.5 else 1
+      if labels is None:
+        labels = t.LongTensor([-1])
+      print(f'Want: {labels.tolist()} Got: {result} Loss: {loss} ')
+  
+
 
 # =============== 
 
@@ -156,9 +215,27 @@ def get_datas(index, epoch, desc):
 
 def run_at_night_15():
    init_G(2)
-   G['m'] = m = BERT_LONG_TF_POS(head=8)
-   get_datas(0, 2, f'length = 1:1, weight = 1:1, head = 8')
+   G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
+   m.fl_rate = 5
+   base = 0
+   get_datas(0, 2, f'FL rate = {m.fl_rate}, epoch = 2, length = 1:1, weight = 1:1, head = 8')
+   get_datas(1, 1, f'FL rate = {m.fl_rate}, epoch = 3, length = 1:1, weight = 1:1, head = 8')
+   get_datas(2, 1, f'FL rate = {m.fl_rate}, epoch = 4, length = 1:1, weight = 1:1, head = 8')
 
    init_G(4)
-   G['m'] = m = BERT_LONG_TF_POS(head=8)
-   get_datas(1, 2, f'length = 2:2, weight = 1:1, head = 8')
+   G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
+   m.fl_rate = 5
+   base = 10
+   get_datas(0 + base, 2, f'FL rate = {m.fl_rate}, epoch = 2, length = 2:2, weight = 1:1, head = 8')
+   get_datas(1 + base, 1, f'FL rate = {m.fl_rate}, epoch = 3, length = 2:2, weight = 1:1, head = 8')
+   get_datas(2 + base, 1, f'FL rate = {m.fl_rate}, epoch = 4, length = 2:2, weight = 1:1, head = 8')
+
+   init_G(4)
+   G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
+   m.fl_rate = 2
+   base = 20
+   get_datas(0 + base, 2, f'FL rate = {m.fl_rate}, epoch = 2, length = 2:2, weight = 1:1, head = 8')
+   get_datas(1 + base, 1, f'FL rate = {m.fl_rate}, epoch = 3, length = 2:2, weight = 1:1, head = 8')
+   get_datas(2 + base, 1, f'FL rate = {m.fl_rate}, epoch = 4, length = 2:2, weight = 1:1, head = 8')
+
+   
