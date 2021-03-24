@@ -3,8 +3,8 @@ import unidic_lite
 import MeCab
 
 tagger = MeCab.Tagger(unidic_lite.DICDIR)
-MODEL_FILE = '/home/taku/projects/jawiki_20180420_300d.pkl'
-# MODEL_FILE = '/usr01/ZhuoBinggang/jawiki_20180420_300d.pkl'
+# MODEL_FILE = '/home/taku/projects/jawiki_20180420_300d.pkl'
+MODEL_FILE = '/usr01/ZhuoBinggang/jawiki_20180420_300d.pkl'
 wiki2vec = Wikipedia2Vec.load(MODEL_FILE)
 
 def sentence_to_words(s, max_len = 512):
