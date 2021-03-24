@@ -74,6 +74,13 @@ class AttMemNet(WikiAttOfficial):
       # print(len(self.working_memory))
     if self.memory_checking:
       print([round(item, 5) for item in score.tolist()])
+
+  def cal_loss(self, out, label):
+    assert len(label.shape) == 1
+    assert len(out.shape) == 2
+    assert (out.shape[0] == 1 and out.shape[1] == 2)
+    loss = self.CEL(o, label)
+    return loss
     
   # inpts: ss_tensor, ss
   # ss_tensor: [seq_len, (?, feature)], 不定长复数句子
@@ -97,7 +104,7 @@ class AttMemNet(WikiAttOfficial):
     o = out[pos] # (feature)
     o = o.view(1, self.feature)
     o = self.classifier(o) # (1, 2)
-    loss = self.CEL(o, label)
+    loss = self.cal_loss(o, label)
     self.zero_grad()
     loss.backward()
     self.optim.step()
@@ -161,18 +168,72 @@ class AttMemNet_Parameter2(AttMemNet):
     )
 
 
+class AttMemNet_FL(AttMemNet):
+  def init_hook(self):
+    self.feature = 300
+    self.fl_rate = 5
+    self.max_seq_len = 64
+    self.classifier = nn.Sequential(
+      nn.Linear(self.feature, int(self.feature / 2)),
+      nn.LeakyReLU(0.1),
+      nn.Linear(int(self.feature / 2), 1),
+      nn.Sigmoid()
+    )
+    self.init_selfatt_layers()
+    self.init_working_memory()
+    self.ember = nn.Embedding(3, self.feature)
+    self.pos_matrix = U.position_matrix(self.max_seq_len + 10, self.feature).float()
+
+  def cal_loss(self, out, label):
+    assert len(label.shape) == 1
+    assert len(out.shape) == 2
+    assert (out.shape[0] == 1 and out.shape[1] == 1)
+    # loss = self.CEL(o, label)
+    pt = out if (label == 1) else (1 - out)
+    loss = (-1) * t.log(pt) * t.pow((1 - pt), self.fl_rate)
+    return loss
+
+  @t.no_grad()
+  def dry_run(self, inpts, labels=None, checking = False):
+    label, pos = labels # (1), LongTensor
+    pos = pos.item()
+    if GPU_OK:
+      inpts = [item.cuda() for item in inpts]
+      label = label.cuda()
+    # cat with working memory
+    seq_len = len(inpts)
+    self.cat2memory(inpts)
+    out, sentence_scores, word_scores_per_sentence = self.memory_self_attention() # (seq_len + current_memory_size, feature), (seq_len + current_memory_size, seq_len + current_memory_size)
+    out = out[-seq_len:] # 剪掉记忆储存部分
+    scores = self.adapt_multi_head_scores(sentence_scores) # (seq_len + current_memory_size, seq_len + current_memory_size)
+    scores = scores[-seq_len:]
+    memory_info_copy = self.working_memory_info.copy() if checking else None
+    self.memory_arrange(scores[pos])
+    o = out[pos] # (feature)
+    o = o.view(1, self.feature)
+    o = self.classifier(o) # (1, 1)
+    self.print_train_info(o, label, -1)
+    result = 0 if o < 0.5 else 1
+    if checking:
+      return result, sentence_scores, word_scores_per_sentence, memory_info_copy
+    else:
+      return result
+
+  def print_train_info(self, o, labels=None, loss=-1):
+    if self.verbose:
+      result = 0 if o < 0.5 else 1
+      if labels is None:
+        labels = t.LongTensor([-1])
+      print(f'Want: {labels.tolist()} Got: {result} Loss: {loss} ')
+ 
+
+
+
 def run():
   init_G(2)
   head = 6
-  size = 5
-  for i in range(5):
-    G['m'] = m = AttMemNet_Parameter2(hidden_size = 256, head=head, memory_size = size)
-    G[f'm1_epoch{i}'] = m
-    get_datas(i, 1, f'双层sentence integrator length=1:1 epoch = {i}, head = {head}, size = {size}')
-
-  for i in range(5):
-    G['m'] = m = AttMemNet_Parameter1(hidden_size = 256, head=head, memory_size = size)
-    G[f'm2_epoch{i}'] = m
-    get_datas(i, 1, f'双层sentence compressor length=1:1 epoch = {i}, head = {head}, size = {size}')
-
+  memsize = 0
+  G['m'] = m = AttMemNet_FL(hidden_size = 256, head=head, memory_size = memsize)
+  epochs = 1
+  get_datas(0, epochs, f'FL, length=1:1 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
 
