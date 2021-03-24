@@ -97,6 +97,7 @@ class Multihead_Official(nn.Module):
 
   # return: (seq_len, feature)
   def forward(self, embs):
+    assert len(embs.shape) == 2
     embs = embs.view(-1, 1, self.feature)
     out, scores = self.main(embs, embs, embs)
     return out.view(-1, self.feature)

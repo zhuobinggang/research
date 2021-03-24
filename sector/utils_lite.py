@@ -52,14 +52,15 @@ def draw_head_attention(head_scores, info, cls_pos = 0, path='dd.png'):
   head, seq_len, _ = head_scores.shape
   avg_scores = head_scores.sum(dim=0) / head # (seq_len, seq_len)
   avg_scores = avg_scores[cls_pos] # (seq_len)
-  mat.append(avg_scores)
   xs = info
-  ys = ['avg']
+  ys = []
   for i in range(head):
     ys.append(f'head_{i}')
     score = head_scores[i] # (seq_len, seq_len)
     score = score[cls_pos] # (seq_len)
     mat.append(score) 
+  mat.append(avg_scores)
+  ys += ['avg']
   mat = [row.tolist() for row in mat]
   for row in mat:
     row.pop(cls_pos)
