@@ -93,11 +93,14 @@ class AttMemNet(WikiAttOfficial):
       inpts = [item.cuda() for item in inpts]
       label = label.cuda()
     # cat with working memory
-    seq_len = len(inpts)
+    seq_len = len(inpts[0])
+    current_mem_len = len(self.working_memory)
     self.cat2memory(inpts)
     out, sentence_scores, word_scores_per_sentence = self.memory_self_attention() # (seq_len + current_memory_size, feature), (seq_len + current_memory_size, seq_len + current_memory_size)
+    assert out.shape[0] == current_mem_len + seq_len
     out = out[-seq_len:] # 剪掉记忆储存部分
     scores = self.adapt_multi_head_scores(sentence_scores) # (seq_len + current_memory_size, seq_len + current_memory_size)
+    assert scores.shape[0] == scores.shape[1] == current_mem_len + seq_len 
     scores = scores[-seq_len:]
     memory_info_copy = self.working_memory_info.copy() if checking else None
     self.memory_arrange(scores[pos])
@@ -230,10 +233,13 @@ class AttMemNet_FL(AttMemNet):
 
 
 def run():
-  init_G(2)
+  init_G(4)
   head = 6
   memsize = 0
   G['m'] = m = AttMemNet_FL(hidden_size = 256, head=head, memory_size = memsize)
   epochs = 1
-  get_datas(0, epochs, f'FL, length=1:1 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
+  get_datas(0, epochs, f'FL, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
+  get_datas(1, 1, f'FL, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
+  get_datas(2, 1, f'FL, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
+  get_datas(3, 1, f'FL, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
 
