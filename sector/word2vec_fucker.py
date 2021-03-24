@@ -16,15 +16,23 @@ def sentence_to_words(s, max_len = 512):
     node = node.next
   return [word for word in words if len(word) > 0][:max_len]
 
-def sentence_to_wordvecs(s, max_len = 512):
+def sentence_to_wordvecs(s, max_len = 512, require_words = False):
   words = sentence_to_words(s, max_len)
   vecs = []
+  words_per_sentence = []
   for word in words:
+    current_length = len(vecs)
     try:
       vecs.append(wiki2vec.get_word_vector(word))
     except:
       #print(f'No word vec of {word}')
       pass
-  return vecs
-        
+    if current_length != len(vecs): # 增加了
+      words_per_sentence.append(word)
+    else:
+      pass
+  if require_words:
+    return vecs, words_per_sentence
+  else:
+    return vecs 
 

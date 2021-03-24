@@ -78,16 +78,21 @@ class DatasetPos(Dataset):
     return ss, label, pos_relative
 
 
-def w2v(ss, max_len):
+def w2v(ss, max_len, require_words= False):
   results = []
+  wordss = []
   for s in ss:
-    wordvecs = W.sentence_to_wordvecs(s, max_len)
+    wordvecs, words = W.sentence_to_wordvecs(s, max_len, require_words = True)
+    wordss.append(words)
     if len(wordvecs) > 0:
       results.append(t.tensor(wordvecs))
     else:
       print('Waring: sentence to a empty wordvecs')
       results.append(t.zeros(1, 300))
-  return results
+  if require_words:
+    return results, wordss
+  else:
+    return results
 
 class Loader_Pos():
   def __init__(self, ds, max_len = 64):

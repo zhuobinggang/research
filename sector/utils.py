@@ -237,19 +237,17 @@ def get_test_results_batch(m, testld, logger = print):
 def get_test_results_single_point(m, testld, logger = print):
   targets = []
   results = []
-  counter = 0
   start = time.time()
   length = len(testld.dataset)
   for inpts, labels in testld:
-    counter += inpts[0].shape[0]
     label, pos = labels
-    # logger(f'Testing {counter}/{length}')
     targets.append(label.item())
     # targets.append(label[pos.item()].item())
     results.append(m.dry_run(inpts, labels))
   end = time.time()
   logger(f'Tested! Time cost: {end - start} seconds')
   return results, targets
+
 
 def get_test_results_single_point_v2(m, testld, logger = print):
   targets = []

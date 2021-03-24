@@ -1,6 +1,9 @@
 from csg_exp3 import *
 torch = t
 import requests
+import utils_lite
+R = runner
+from self_attention import Multihead_SelfAtt, Multihead_Official, Multihead_Official_Scores
 
 def request_my_logger(dic, desc = 'No describe'):
   try:
@@ -105,16 +108,29 @@ class BERT_LONG_TF(BERT_LONG_DEPEND):
 
 
 class BERT_LONG_TF_POS(BERT_LONG_TF):
+  def init_hook(self):
+    self.feature = self.bert_size
+    self.self_att_layer = Multihead_Official(feature = self.feature, head = self.head)
+    print(f'Init BERT_LONG_TF_POS with head = {self.head}')
+    self.classifier = nn.Sequential( # (1, 768) => (1, 2)
+      nn.Linear(self.bert_size, 2),
+    )
+    self.CEL = nn.CrossEntropyLoss()
+    # self.CEL = nn.CrossEntropyLoss(t.FloatTensor([1, 4])) # LSTM比较难训练，试着
+    self.pos_matrix = utils_lite.position_matrix(99, self.feature).float()
+
+  def get_pos_encoding(self, emb):
+    seq_len, feature = emb.shape
+    assert feature == self.feature
+    return self.pos_matrix[:seq_len].detach()
+
   # ss: (sentence_size, 768)
   # return: (sentence_size, 768)
   def integrate_sentences_info(self, ss):
     seq_len, feature = ss.shape
-    # NOTE: Add pos
-    pos = position_encoding(ss) # (seq_len, feature)
-    ss = (ss + pos).float()
-    ss = ss.view(seq_len, 1, feature) # (sentence_size, 1, 768)
-    ss = self.self_att_layer(ss) # (sentence_size, 1, 768)
-    return ss.view(seq_len, feature)
+    ss = ss + self.get_pos_encoding(ss) # (seq_len, feature) NOTE: Add pos
+    ss = self.self_att_layer(ss) # (seq_len, feature)
+    return ss
 
 
 # =============== 
@@ -133,44 +149,16 @@ def set_G(m, ld, testld, devld):
 def read_G():
   return G['m'], G['ld'], G['testld'], G['devld']
 
-def get_datas(index, epoch, desc='Nothing'):
-  m, ld, testld, devld = read_G()
-  losses = runner.train_simple(m, ld, epoch) # only one epoch for order matter model
-  G[f'testdic_{index}'] = runner.get_test_result_long(m, testld)
-  G[f'devdic_{index}'] = runner.get_test_result_long(m, devld)
-  request_my_logger(G[f'testdic_{index}'], desc)
+def get_datas(index, epoch, desc):
+  m, ld , testld, devld = read_G()
+  losses = R.get_datas(m, ld, testld, devld, index, epoch, desc)
   return losses
 
-
-# length = 3:3, weight = 1:1, head = 4
-# length = 3:3, weight = 1:1, head = 16
-# length = 3:3, weight = 1:1, head = 24
-# length = 3:3, weight = 1:1, head = 32
-# length = 3:3, weight = 1:1, head = 8, dropout = 0.1
-# length = 4:4, weight = 1:1, head = 8
-# length = 5:5, weight = 1:1, head = 8
-# length = 6:6, weight = 1:1, head = 8
-# 在len=6时候: 1) 测试pos vs no pos的性能差异；2) 对比head=8时候和head=1时候的性能差异
 def run_at_night_15():
-   init_G(6)
-
-   # length = 3:3, weight = 1:1, head = 4
-   G['m'] = m = BERT_LONG_TF_POS(head=4)
-   get_datas(0, 2, 'length = 3:3, weight = 1:1, head = 4')
-
-   # length = 3:3, weight = 1:1, head = 8
+   init_G(2)
    G['m'] = m = BERT_LONG_TF_POS(head=8)
-   get_datas(1, 2, 'length = 3:3, weight = 1:1, head = 8')
+   get_datas(0, 2, f'length = 1:1, weight = 1:1, head = 8')
 
-   # length = 3:3, weight = 1:1, head = 16
-   G['m'] = m = BERT_LONG_TF_POS(head=16)
-   get_datas(2, 2, 'length = 3:3, weight = 1:1, head = 16')
-
-   # length = 3:3, weight = 1:1, head = 24
-   G['m'] = m = BERT_LONG_TF_POS(head=24)
-   get_datas(3, 2, 'length = 3:3, weight = 1:1, head = 24')
-
-   # length = 3:3, weight = 1:1, head = 8, dropout = 0.1
-   G['m'] = m = BERT_LONG_TF_POS(head=8, dropout=0.1)
-   get_datas(4, 2, 'length = 3:3, weight = 1:1, head = 8, dropout = 0.1')
-
+   init_G(4)
+   G['m'] = m = BERT_LONG_TF_POS(head=8)
+   get_datas(1, 2, f'length = 2:2, weight = 1:1, head = 8')

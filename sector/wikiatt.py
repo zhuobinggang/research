@@ -24,9 +24,9 @@ class Loader_Var_Len():
     else:
       ss, label, pos_relative = self.ds[self.start]
       self.start += 1
-      ss_tensor = w2v(ss, self.max_len) # (seq_len, ?, 300), list
+      ss_tensor, words_per_sentence = w2v(ss, self.max_len, require_words = True) # (seq_len, ?, 300), list
       # ss_padded = t.nn.utils.rnn.pad_sequence(ss_tensor, True) # (seq_len, max_token, 300)
-      return ss_tensor, (t.LongTensor([label]), t.LongTensor([pos_relative]))
+      return (ss_tensor, words_per_sentence), (t.LongTensor([label]), t.LongTensor([pos_relative]))
 
   def shuffle(self):
     self.ds.shuffle()

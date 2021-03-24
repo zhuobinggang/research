@@ -93,11 +93,11 @@ class Multihead_Official(nn.Module):
   def with_score(self, embs):
     embs = embs.view(-1, 1, self.feature)
     out, scores = self.main(embs, embs, embs)
-    batch, seq_len, _ = scores.shape
-    return out.view(-1, self.feature), scores.view(seq_len, seq_len)
+    return out.view(-1, self.feature), scores
 
   # return: (seq_len, feature)
   def forward(self, embs):
+    assert len(embs.shape) == 2
     embs = embs.view(-1, 1, self.feature)
     out, scores = self.main(embs, embs, embs)
     return out.view(-1, self.feature)
@@ -108,3 +108,14 @@ class Multihead_Official_Scores(Multihead_Official):
   def forward(self, embs):
     return self.with_score(embs)
 
+
+class Multihead_Official_Scores_Keep_Head(Multihead_Official_Scores):
+  # return:
+  # results: (seq_len, feature)
+  # scores: (heads, seq_len, seq_len)
+  def with_score(self, embs):
+    embs = embs.view(-1, 1, self.feature)
+    out, scores = self.main(embs, embs, embs)
+    return out.view(-1, self.feature), scores
+
+  
