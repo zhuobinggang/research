@@ -204,17 +204,20 @@ class AttMemNet_FL(AttMemNet):
       inpts = [item.cuda() for item in inpts]
       label = label.cuda()
     # cat with working memory
-    seq_len = len(inpts)
+    seq_len = len(inpts[0])
+    current_mem_len = len(self.working_memory)
     self.cat2memory(inpts)
     out, sentence_scores, word_scores_per_sentence = self.memory_self_attention() # (seq_len + current_memory_size, feature), (seq_len + current_memory_size, seq_len + current_memory_size)
+    assert out.shape[0] == current_mem_len + seq_len
     out = out[-seq_len:] # 剪掉记忆储存部分
     scores = self.adapt_multi_head_scores(sentence_scores) # (seq_len + current_memory_size, seq_len + current_memory_size)
+    assert scores.shape[0] == scores.shape[1] == current_mem_len + seq_len 
     scores = scores[-seq_len:]
     memory_info_copy = self.working_memory_info.copy() if checking else None
     self.memory_arrange(scores[pos])
     o = out[pos] # (feature)
     o = o.view(1, self.feature)
-    o = self.classifier(o) # (1, 1)
+    o = self.classifier(o) # (1, 2)
     self.print_train_info(o, label, -1)
     result = 0 if o < 0.5 else 1
     if checking:
@@ -229,8 +232,6 @@ class AttMemNet_FL(AttMemNet):
         labels = t.LongTensor([-1])
       print(f'Want: {labels.tolist()} Got: {result} Loss: {loss} ')
  
-
-
 
 def run():
   init_G(4)

@@ -15,7 +15,11 @@ def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing'):
   losses = train_simple(m, ld, epoch) # only one epoch for order matter model
   G[f'testdic_{index}'] = get_test_result_long(m, testld)
   G[f'devdic_{index}'] = get_test_result_long(m, devld)
-  request_my_logger(G[f'testdic_{index}'], desc)
+  dic = {
+    testdic: G[f'testdic_{index}'],
+    devdic: G[f'devdic_{index}'],
+  }
+  request_my_logger(dic, desc)
   return losses
 
 def request_my_logger(dic, desc = 'No describe'):
