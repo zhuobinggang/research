@@ -214,28 +214,31 @@ def get_datas(index, epoch, desc):
   return losses
 
 def run_at_night_15():
-   init_G(2)
+  init_G(2)
+  base = 10
+  for i in range(5):
+   G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
+   m.fl_rate = 5
+   get_datas(i + base, 2, f'BASELINE rate = {m.fl_rate}')
+
+  init_G(4)
+  base = 20
+  for i in range(5):
    G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
    m.fl_rate = 5
    base = 0
-   get_datas(0, 2, f'FL rate = {m.fl_rate}, epoch = 2, length = 1:1, weight = 1:1, head = 8')
-   get_datas(1, 1, f'FL rate = {m.fl_rate}, epoch = 3, length = 1:1, weight = 1:1, head = 8')
-   get_datas(2, 1, f'FL rate = {m.fl_rate}, epoch = 4, length = 1:1, weight = 1:1, head = 8')
+   get_datas(i + base, 2, f'加大长度2:2 rate = {m.fl_rate}')
 
-   init_G(4)
+  init_G(2)
+  base = 30
+  for i in range(5):
+   G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
+   m.fl_rate = 6 
+   get_datas(i + base, 2, f'1:1但是提升衰减率rate = {m.fl_rate}')
+
+  init_G(6)
+  base = 40
+  for i in range(5):
    G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
    m.fl_rate = 5
-   base = 10
-   get_datas(0 + base, 2, f'FL rate = {m.fl_rate}, epoch = 2, length = 2:2, weight = 1:1, head = 8')
-   get_datas(1 + base, 1, f'FL rate = {m.fl_rate}, epoch = 3, length = 2:2, weight = 1:1, head = 8')
-   get_datas(2 + base, 1, f'FL rate = {m.fl_rate}, epoch = 4, length = 2:2, weight = 1:1, head = 8')
-
-   init_G(4)
-   G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
-   m.fl_rate = 2
-   base = 20
-   get_datas(0 + base, 2, f'FL rate = {m.fl_rate}, epoch = 2, length = 2:2, weight = 1:1, head = 8')
-   get_datas(1 + base, 1, f'FL rate = {m.fl_rate}, epoch = 3, length = 2:2, weight = 1:1, head = 8')
-   get_datas(2 + base, 1, f'FL rate = {m.fl_rate}, epoch = 4, length = 2:2, weight = 1:1, head = 8')
-
-   
+   get_datas(i + base, 2, f'加大长度3:3 rate = {m.fl_rate}')
