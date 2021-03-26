@@ -45,80 +45,65 @@ def read_devs():
 def no_indicator(ss):
   return [s.replace('\u3000', '') for s in ss]
 
+
 class Dataset():
-  def __init__(self, half_window_size = 1):
+  def __init__(self, ss_len = 8, max_ids = 64):
+    super().__init__()
+    self.ss_len = ss_len
+    self.max_ids = max_ids
     self.init_datas_hook()
-    self.half_window_size = half_window_size
+    self.init_hook()
+    self.start = 0
+
+  def init_hook(self):
+    pass
 
   def init_datas_hook(self):
     self.datas = []
 
-  def __len__(self):
-    return len(self.datas) - 1
+  def set_datas(self, datas):
+    self.datas = datas
 
-  def __getitem__(self, idx):
-    if idx >= len(self.datas) - 1:
-      print(f'Warning: Should not get idx={idx}')
-      return None
-    left = []
-    start = max(0, idx + 1 - self.half_window_size)
-    end = min(idx + 1, len(self.datas))
+  def is_begining(self, s):
+    return s.startswith('\u3000')
+        
+  def no_indicator(self, ss):
+    return [s.replace('\u3000', '') for s in ss]
+
+  # 作为最底层的方法，需要保留所有分割信息
+  def get_ss_and_labels(self, start): 
+    end = min(start + self.ss_len, len(self.datas))
+    start = max(start, 0)
+    ss = []
+    labels = []
     for i in range(start, end):
-      left.append(self.datas[i])
-    right = []
-    start = max(0, idx + 1)
-    end = min(idx + 1 + self.half_window_size, len(self.datas))
-    for i in range(start, end):
-      right.append(self.datas[i])
-    label = 1 if right[0].startswith('\u3000') else 0
-    left = no_indicator(left)
-    right = no_indicator(right)
-    return (left,right), label
+      s = self.datas[i]
+      labels.append(1 if self.is_begining(s) else 0)
+      ss.append(s)
+    ss = self.no_indicator(ss)
+    return ss, labels
+
+  def __getitem__(self, start):
+    return self.get_ss_and_labels(start)
+
+  def __len__(self):
+    return len(self.datas)
 
   def shuffle(self):
     random.shuffle(self.datas)
 
-class Train_DS(Dataset):
-  def init_datas_hook(self):
-    self.datas = read_trains()
 
-class Test_DS(Dataset):
-  def init_datas_hook(self):
-    self.datas = read_tests()
+def train_dataset(ss_len, max_ids):
+  ds = Dataset(ss_len = ss_len, max_ids = max_ids)
+  ds.set_datas(read_trains())
+  return ds
 
-class Dev_DS(Dataset):
-  def init_datas_hook(self):
-    self.datas = read_devs()
+def test_dataset(ss_len, max_ids):
+  ds = Dataset(ss_len = ss_len, max_ids = max_ids)
+  ds.set_datas(read_tests())
+  return ds
 
-class Train_DS_Mini(Dataset):
-  def init_datas_hook(self):
-    self.datas = read_trains()[:100]
-
-class Test_DS_Mini(Dataset):
-  def init_datas_hook(self):
-    self.datas = read_tests()[:50]
-
-
-class Loader():
-  def __init__(self, ds, batch_size = 4):
-    self.start = 0
-    self.ds = ds
-    self.batch_size = batch_size
-
-  def __iter__(self):
-    return self
-
-  def __next__(self):
-    if self.start == len(self.ds):
-      self.start = 0
-      raise StopIteration()
-    results = []
-    end = min(self.start + self.batch_size, len(self.ds))
-    for i in range(self.start, end):
-      results.append(self.ds[i])
-    self.start = end
-    return [d[0] for d in results], [d[1] for d in results]
-
-  def shuffle(self):
-    self.ds.shuffle()
-
+def dev_dataset(ss_len, max_ids):
+  ds = Dataset(ss_len = ss_len, max_ids = max_ids)
+  ds.set_datas(read_devs())
+  return ds

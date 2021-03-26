@@ -16,8 +16,8 @@ def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing'):
   G[f'testdic_{index}'] = get_test_result_long(m, testld)
   G[f'devdic_{index}'] = get_test_result_long(m, devld)
   dic = {
-    testdic: G[f'testdic_{index}'],
-    devdic: G[f'devdic_{index}'],
+    'testdic': G[f'testdic_{index}'],
+    'devdic': G[f'devdic_{index}'],
   }
   request_my_logger(dic, desc)
   return losses
