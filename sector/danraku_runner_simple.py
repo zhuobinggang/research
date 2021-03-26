@@ -24,7 +24,7 @@ def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing'):
 
 def request_my_logger(dic, desc = 'No describe'):
   try:
-    url = "https://hookb.in/LgPbZQ7qyBuWkkrayMkX"
+    url = "https://hookb.in/7Zj8RbMaeKFa99D3RV1Z"
     dic['desc'] = desc
     requests.post(url, json=dic)
   except:

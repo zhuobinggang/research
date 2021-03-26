@@ -126,7 +126,7 @@ class Model_Fuck(nn.Module):
       left, right = get_left_right_by_ss_pos(ss, pos)
       emb1 = B.compress_left_get_embs(self.bert, self.toker, left) # (seq_len, 784)
       emb2 = B.compress_right_get_embs(self.bert, self.toker, right) # (seq_len, 784)
-      print(f'{emb1.shape[0]}, {emb2.shape[0]}')
+      # print(f'{emb1.shape[0]}, {emb2.shape[0]}')
       assert emb1.shape[0] == emb2.shape[0]
       mean = (emb1 + emb2) / 2 # (seq_len, 784)
       pooled = mean.mean(0) # (784)
@@ -241,3 +241,15 @@ def run_test():
   G['devld'].ds.datas = G['devld'].ds.datas[:15]
   G['m'] = m = Model_Fuck()
   get_datas(0, 1, f'试着池化')
+
+def run():
+  init_G()
+  G['m'] = m = Model_Fuck()
+  get_datas(0, 1, f'池化epoch压测: epoch1')
+  get_datas(1, 1, f'池化epoch压测: epoch2')
+  get_datas(2, 1, f'池化epoch压测: epoch3')
+  for i in range(4):
+    base = 10
+    G['m'] = m = Model_Fuck()
+    get_datas(base + i, 2, f'试着池化, 跑四次，每次2epoch')
+
