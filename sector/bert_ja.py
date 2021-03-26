@@ -1,6 +1,7 @@
 from transformers import BertModel, BertJapaneseTokenizer
 from importlib import reload
 import torch as t
+GPU_OK = t.cuda.is_available()
 
 model = None
 tokenizer = None
@@ -45,6 +46,8 @@ def compress_left_get_embs(bert, toker, left):
     seq_len = len(ids) - 2
     ids = t.LongTensor(ids)
     ids = ids.view(1, -1) # (batch_size, sequence_length)
+    if GPU_OK:
+      ids = ids.cuda()
     dic = bert(input_ids = ids, return_dict = True)
     out = dic['last_hidden_state']
     batch, length, hidden_size = out.shape
@@ -58,6 +61,8 @@ def compress_left_get_embs(bert, toker, left):
     rseq_len = len(rids)
     lseq_len = len(lids)
     ids = t.LongTensor(add_special_token_for_ids_pair(toker, lids, rids)).view(1, -1)
+    if GPU_OK:
+      ids = ids.cuda()
     dic = bert(input_ids = ids, return_dict = True)
     out = dic['last_hidden_state']
     batch, length, hidden_size = out.shape
@@ -76,6 +81,8 @@ def compress_right_get_embs(bert, toker, right):
     seq_len = len(ids) - 2
     ids = t.LongTensor(ids)
     ids = ids.view(1, -1) # (batch_size, sequence_length)
+    if GPU_OK:
+      ids = ids.cuda()
     dic = bert(input_ids = ids, return_dict = True)
     out = dic['last_hidden_state']
     batch, length, hidden_size = out.shape
@@ -89,6 +96,8 @@ def compress_right_get_embs(bert, toker, right):
     rseq_len = len(rids)
     lseq_len = len(lids)
     ids = t.LongTensor(add_special_token_for_ids_pair(toker, lids, rids)).view(1, -1)
+    if GPU_OK:
+      ids = ids.cuda()
     dic = bert(input_ids = ids, return_dict = True)
     out = dic['last_hidden_state']
     batch, length, hidden_size = out.shape

@@ -7,6 +7,7 @@ import utils as U
 from importlib import reload
 
 U.init_logger('exp5.log')
+GPU_OK = t.cuda.is_available()
 
 # start ======================= Loader Tested, No Touch =======================
 class Loader():
@@ -132,6 +133,8 @@ class Model_Fuck(nn.Module):
       pooled_embs.append(pooled)
     pooled_embs = t.stack(pooled_embs) # (batch, 784)
     labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
     o = self.classifier(pooled_embs) # (batch, 2)
     loss = self.CEL(o, labels)
     self.zero_grad()
@@ -155,6 +158,8 @@ class Model_Fuck(nn.Module):
       pooled_embs.append(pooled)
     pooled_embs = t.stack(pooled_embs) # (batch, 784)
     labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
     o = self.classifier(pooled_embs) # (batch, 2)
     self.print_train_info(o, labels, -1)
     return o.argmax(1), labels
