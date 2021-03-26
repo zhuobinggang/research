@@ -216,14 +216,14 @@ def get_datas(index, epoch, desc):
 def run_at_night_15():
   init_G(2)
   base = 10
-  for i in range(5):
+  for i in range(3):
    G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
    m.fl_rate = 5
    get_datas(i + base, 2, f'BASELINE rate = {m.fl_rate}')
 
   init_G(4)
   base = 20
-  for i in range(5):
+  for i in range(3):
    G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
    m.fl_rate = 5
    base = 0
@@ -231,14 +231,14 @@ def run_at_night_15():
 
   init_G(2)
   base = 30
-  for i in range(5):
+  for i in range(3):
    G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
    m.fl_rate = 6 
    get_datas(i + base, 2, f'1:1但是提升衰减率rate = {m.fl_rate}')
 
   init_G(6)
   base = 40
-  for i in range(5):
+  for i in range(3):
    G['m'] = m = BERT_LONG_TF_POS_FL(head=8)
    m.fl_rate = 5
    get_datas(i + base, 2, f'加大长度3:3 rate = {m.fl_rate}')
