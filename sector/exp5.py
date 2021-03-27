@@ -69,11 +69,19 @@ def handle_mass(mass):
     pos.append(p)
   return ss, labels, pos
 
-def get_left_right_by_ss_pos(ss, pos):
-  left = [ss[pos - 1], ss[pos]] if pos > 0 else [ss[pos]]
-  right = [ss[pos], ss[pos + 1]] if pos < len(ss) - 1 else [ss[pos]]
+def get_left_right_by_ss_pos(ss, pos, distant = 1):
+  # left = [ss[pos - 1], ss[pos]] if pos > 0 else [ss[pos]]
+  left_index = pos - distant
+  if left_index >= 0:
+    left = [ss[left_index], ss[pos]]
+  else:
+    left = [ss[pos]]
+  right_index = pos + distant
+  if right_index <= (len(ss) - 1):
+    right = [ss[pos], ss[right_index]]
+  else:
+    right = [ss[pos]]
   return left, right
- 
 
 class Model_Fuck(nn.Module):
   def __init__(self, weight_one = 1, hidden_size = 256, head = 8, dropout=0):
@@ -164,10 +172,65 @@ class Model_Fuck(nn.Module):
     self.print_train_info(o, labels, -1)
     return o.argmax(1), labels
 
-def init_G():
-  G['ld'] = Loader(ds = data.train_dataset(ss_len = 3, max_ids = 64), half = 1, batch = 4)
-  G['testld'] = Loader(ds = data.test_dataset(ss_len = 3, max_ids = 64), half = 1, batch = 4)
-  G['devld'] = Loader(ds = data.dev_dataset(ss_len = 3, max_ids = 64), half = 1, batch = 4)
+
+class Model_Fuck_2vs2(Model_Fuck):
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    pooled_embs = [] 
+    for ss, pos in zip(sss, poss):
+      left, right = get_left_right_by_ss_pos(ss, pos)
+      emb1 = B.compress_left_get_embs(self.bert, self.toker, left) # (seq_len, 784)
+      emb2 = B.compress_right_get_embs(self.bert, self.toker, right) # (seq_len, 784)
+      left, right = get_left_right_by_ss_pos(ss, pos, distant = 2)
+      emb3 = B.compress_left_get_embs(self.bert, self.toker, left) # (seq_len, 784)
+      emb4 = B.compress_right_get_embs(self.bert, self.toker, right) # (seq_len, 784)
+      # print(f'{emb1.shape[0]}, {emb2.shape[0]}')
+      assert emb1.shape[0] == emb2.shape[0] == emb3.shape[0] == emb4.shape[0]
+      mean = (emb1 + emb2 + emb3 + emb4) / 4 # (seq_len, 784)
+      pooled = mean.mean(0) # (784)
+      pooled_embs.append(pooled)
+    pooled_embs = t.stack(pooled_embs) # (batch, 784)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
+    o = self.classifier(pooled_embs) # (batch, 2)
+    loss = self.CEL(o, labels)
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, labels, loss.detach().item())
+    return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    pooled_embs = [] 
+    for ss, pos in zip(sss, poss):
+      left, right = get_left_right_by_ss_pos(ss, pos)
+      emb1 = B.compress_left_get_embs(self.bert, self.toker, left) # (seq_len, 784)
+      emb2 = B.compress_right_get_embs(self.bert, self.toker, right) # (seq_len, 784)
+      left, right = get_left_right_by_ss_pos(ss, pos, distant = 2)
+      emb3 = B.compress_left_get_embs(self.bert, self.toker, left) # (seq_len, 784)
+      emb4 = B.compress_right_get_embs(self.bert, self.toker, right) # (seq_len, 784)
+      # print(f'{emb1.shape[0]}, {emb2.shape[0]}')
+      assert emb1.shape[0] == emb2.shape[0] == emb3.shape[0] == emb4.shape[0]
+      mean = (emb1 + emb2 + emb3 + emb4) / 4 # (seq_len, 784)
+      pooled = mean.mean(0) # (784)
+      pooled_embs.append(pooled)
+    pooled_embs = t.stack(pooled_embs) # (batch, 784)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
+    o = self.classifier(pooled_embs) # (batch, 2)
+    self.print_train_info(o, labels, -1)
+    return o.argmax(1), labels
+
+def init_G(half = 1):
+  G['ld'] = Loader(ds = data.train_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+  G['testld'] = Loader(ds = data.test_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+  G['devld'] = Loader(ds = data.dev_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
 
 def get_datas(index, epoch, desc):
   return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], G['devld'], desc)
@@ -235,14 +298,26 @@ def get_test_result_dic(m, testld):
   return dic
 
 def run_test():
-  init_G()
+  init_G(2)
   G['ld'].ds.datas = G['ld'].ds.datas[:15]
   G['testld'].ds.datas = G['testld'].ds.datas[:15]
   G['devld'].ds.datas = G['devld'].ds.datas[:15]
-  G['m'] = m = Model_Fuck()
-  get_datas(0, 1, f'试着池化')
+  G['m'] = m = Model_Fuck_2vs2()
+  get_datas(0, 1, f'池化test 2:2')
 
 def run():
+  init_G(2)
+  G['m'] = m = Model_Fuck_2vs2()
+  get_datas(0, 1, f'池化压测 2: 2: epoch0')
+  get_datas(1, 1, f'池化压测 2: 2: epoch1')
+  get_datas(2, 1, f'池化压测 2: 2: epoch2')
+  for i in range(5):
+    base = 10
+    G['m'] = m = Model_Fuck_2vs2()
+    get_datas(base + i, 2, f'池化2:2, 跑5次，每次2epoch')
+
+
+def run_len1():
   init_G()
   G['m'] = m = Model_Fuck()
   get_datas(0, 1, f'池化epoch压测: epoch1')
