@@ -110,6 +110,7 @@ def compress_right_get_embs(bert, toker, right):
 def flatten_num_lists(num_lists):
   return [item for lst in num_lists for item in lst]
 
+# return: (?, 784)
 def compress_by_ss_pos_get_emb(bert, toker, ss, pos):
   idss = [encode_without_special_tokens(toker, s) for s in ss]
   target = idss[pos]
@@ -123,12 +124,13 @@ def compress_by_ss_pos_get_emb(bert, toker, ss, pos):
   batch, length, hidden_size = out.shape
   assert length == len(left) + len(right) + 2
   out = out.view(length, hidden_size)
-  out_right = out[len(left) + 2] # 去掉cls, left, sep
+  out_right = out[len(left) + 2:] # 去掉cls, left, sep
   assert out_right.shape[0] == len(right)
   out_target = out_right[0: len(target)]
   assert out_target.shape[0] == len(target)
   return out_target
 
+# return: (784)
 def compress_by_ss_pos_get_cls(bert, toker, ss, pos):
   idss = [encode_without_special_tokens(toker, s) for s in ss]
   target = idss[pos]
@@ -142,4 +144,21 @@ def compress_by_ss_pos_get_cls(bert, toker, ss, pos):
   batch, length, hidden_size = out.shape
   assert length == len(left) + len(right) + 2
   out = out.view(length, hidden_size)
+  return out[0] # (784)
+
+def compress_by_ss_pos_get_sep(bert, toker, ss, pos):
+  idss = [encode_without_special_tokens(toker, s) for s in ss]
+  target = idss[pos]
+  left = flatten_num_lists(idss[pos - 1: pos])
+  right = flatten_num_lists(idss[pos:])
+  ids = add_special_token_for_ids_pair(toker, left, right)
+  ids = t.LongTensor(ids).view(1, -1)
+  if GPU_OK:
+    ids = ids.cuda()
+  out = bert(input_ids = ids, return_dict = True)['last_hidden_state']
+  batch, length, hidden_size = out.shape
+  assert length == len(left) + len(right) + 2
+  out = out.view(length, hidden_size)
+  out = out[1+len(left):] # [SEP] + right
+  assert out.shape[0] == 1 + len(right)
   return out[0] # (784)

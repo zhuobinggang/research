@@ -58,8 +58,10 @@ class Model_Fuck(nn.Module):
 
   def init_hook(self):
     self.classifier = nn.Sequential(
-      nn.Linear(self.bert_size, 2)
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
     )
+    self.fl_rate = 0
 
   def init_bert(self):
     self.bert = BertModel.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
@@ -74,6 +76,18 @@ class Model_Fuck(nn.Module):
       if labels is None:
         labels = t.LongTensor([-1])
       print(f'Want: {labels.tolist()} Got: {o.argmax(1).tolist()} Loss: {loss} ')
+
+  def cal_loss(self, out, labels):
+    assert len(labels.shape) == 1
+    assert len(out.shape) == 2
+    assert labels.shape[0] == out.shape[0]
+    total = []
+    for o, l in zip(out, labels):
+      pt = o if (l == 1) else (1 - o)
+      loss = (-1) * t.log(pt) * t.pow((1 - pt), self.fl_rate)
+      total.append(loss)
+    total = t.stack(total)
+    return total.sum()
 
   def get_should_update(self):
     return chain(self.bert.parameters(), self.classifier.parameters())
@@ -95,8 +109,8 @@ class Model_Fuck(nn.Module):
     labels = t.LongTensor(labels) # (batch), (0 or 1)
     if GPU_OK:
       labels = labels.cuda()
-    o = self.classifier(pooled_embs) # (batch, 2)
-    loss = self.CEL(o, labels)
+    o = self.classifier(pooled_embs) # (batch, 1)
+    loss = self.cal_loss(o, labels)
     self.zero_grad()
     loss.backward()
     self.optim.step()
@@ -120,10 +134,82 @@ class Model_Fuck(nn.Module):
     labels = t.LongTensor(labels) # (batch), (0 or 1)
     if GPU_OK:
       labels = labels.cuda()
-    o = self.classifier(pooled_embs) # (batch, 2)
+    o = self.classifier(pooled_embs) # (batch, 1)
     self.print_train_info(o, labels, -1)
-    return o.argmax(1), labels
+    return fit_sigmoided_to_label(o), labels
 
+
+# 基于2:1池化使用FL
+class Model_Fuck_FL(Model_Fuck):
+  def init_hook(self):
+    self.classifier = nn.Sequential(
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
+    )
+    self.fl_rate = 0
+
+  def cal_loss(self, out, labels):
+    assert len(labels.shape) == 1
+    assert len(out.shape) == 2
+    assert labels.shape[0] == out.shape[0]
+    total = []
+    for o, l in zip(out, labels):
+      pt = o if (l == 1) else (1 - o)
+      loss = (-1) * t.log(pt) * t.pow((1 - pt), self.fl_rate)
+      total.append(loss)
+    total = t.stack(total)
+    return total.sum()
+
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    pooled_embs = [] 
+    for ss, pos in zip(sss, poss):
+      left, right = get_left_right_by_ss_pos(ss, pos)
+      emb1 = B.compress_left_get_embs(self.bert, self.toker, left) # (seq_len, 784)
+      emb2 = B.compress_right_get_embs(self.bert, self.toker, right) # (seq_len, 784)
+      # print(f'{emb1.shape[0]}, {emb2.shape[0]}')
+      assert emb1.shape[0] == emb2.shape[0]
+      mean = (emb1 + emb2) / 2 # (seq_len, 784)
+      pooled = mean.mean(0) # (784)
+      pooled_embs.append(pooled)
+    pooled_embs = t.stack(pooled_embs) # (batch, 784)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
+    o = self.classifier(pooled_embs) # (batch, 1)
+    loss = self.cal_loss(o, labels)
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, labels, loss.detach().item())
+    return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    pooled_embs = [] 
+    for ss, pos in zip(sss, poss):
+      left, right = get_left_right_by_ss_pos(ss, pos)
+      emb1 = B.compress_left_get_embs(self.bert, self.toker, left) # (seq_len, 784)
+      emb2 = B.compress_right_get_embs(self.bert, self.toker, right) # (seq_len, 784)
+      assert emb1.shape[0] == emb2.shape[0]
+      mean = (emb1 + emb2) / 2 # (seq_len, 784)
+      pooled = mean.mean(0) # (784)
+      pooled_embs.append(pooled)
+    pooled_embs = t.stack(pooled_embs) # (batch, 784)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
+    o = self.classifier(pooled_embs) # (batch, 1), sigmoided
+    self.print_train_info(o, labels, -1)
+    return fit_sigmoided_to_label(o), labels
+
+
+# 不用什么left right了，直接用让bert attend然后取target出来poolout
+  
+ 
 
 class Model_Fuck_2vs2(Model_Fuck):
   def train(self, mass):
@@ -181,19 +267,42 @@ class Model_Fuck_2vs2(Model_Fuck):
 
 
 class Model_Baseline(Model_Fuck):
+  def init_hook(self):
+    self.classifier = nn.Sequential(
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
+    )
+    self.fl_rate = 0
+
+  def cal_loss(self, out, labels):
+    assert len(labels.shape) == 1
+    assert len(out.shape) == 2
+    assert labels.shape[0] == out.shape[0]
+    total = []
+    for o, l in zip(out, labels):
+      pt = o if (l == 1) else (1 - o)
+      loss = (-1) * t.log(pt) * t.pow((1 - pt), self.fl_rate)
+      total.append(loss)
+    total = t.stack(total)
+    return total.sum()
+
+  def pool_policy(self, ss, pos):
+    # NOTE: [CLS]
+    return B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos) # (784)
+  
   def train(self, mass):
     batch = len(mass)
     sss, labels, poss = handle_mass(mass) 
-    clss = []
+    pools = []
     for ss, pos in zip(sss, poss): 
-      cls = B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos) # (784)
-      clss.append(cls)
+      pooled = self.pool_policy(ss, pos) # (784)
+      pools.append(pooled)
+    pools = t.stack(pools) # (batch, 784)
     labels = t.LongTensor(labels) # (batch), (0 or 1)
     if GPU_OK:
       labels = labels.cuda()
-    clss = t.stack(clss) # (batch, 784)
-    o = self.classifier(clss) # (batch, 2)
-    loss = self.CEL(o, labels)
+    o = self.classifier(pools) # (batch, 1)
+    loss = self.cal_loss(o, labels)
     self.zero_grad()
     loss.backward()
     self.optim.step()
@@ -204,17 +313,39 @@ class Model_Baseline(Model_Fuck):
   def dry_run(self, mass):
     batch = len(mass)
     sss, labels, poss = handle_mass(mass) 
-    clss = []
+    pools = []
     for ss, pos in zip(sss, poss): 
-      cls = B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos) # (784)
-      clss.append(cls)
+      pooled = self.pool_policy(ss, pos) # (784)
+      pools.append(pooled)
+    pools = t.stack(pools) # (batch, 784)
     labels = t.LongTensor(labels) # (batch), (0 or 1)
     if GPU_OK:
       labels = labels.cuda()
-    clss = t.stack(clss) # (batch, 784)
-    o = self.classifier(clss) # (batch, 2)
+    o = self.classifier(pools) # (batch, 1)
     self.print_train_info(o, labels, -1)
-    return o.argmax(1), labels 
+    return fit_sigmoided_to_label(o), labels 
+
+class Model_Baseline_SEP(Model_Baseline):
+  def pool_policy(self, ss, pos):
+    return B.compress_by_ss_pos_get_sep(self.bert, self.toker, ss, pos)
+
+class Model_Mean_Pool(Model_Baseline):
+  def pool_policy(self, ss, pos):
+    embs = B.compress_by_ss_pos_get_emb(self.bert, self.toker, ss, pos) # (?, 784)
+    return embs.mean(0) # (784)
+  
+
+def fit_sigmoided_to_label(out):
+  assert len(out.shape) == 2
+  results = []
+  for item in out:
+    assert item >= 0 and item <= 1
+    if item < 0.5:
+      results.append(0) 
+    else:
+      results.append(1) 
+  return t.LongTensor(results)
+
 
 def init_G(half = 1):
   G['ld'] = Loader(ds = data.train_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
@@ -286,40 +417,76 @@ def get_test_result_dic(m, testld):
     dic['bacc'] = bacc
   return dic
 
-def run_test():
-  init_G(2)
+
+
+def run_left_right_without_fl():
+  init_G(1)
+  for i in range(4):
+    G['m'] = m = Model_Fuck()
+    m.fl_rate = 0
+    get_datas(0, 2, f'左右池化')
+
+def run_left_right_fl():
+  init_G(1)
+  for i in range(4):
+    G['m'] = m = Model_Fuck()
+    m.fl_rate = 5
+    get_datas(0, 2, f'左右池化, flrate={m.fl_rate}')
+
+def run_neo_without_fl():
+  init_G(1)
+  for i in range(4):
+    G['m'] = m = Model_Baseline() # [CLS]
+    m.fl_rate = 0
+    get_datas(i + 0, 2, f'1:2 [CLS]池化, flrate={m.fl_rate}')
+  for i in range(4):
+    G['m'] = m = Model_Baseline_SEP() # [SEP]
+    m.fl_rate = 0
+    get_datas(i + 10, 2, f'1:2 [SEP]池化, flrate={m.fl_rate}')
+  for i in range(4):
+    G['m'] = m = Model_Mean_Pool() # mean
+    m.fl_rate = 0
+    get_datas(i + 20, 2, f'1:2 [MEAN]池化, flrate={m.fl_rate}')
+
+def run_neo_fl():
+  init_G(1)
+  for i in range(4):
+    G['m'] = m = Model_Baseline() # [CLS]
+    m.fl_rate = 5
+    get_datas(i + 30, 2, f'1:2 [CLS]池化, flrate={m.fl_rate}')
+  for i in range(4):
+    G['m'] = m = Model_Baseline_SEP() # [SEP]
+    m.fl_rate = 5 
+    get_datas(i + 40, 2, f'1:2 [SEP]池化, flrate={m.fl_rate}')
+  for i in range(4):
+    G['m'] = m = Model_Mean_Pool() # mean
+    m.fl_rate = 5
+    get_datas(i + 50, 2, f'1:2 [MEAN]池化, flrate={m.fl_rate}')
+
+def run_neo_test():
+  init_G(1)
   G['ld'].ds.datas = G['ld'].ds.datas[:15]
   G['testld'].ds.datas = G['testld'].ds.datas[:15]
   G['devld'].ds.datas = G['devld'].ds.datas[:15]
-  G['m'] = m = Model_Fuck_2vs2()
-  get_datas(0, 1, f'池化test 2:2')
+  #G['m'] = m = Model_Baseline() # [CLS]
+  #get_datas(0, 1, f'1:2 [cls]池化, flrate={m.fl_rate}, test')
+  #G['m'] = m = Model_Baseline_SEP() # [CLS]
+  #get_datas(0, 1, f'1:2 [sep]池化, flrate={m.fl_rate}, test')
+  #G['m'] = m = Model_Mean_Pool() # [CLS]
+  #get_datas(0, 1, f'1:2 [mean]池化, flrate={m.fl_rate}, test')
+  G['m'] = m = Model_Fuck() 
+  m.fl_rate = 5
+  get_datas(0, 1, f'1:2 左右横跳, flrate={m.fl_rate}, test')
+
+
+def run_neo():
+  run_neo_without_fl()
+  run_neo_fl()
+  run_left_right_without_fl()
+  run_left_right_fl()
 
 def run():
-  init_G(2)
-  G['m'] = m = Model_Fuck_2vs2()
-  get_datas(0, 1, f'池化压测 2: 2: epoch0')
-  get_datas(1, 1, f'池化压测 2: 2: epoch1')
-  get_datas(2, 1, f'池化压测 2: 2: epoch2')
-  for i in range(5):
-    base = 10
-    G['m'] = m = Model_Fuck_2vs2()
-    get_datas(base + i, 2, f'池化2:2, 跑5次，每次2epoch')
-
-
-def run_len1():
-  init_G()
-  G['m'] = m = Model_Fuck()
-  get_datas(0, 1, f'池化epoch压测: epoch1')
-  get_datas(1, 1, f'池化epoch压测: epoch2')
-  get_datas(2, 1, f'池化epoch压测: epoch3')
-  for i in range(4):
-    base = 10
-    G['m'] = m = Model_Fuck()
-    get_datas(base + i, 2, f'试着池化, 跑四次，每次2epoch')
-
-
-def run_baseline_1vs2():
   init_G(1)
-  G['m'] = m = Model_Baseline()
-  get_datas(0, 1, f'Baseline 1:2')
-  get_datas(1, 1, f'Baseline 1:2')
+  G['m'] = m = Model_Fuck()
+  m.fl_rate = 5
+  get_datas(0, 1, f'左右横跳 + flrate={m.fl_rate} epoch1测试')
