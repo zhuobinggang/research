@@ -9,55 +9,7 @@ from importlib import reload
 U.init_logger('exp5.log')
 GPU_OK = t.cuda.is_available()
 
-# start ======================= Loader Tested, No Touch =======================
-class Loader():
-  def __init__(self, ds, half, batch):
-    self.half = ds.half = half
-    self.ss_len = ds.ss_len = half * 2 + 1
-    self.ds = self.dataset = ds
-    self.batch = self.batch_size = batch
-    self.start = self.start_point()
-
-  def __iter__(self):
-    return self
-
-  def __len__(self):
-    return self.end_point() - self.start_point() + 1
-
-  def start_point(self):
-    return 0
-
-  def end_point(self):
-    return len(self.ds.datas) - 1
-
-  def get_data_by_index(self, idx):
-    assert idx >= self.start_point()
-    assert idx <= self.end_point()
-    start = idx - self.half # 可能是负数
-    ss, labels = self.ds[start] # 会自动切掉负数的部分
-    correct_start = max(start, 0)
-    pos = idx - correct_start
-    return ss, labels, pos # 只需要中间的label
-
-  # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
-  # raise StopIteration()
-  def __next__(self):
-    start = self.start
-    if start > self.end_point():
-      self.start = self.start_point()
-      raise StopIteration()
-    else:
-      results = []
-      end = min(start + self.batch - 1, self.end_point())
-      for i in range(start, end + 1):
-        ss, label, pos = self.get_data_by_index(i)
-        results.append((ss, label, pos))
-      self.start = end + 1
-      return results
-
-  def shuffle(self):
-    self.ds.shuffle()
-# end ======================= Loader Tested, No Touch =======================
+Loader = data.Loader
 
 def handle_mass(mass):
   ss = []
@@ -227,6 +179,43 @@ class Model_Fuck_2vs2(Model_Fuck):
     self.print_train_info(o, labels, -1)
     return o.argmax(1), labels
 
+
+class Model_Baseline(Model_Fuck):
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    clss = []
+    for ss, pos in zip(sss, poss): 
+      cls = B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos) # (784)
+      clss.append(cls)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
+    clss = t.stack(clss) # (batch, 784)
+    o = self.classifier(clss) # (batch, 2)
+    loss = self.CEL(o, labels)
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, labels, loss.detach().item())
+    return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    clss = []
+    for ss, pos in zip(sss, poss): 
+      cls = B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos) # (784)
+      clss.append(cls)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
+    clss = t.stack(clss) # (batch, 784)
+    o = self.classifier(clss) # (batch, 2)
+    self.print_train_info(o, labels, -1)
+    return o.argmax(1), labels 
+
 def init_G(half = 1):
   G['ld'] = Loader(ds = data.train_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
   G['testld'] = Loader(ds = data.test_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
@@ -328,3 +317,9 @@ def run_len1():
     G['m'] = m = Model_Fuck()
     get_datas(base + i, 2, f'试着池化, 跑四次，每次2epoch')
 
+
+def run_baseline_1vs2():
+  init_G(1)
+  G['m'] = m = Model_Baseline()
+  get_datas(0, 1, f'Baseline 1:2')
+  get_datas(1, 1, f'Baseline 1:2')

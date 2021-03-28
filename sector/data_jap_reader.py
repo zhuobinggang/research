@@ -107,3 +107,53 @@ def dev_dataset(ss_len, max_ids):
   ds = Dataset(ss_len = ss_len, max_ids = max_ids)
   ds.set_datas(read_devs())
   return ds
+
+# start ======================= Loader Tested, No Touch =======================
+class Loader():
+  def __init__(self, ds, half, batch):
+    self.half = ds.half = half
+    self.ss_len = ds.ss_len = half * 2 + 1
+    self.ds = self.dataset = ds
+    self.batch = self.batch_size = batch
+    self.start = self.start_point()
+
+  def __iter__(self):
+    return self
+
+  def __len__(self):
+    return self.end_point() - self.start_point() + 1
+
+  def start_point(self):
+    return 0
+
+  def end_point(self):
+    return len(self.ds.datas) - 1
+
+  def get_data_by_index(self, idx):
+    assert idx >= self.start_point()
+    assert idx <= self.end_point()
+    start = idx - self.half # 可能是负数
+    ss, labels = self.ds[start] # 会自动切掉负数的部分
+    correct_start = max(start, 0)
+    pos = idx - correct_start
+    return ss, labels, pos # 只需要中间的label
+
+  # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
+  # raise StopIteration()
+  def __next__(self):
+    start = self.start
+    if start > self.end_point():
+      self.start = self.start_point()
+      raise StopIteration()
+    else:
+      results = []
+      end = min(start + self.batch - 1, self.end_point())
+      for i in range(start, end + 1):
+        ss, label, pos = self.get_data_by_index(i)
+        results.append((ss, label, pos))
+      self.start = end + 1
+      return results
+
+  def shuffle(self):
+    self.ds.shuffle()
+# end ======================= Loader Tested, No Touch =======================
