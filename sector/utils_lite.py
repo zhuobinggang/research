@@ -72,4 +72,13 @@ def output_heatmap(mat, xs, ys, path = 'dd.png'):
   plt.savefig(path)
 
 
-
+def fit_sigmoided_to_label(out):
+  assert len(out.shape) == 2
+  results = []
+  for item in out:
+    assert item >= 0 and item <= 1
+    if item < 0.5:
+      results.append(0) 
+    else:
+      results.append(1) 
+  return t.LongTensor(results)
