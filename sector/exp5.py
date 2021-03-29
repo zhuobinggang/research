@@ -489,9 +489,9 @@ def run_neo():
 
 def greedy_search_flrate():
   init_G(1)
-  for i in range(8):
+  for i in range(7):
     G['m'] = m = Model_Fuck()
-    m.fl_rate = i
+    m.fl_rate = i + 1
     get_datas(i, 2, f'1:2 左右横跳fl rate搜索, flrate={m.fl_rate}')
 
 
