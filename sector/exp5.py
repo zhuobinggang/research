@@ -377,9 +377,11 @@ def get_datas_org(index, epoch, m, ld, testld, devld,  desc='Nothing'):
   losses = train_simple(m, ld, epoch) # only one epoch for order matter model
   G[f'testdic_{index}'] = get_test_result_dic(m, testld)
   G[f'devdic_{index}'] = get_test_result_dic(m, devld)
+  G[f'losses_{index}'] = losses
   dic = {
     'testdic': G[f'testdic_{index}'],
     'devdic': G[f'devdic_{index}'],
+    'losses': losses
   }
   R.request_my_logger(dic, desc)
   return losses
@@ -485,8 +487,13 @@ def run_neo():
   run_left_right_without_fl()
   run_left_right_fl()
 
-def run():
+def greedy_search_flrate():
   init_G(1)
-  G['m'] = m = Model_Fuck()
-  m.fl_rate = 5
-  get_datas(0, 1, f'左右横跳 + flrate={m.fl_rate} epoch1测试')
+  for i in range(7):
+    G['m'] = m = Model_Fuck()
+    m.fl_rate = i + 1
+    get_datas(i, 2, f'1:2 左右横跳fl rate搜索, flrate={m.fl_rate}')
+
+
+def run():
+  greedy_search_flrate()
