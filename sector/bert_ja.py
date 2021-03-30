@@ -173,7 +173,7 @@ def compress_by_ss_pos_get_mean(bert, toker, ss):
   batch, length, hidden_size = out.shape
   out = out.view(length, hidden_size)
   out = out.mean(0)
-  assert len(out.shape) == 1 and out.shape[0] == 784
+  assert len(out.shape) == 1 and out.shape[0] == hidden_size
   return out
 
 
