@@ -360,7 +360,7 @@ class Model_Sector_Plus(Model_Fuck):
         else:
           left_disturbed = left.copy()
           order_labels.append(0)
-        cls = B.compress_by_ss_pos_get_cls(left_disturbed, 1) # (784)
+        cls = B.compress_by_ss_pos_get_cls(self.bert, self.toker, left_disturbed, 1) # (784)
         clss_for_order_checking.append(cls)
       else:
         print(f'Warning, left length = {len(left)}')
