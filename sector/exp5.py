@@ -346,6 +346,9 @@ class Model_Sector_Plus(Model_Fuck):
       nn.Linear(self.bert_size, 1),
       nn.Sigmoid()
     )
+
+  def get_should_update(self):
+    return chain(self.bert.parameters(), self.classifier.parameters(), self.classifier2.parameters())
   
   def train(self, mass):
     batch = len(mass)
