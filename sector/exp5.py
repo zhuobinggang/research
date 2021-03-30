@@ -353,7 +353,7 @@ class Model_Sector_Plus(Model_Fuck):
       pooled = mean.mean(0) # (784)
       pooled_embs.append(pooled)
       # For order detector
-      if len(left == 2): 
+      if len(left) == 2: 
         if random.randrange(100) > 50: # 1/2的概率倒序
           left_disturbed = list(reversed(left))
           order_labels.append(1)
