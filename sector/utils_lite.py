@@ -3,7 +3,11 @@ import torch
 import requests
 import matplotlib.pyplot as plt
 import seaborn as sns # for data visualization
-plt.rcParams['font.family'] = 'Noto Sans CJK JP'
+# plt.rcParams['font.family'] = 'Noto Sans CJK JP'
+plt.rcParams.update({
+  # 'font.size': 5,
+  'font.family': 'Noto Sans CJK JP'
+})
 t = torch
 GPU_OK = t.cuda.is_available()
 
@@ -46,7 +50,7 @@ def position_matrix(seq_len, feature):
 
 # head_scores: (batch, head, seq_len, seq_len)
 # info: (seq_len)
-def draw_head_attention(head_scores, info, cls_pos = 0, path='dd.png'):
+def draw_head_attention(head_scores, info, cls_pos = 0, path='dd.png', desc = ''):
   mat = []
   head_scores = head_scores[0]
   head, seq_len, _ = head_scores.shape
@@ -64,11 +68,18 @@ def draw_head_attention(head_scores, info, cls_pos = 0, path='dd.png'):
   mat = [row.tolist() for row in mat]
   for row in mat:
     row.pop(cls_pos)
-  output_heatmap(np.transpose(mat), ys, xs, path)
+  output_heatmap(np.transpose(mat), ys, xs, path, desc)
 
-def output_heatmap(mat, xs, ys, path = 'dd.png'):
+def output_heatmap(mat, xs, ys, path = 'dd.png', desc = ''):
+  if len(ys) > 16:
+    print(f'Warning: too long sequence: {len(ys)}')
+    # sns.set(font_scale=0.5)
+  else:
+    # 5sns.set(font_scale=1.0)
+    pass
   plt.clf()
   sns.heatmap(mat, xticklabels=xs, yticklabels=ys)
+  plt.text(0 , -0.5, desc)
   plt.savefig(path)
 
 

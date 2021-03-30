@@ -320,9 +320,25 @@ def get_analysis_data(m):
     results.append((label, probability, memory_info_copy, sentence_scores, word_scores_per_sentence))
 
 
-def filter_datas_1():
-  results = G['results']
-  label1_results = [res for res in results if res[0] == 1]
+def filter_datas_1(results):
+  return [res for res in results if res[0] == 1]
+
+def most_near_1(results):
+  return list(reversed(sorted(results, key = lambda x: x[1]))) # sort by probability
     
+def most_near_0(results):
+  return list(sorted(results, key = lambda x: x[1])) # sort by probability
 
-
+def draw_by_results_and_index(results, index):
+  label, probability, memory_info_copy, sentence_scores, word_scores_per_sentence = results[index]
+  if len(word_scores_per_sentence) == 2:
+    sentence_att = sentence_scores # (batch, head, n, n)
+    sentence_att = sentence_att[0] # (head, n, n)
+    sentence_att = sentence_att.mean(0) # (n, n)
+    sentence_att = sentence_att[-1] # (n)
+    U.draw_head_attention(word_scores_per_sentence[0], memory_info_copy[0], path = 'left.png', desc= f'target: {label}, probability: {probability},  att_score: {sentence_att[0]}')
+    U.draw_head_attention(word_scores_per_sentence[1], memory_info_copy[1], path = 'right.png', desc = f'target: {label}, probability: {probability},  att_score: {sentence_att[1]}')
+  elif len(word_scores_per_sentence) == 1:
+    print(f'Warning: just 1 sentence: {memory_info_copy}')
+    U.draw_head_attention(word_scores_per_sentence[0], memory_info_copy[0], path = 'begin.png', desc = 'att_score: 1')
+    
