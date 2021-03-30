@@ -162,3 +162,17 @@ def compress_by_ss_pos_get_sep(bert, toker, ss, pos):
   out = out[1+len(left):] # [SEP] + right
   assert out.shape[0] == 1 + len(right)
   return out[0] # (784)
+
+def compress_by_ss_pos_get_mean(bert, toker, ss):
+  assert len(ss) = 2
+  ids = encode_sentence_pair(toker, ss[0], ss[1])
+  out = bert(input_ids = ids, return_dict = True)['last_hidden_state']
+  batch, length, hidden_size = out.shape
+  out = out.view(length, hidden_size)
+  out = out.mean(0)
+  assert len(out.shape) == 1 and out.shape[0] == 784
+  return out
+
+
+
+
