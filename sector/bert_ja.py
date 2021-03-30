@@ -166,6 +166,9 @@ def compress_by_ss_pos_get_sep(bert, toker, ss, pos):
 def compress_by_ss_pos_get_mean(bert, toker, ss):
   assert len(ss) == 2
   ids = encode_sentence_pair(toker, ss[0], ss[1])
+  ids = t.LongTensor(ids).view(1, -1)
+  if GPU_OK:
+    ids = ids.cuda()
   out = bert(input_ids = ids, return_dict = True)['last_hidden_state']
   batch, length, hidden_size = out.shape
   out = out.view(length, hidden_size)
