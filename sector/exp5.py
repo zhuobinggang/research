@@ -631,7 +631,7 @@ def ordering_with_mean():
   init_G(1)
   for i in range(3):
     G['m'] = m = Model_Sector_Plus_V2(rate = 0)
-    get_datas(i + 10, 2, f'1:2 左右横跳 + [MEAN] ordering, flrate={m.fl_rate}')
+    get_datas(i + 20, 2, f'1:2 左右横跳 + [MEAN] ordering, flrate={m.fl_rate}')
 
 def run():
   left_right_flrate3_run()
