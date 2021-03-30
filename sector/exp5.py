@@ -337,6 +337,16 @@ class Model_Mean_Pool(Model_Baseline):
 
 
 class Model_Sector_Plus(Model_Fuck):
+  def init_hook(self): 
+    self.classifier = nn.Sequential(
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
+    )
+    self.classifier2 = nn.Sequential(
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
+    )
+  
   def train(self, mass):
     batch = len(mass)
     sss, labels, poss = handle_mass(mass) 
