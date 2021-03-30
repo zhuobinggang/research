@@ -396,26 +396,54 @@ class Model_Sector_Plus(Model_Fuck):
     self.print_train_info(o, labels, loss.detach().item())
     return loss.detach().item()
 
-  @t.no_grad()
-  def dry_run(self, mass):
+# 不要分开CLS和mean，同一个embedding需要考虑两样东西
+# C: 如果它利用位置信息就很容易区分了
+class Model_Sector_Plus_V2(Model_Sector_Plus):
+  def train(self, mass):
     batch = len(mass)
     sss, labels, poss = handle_mass(mass) 
     pooled_embs = [] 
+    clss_for_order_checking = [] # For order detector
+    order_labels = [] # For order detector
     for ss, pos in zip(sss, poss):
       left, right = get_left_right_by_ss_pos(ss, pos)
       emb1 = B.compress_left_get_embs(self.bert, self.toker, left) # (seq_len, 784)
       emb2 = B.compress_right_get_embs(self.bert, self.toker, right) # (seq_len, 784)
+      # print(f'{emb1.shape[0]}, {emb2.shape[0]}')
       assert emb1.shape[0] == emb2.shape[0]
       mean = (emb1 + emb2) / 2 # (seq_len, 784)
       pooled = mean.mean(0) # (784)
       pooled_embs.append(pooled)
+      # For order detector
+      if len(left) == 2: 
+        if random.randrange(100) > 50: # 1/2的概率倒序
+          left_disturbed = list(reversed(left))
+          order_labels.append(1)
+        else:
+          left_disturbed = left.copy()
+          order_labels.append(0)
+        cls = B.compress_by_ss_pos_get_mean(self.bert, self.toker, left_disturbed) # (784)
+        clss_for_order_checking.append(cls)
+      else:
+        print(f'Warning, left length = {len(left)}')
     pooled_embs = t.stack(pooled_embs) # (batch, 784)
     labels = t.LongTensor(labels) # (batch), (0 or 1)
+    order_labels = t.LongTensor(order_labels) # (x <= batch) For order detector
     if GPU_OK:
       labels = labels.cuda()
+      order_labels = order_labels.cuda()
     o = self.classifier(pooled_embs) # (batch, 1)
-    self.print_train_info(o, labels, -1)
-    return fit_sigmoided_to_label(o), labels
+    sector_loss = self.cal_loss(o, labels)
+    # For order detector
+    clss_for_order_checking = t.stack(clss_for_order_checking) # (x <= batch, 784)
+    output_ordering = self.classifier2(clss_for_order_checking) # (x, 1)
+    ordering_loss = self.cal_loss(output_ordering, order_labels, rate=0) # 不存在数据不均衡问题
+    loss = sector_loss + ordering_loss
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, labels, loss.detach().item())
+    return loss.detach().item()
 
 
 # ========================================================
@@ -580,11 +608,34 @@ def greedy_search_flrate():
     m.fl_rate = i + 1
     get_datas(i, 2, f'1:2 左右横跳fl rate搜索, flrate={m.fl_rate}')
 
+# 左右横跳 rate = 3获取实验结果
+def left_right_flrate3_run():
+  init_G(1)
+  for i in range(5):
+    G['m'] = m = Model_Fuck(rate=3)
+    get_datas(i, 2, f'1:2 左右横跳fl rate搜索, flrate={m.fl_rate}')
+
 def run_sector_plus_ordering():
   init_G(1)
   G['m'] = m = Model_Sector_Plus(rate = 0)
   get_datas(1, 1, f'1:2 左右横跳 + ordering, flrate={m.fl_rate}, 1')
   get_datas(2, 1, f'1:2 左右横跳 + ordering, flrate={m.fl_rate}, 2')
 
+def ordering_with_cls():
+  init_G(1)
+  for i in range(3):
+    G['m'] = m = Model_Sector_Plus(rate = 0)
+    get_datas(i + 10, 2, f'1:2 左右横跳 + [CLS] ordering, flrate={m.fl_rate}')
+
+def ordering_with_mean():
+  init_G(1)
+  for i in range(3):
+    G['m'] = m = Model_Sector_Plus_V2(rate = 0)
+    get_datas(i + 10, 2, f'1:2 左右横跳 + [MEAN] ordering, flrate={m.fl_rate}')
+
 def run():
-  greedy_search_flrate()
+  left_right_flrate3_run()
+  ordering_with_cls()
+  ordering_with_mean()
+
+
