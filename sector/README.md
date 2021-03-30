@@ -1,5 +1,28 @@
 # 新的规划
 
+# 最合适FL值(对于左右横跳来说): 3
+```
+{
+  "testdic": {
+    "prec": 0.9352428393524284,
+    "rec": 0.7517517517517518,
+    "f1": 0.8335183129855717,
+    "bacc": 0.8702512138964276
+  },
+  "devdic": {
+    "prec": 0.7290748898678414,
+    "rec": 0.4882005899705015,
+    "f1": 0.5848056537102473,
+    "bacc": 0.7300495753142432
+  },
+  "losses": [
+    926.2218190476224,
+    610.7902639371816
+  ],
+  "desc": "1:2 左右横跳fl rate搜索, flrate=3"
+}
+```
+
 ## 实验了wiki2vec & attention memnet based sector
 
 ### 首先作为baseline的2:2 & 0 memsize
@@ -71,7 +94,7 @@ U.draw_head_attention(word_scores_per_sentence[pos], memory_info[pos], path='out
 {'prec': 0.651542, 'rec': 0.530280, 'f1': 0.584690, 'bacc': 0.743207}
 
 ```
-## 左右池化1:2
+## 左右池化1:2 (8 times avg f1 0.8263063936841769)
 {
   "testdic": {
     "prec": 0.9283935242839353,
@@ -162,7 +185,6 @@ U.draw_head_attention(word_scores_per_sentence[pos], memory_info[pos], path='out
   },
   "desc": "左右池化"
 }
-
 {
   "testdic": {
     "prec": 0.9101258238466148,
