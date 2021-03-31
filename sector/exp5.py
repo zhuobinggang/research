@@ -745,7 +745,10 @@ def ordering_with_mean():
 
 def run_double_sentence_exp():
   init_G_Symmetry(2) 
-  for i in range(5):
+  for i in range(2):
+    G['m'] = m = Double_Sentence_CLS(rate = 0)
+    get_datas(i + 30, 2, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
+  for i in range(3):
     G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
     m.ordering_loss_rate = 1
     get_datas(i, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
@@ -755,8 +758,9 @@ def run_double_sentence_exp():
     get_datas(i + 10, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
   for i in range(3):
     G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
-    m.ordering_loss_rate = 0.3
+    m.ordering_loss_rate = 2
     get_datas(i + 20, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
+
 
 def run_v1():
   left_right_flrate3_run()
