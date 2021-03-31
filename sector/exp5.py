@@ -521,14 +521,17 @@ class Double_Sentence_Plus_Ordering(Double_Sentence_CLS):
       if pos != 2:
         print(f'Warning: pos={pos}')
       pooled_embs.append(self.pool_policy(ss, pos))
+      # Ordering
+      ss_disturbed = ss.copy()
       if random.randrange(100) > 50: # 1/2的概率倒序
-        ss_disturbed = ss.copy()
         random.shuffle(ss_disturbed)
-        ordering_embs.append(self.pool_policy(ss_disturbed, pos))
-        if ss_disturbed == ss:
-          ordering_labels.append(0)
-        else:
-          ordering_labels.append(1)
+      else:
+        pass
+      ordering_embs.append(self.pool_policy(ss_disturbed, pos))
+      if ss_disturbed == ss:
+        ordering_labels.append(0)
+      else:
+        ordering_labels.append(1)
     pooled_embs = t.stack(pooled_embs) # (batch, 784)
     ordering_embs = t.stack(ordering_embs)
     labels = t.LongTensor(labels) # (batch), (0 or 1)

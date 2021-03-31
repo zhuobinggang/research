@@ -1,5 +1,17 @@
 from wikiatt import *
 from self_attention import Multihead_SelfAtt, Multihead_Official, Multihead_Official_Scores
+import random
+
+def fit_sigmoided_to_label(out):
+  assert len(out.shape) == 2
+  results = []
+  for item in out:
+    assert item >= 0 and item <= 1
+    if item < 0.5:
+      results.append(0) 
+    else:
+      results.append(1) 
+  return t.LongTensor(results)
 
 class AttMemNet(WikiAttOfficial):
   def init_selfatt_layers(self):
@@ -300,14 +312,91 @@ class Att_FL(AttMemNet_FL):
       print(f'Want: {labels.tolist()} Got: {result} Loss: {loss} ')
  
 
+class Att_FL_Ordering(Att_FL):
+  def init_hook(self):
+    self.feature = 300
+    self.fl_rate = 0
+    self.max_seq_len = 64
+    self.classifier = nn.Sequential(
+      nn.Linear(self.feature, int(self.feature / 2)),
+      nn.LeakyReLU(0.1),
+      nn.Linear(int(self.feature / 2), 1),
+      nn.Sigmoid()
+    )
+    # NOTE: 增加classfier2
+    self.classifier2 = nn.Sequential(
+      nn.Linear(self.feature, int(self.feature / 2)),
+      nn.LeakyReLU(0.1),
+      nn.Linear(int(self.feature / 2), 1),
+      nn.Sigmoid()
+    )
+    self.init_selfatt_layers()
+    self.init_working_memory()
+    self.ember = nn.Embedding(3, self.feature)
+    self.pos_matrix = U.position_matrix(self.max_seq_len + 10, self.feature).float()
+
+  def get_should_update(self):
+    # NOTE: 增加classfier2
+    return chain(self.classifier.parameters(), self.sentence_compressor.parameters(), self.sentence_integrator.parameters(), self.ember.parameters(), self.classifier2.parameters())
+
+  def get_ordering_loss(self, ss, pos):
+    ss_disturbed = ss.copy() # 
+    ss_disturbed = [''.join(words) for words in ss_disturbed]
+    if random.randrange(100) > 50: # 1/2的概率倒序
+      random.shuffle(ss_disturbed)
+      label_ordering = t.LongTensor([0 if ss_disturbed == ss else 1])
+    else:
+      label_ordering = t.LongTensor([0])
+    ss_disturbed_tensor, sentence_words = w2v(ss_disturbed, 64, require_words = True) # (seq_len, ?, feature)
+    self.empty_memory()
+    self.cat2memory((ss_disturbed_tensor, sentence_words))
+    out, _, _ = self.memory_self_attention() # (seq_len + current_memory_size, feature)
+    out = out[-seq_len:] # 剪掉记忆储存部分 (seq_len, feature)
+    out = out[pos] # (feature)
+    out = self.classfier2(out) # (1)
+    out.view(1, 1)
+    return self.cal_loss(out, label_ordering)
+
+  # inpts: ss_tensor, ss
+  # ss_tensor: [seq_len, (?, feature)], 不定长复数句子
+  # ss: [seq_len, string]
+  # labels: (label, pos)
+  def train(self, inpts, labels, checking = False):
+    label, pos = labels # (1), LongTensor
+    ss_tensor, ss = inpts
+    pos = pos.item()
+    if GPU_OK:
+      ss_tensor = [item.cuda() for item in ss_tensor]
+      label = label.cuda()
+    # cat with working memory
+    seq_len = len(ss)
+    self.empty_memory()
+    self.cat2memory(inpts)
+    out, sentence_scores, word_scores_per_sentence = self.memory_self_attention() # (seq_len + current_memory_size, feature), (seq_len + current_memory_size, seq_len + current_memory_size)
+    out = out[-seq_len:] # 剪掉记忆储存部分
+    memory_info_copy = self.working_memory_info.copy() if checking else None
+    o = out[pos] # (feature)
+    o = o.view(1, self.feature)
+    o = self.classifier(o) # (1, 1)
+    loss_sector = self.cal_loss(o, label)
+    loss_ordering = self.get_ordering_loss(ss, pos)
+    loss = loss_sector + loss_ordering
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, label, loss.detach().item())
+    return loss.detach().item()
+
+# ===========================
+
 def run():
   init_G(2)
   head = 6
   memsize = 0
-  G['m'] = m = Att_FL(hidden_size = 256, head=head, memory_size = memsize)
+  G['m'] = m = Att_FL_Ordering(hidden_size = 256, head=head, memory_size = memsize)
   m.fl_rate = 0
   epochs = 1
-  get_datas(0, epochs, f'FL, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
+  get_datas(0, epochs, f'Ordering, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
 
 
 def get_analysis_data(m):
