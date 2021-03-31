@@ -134,7 +134,7 @@ def compress_by_ss_pos_get_emb(bert, toker, ss, pos):
 def compress_by_ss_pos_get_cls(bert, toker, ss, pos):
   idss = [encode_without_special_tokens(toker, s) for s in ss]
   target = idss[pos]
-  left = flatten_num_lists(idss[pos - 1: pos])
+  left = flatten_num_lists(idss[0: pos])
   right = flatten_num_lists(idss[pos:])
   ids = add_special_token_for_ids_pair(toker, left, right)
   ids = t.LongTensor(ids).view(1, -1)
@@ -149,7 +149,7 @@ def compress_by_ss_pos_get_cls(bert, toker, ss, pos):
 def compress_by_ss_pos_get_sep(bert, toker, ss, pos):
   idss = [encode_without_special_tokens(toker, s) for s in ss]
   target = idss[pos]
-  left = flatten_num_lists(idss[pos - 1: pos])
+  left = flatten_num_lists(idss[0: pos])
   right = flatten_num_lists(idss[pos:])
   ids = add_special_token_for_ids_pair(toker, left, right)
   ids = t.LongTensor(ids).view(1, -1)
@@ -163,7 +163,7 @@ def compress_by_ss_pos_get_sep(bert, toker, ss, pos):
   assert out.shape[0] == 1 + len(right)
   return out[0] # (784)
 
-def compress_by_ss_pos_get_mean(bert, toker, ss):
+def compress_by_ss_pair_get_mean(bert, toker, ss):
   assert len(ss) == 2
   ids = encode_sentence_pair(toker, ss[0], ss[1])
   ids = t.LongTensor(ids).view(1, -1)
@@ -176,6 +176,20 @@ def compress_by_ss_pos_get_mean(bert, toker, ss):
   assert len(out.shape) == 1 and out.shape[0] == hidden_size
   return out
 
-
+def compress_by_ss_pos_get_mean(bert, toker, ss, pos):
+  idss = [encode_without_special_tokens(toker, s) for s in ss]
+  left = flatten_num_lists(idss[0: pos])
+  right = flatten_num_lists(idss[pos:])
+  ids = add_special_token_for_ids_pair(toker, left, right)
+  ids = t.LongTensor(ids).view(1, -1)
+  if GPU_OK:
+    ids = ids.cuda()
+  out = bert(input_ids = ids, return_dict = True)['last_hidden_state']
+  batch, length, hidden_size = out.shape
+  assert length == len(left) + len(right) + 2
+  out = out.view(length, hidden_size)
+  out = out.mean(0)
+  assert len(out.shape) == 1 and out.shape[0] == hidden_size
+  return out
 
 

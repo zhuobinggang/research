@@ -10,6 +10,7 @@ U.init_logger('exp5.log')
 GPU_OK = t.cuda.is_available()
 
 Loader = data.Loader
+Loader_Symmetry = data.Loader_Symmetry
 
 def handle_mass(mass):
   ss = []
@@ -422,7 +423,7 @@ class Model_Sector_Plus_V2(Model_Sector_Plus):
         else:
           left_disturbed = left.copy()
           order_labels.append(0)
-        cls = B.compress_by_ss_pos_get_mean(self.bert, self.toker, left_disturbed) # (784)
+        cls = B.compress_by_ss_pair_get_mean(self.bert, self.toker, left_disturbed) # (784)
         clss_for_order_checking.append(cls)
       else:
         print(f'Warning, left length = {len(left)}')
@@ -446,6 +447,106 @@ class Model_Sector_Plus_V2(Model_Sector_Plus):
     return loss.detach().item()
 
 
+# By [CLS]
+class Double_Sentence_CLS(Model_Fuck):
+  def pool_policy(self, ss, pos):
+    # NOTE: [CLS]
+    return B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos) # (784)
+
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    pooled_embs = [] 
+    for ss, pos in zip(sss, poss):
+      if pos != 2:
+        print(f'Warning: pos={pos}')
+      emb = self.pool_policy(ss, pos)
+      pooled_embs.append(emb)
+    pooled_embs = t.stack(pooled_embs) # (batch, 784)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
+    o = self.classifier(pooled_embs) # (batch, 1)
+    loss = self.cal_loss(o, labels)
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, labels, loss.detach().item())
+    return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    pooled_embs = [] 
+    for ss, pos in zip(sss, poss):
+      if pos != 2:
+        print(f'Warning: pos={pos}')
+      emb = self.pool_policy(ss, pos)
+      pooled_embs.append(emb)
+    pooled_embs = t.stack(pooled_embs) # (batch, 784)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    if GPU_OK:
+      labels = labels.cuda()
+    o = self.classifier(pooled_embs) # (batch, 1)
+    self.print_train_info(o, labels, -1)
+    return fit_sigmoided_to_label(o), labels
+
+class Double_Sentence_MEAN(Double_Sentence_CLS):
+   def pool_policy(self, ss, pos):
+    # NOTE: [MEAN]
+    return B.compress_by_ss_pair_get_mean(self.bert, self.toker, ss, pos) # (784) 
+
+class Double_Sentence_Plus_Ordering(Double_Sentence_CLS):
+  def init_hook(self): 
+    self.classifier = nn.Sequential(
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
+    )
+    self.classifier2 = nn.Sequential(
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
+    )
+
+  def get_should_update(self):
+    return chain(self.bert.parameters(), self.classifier.parameters(), self.classifier2.parameters())
+
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = handle_mass(mass) 
+    pooled_embs = [] 
+    ordering_embs = []
+    ordering_labels = []
+    for ss, pos in zip(sss, poss):
+      if pos != 2:
+        print(f'Warning: pos={pos}')
+      pooled_embs.append(self.pool_policy(ss, pos))
+      if random.randrange(100) > 50: # 1/2的概率倒序
+        ss_disturbed = ss.copy()
+        random.shuffle(ss_disturbed)
+        ordering_embs.append(self.pool_policy(ss_disturbed, pos))
+        if ss_disturbed == ss:
+          ordering_labels.append(0)
+        else:
+          ordering_labels.append(1)
+    pooled_embs = t.stack(pooled_embs) # (batch, 784)
+    ordering_embs = t.stack(ordering_embs)
+    labels = t.LongTensor(labels) # (batch), (0 or 1)
+    ordering_labels = t.LongTensor(ordering_labels)
+    if GPU_OK:
+      labels = labels.cuda()
+      ordering_labels = ordering_labels.cuda()
+    o = self.classifier(pooled_embs) # (batch, 1)
+    o_ordering = self.classifier2(ordering_embs) # (batch, 1)
+    loss_sector = self.cal_loss(o, labels)
+    loss_ordering = self.cal_loss(o_ordering, ordering_labels)
+    loss = loss_sector + loss_ordering
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    self.print_train_info(o, labels, loss.detach().item())
+    return loss.detach().item()
+
 # ========================================================
   
 
@@ -465,6 +566,11 @@ def init_G(half = 1):
   G['ld'] = Loader(ds = data.train_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
   G['testld'] = Loader(ds = data.test_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
   G['devld'] = Loader(ds = data.dev_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+
+def init_G_Symmetry(half = 1):
+  G['ld'] = Loader_Symmetry(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 4)
+  G['testld'] = Loader_Symmetry(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 4)
+  G['devld'] = Loader_Symmetry(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 4)
 
 def get_datas(index, epoch, desc):
   return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], G['devld'], desc)
@@ -632,6 +738,13 @@ def ordering_with_mean():
   for i in range(3):
     G['m'] = m = Model_Sector_Plus_V2(rate = 0)
     get_datas(i + 20, 2, f'1:2 左右横跳 + [MEAN] ordering, flrate={m.fl_rate}')
+
+def run_double_sentence_exp():
+  init_G_Symmetry(2) 
+  G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
+  get_datas(1, 1, f'1:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate}, 1')
+  get_datas(2, 1, f'1:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate}, 2')
+  
 
 def run():
   left_right_flrate3_run()

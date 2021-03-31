@@ -156,4 +156,22 @@ class Loader():
 
   def shuffle(self):
     self.ds.shuffle()
+
+
+class Loader_Symmetry(Loader):
+  def __init__(self, ds, half, batch):
+    self.half = ds.half = half
+    self.ss_len = ds.ss_len = half * 2
+    self.ds = self.dataset = ds
+    self.batch = self.batch_size = batch
+    self.start = self.start_point()
+
+  def get_data_by_index(self, idx):
+    assert idx >= self.start_point()
+    assert idx <= self.end_point()
+    start = idx - self.half # 可能是负数
+    ss, labels = self.ds[start] # 会自动切掉负数的部分
+    correct_start = max(start, 0)
+    pos = idx - correct_start
+    return ss, labels, pos # 只需要中间的label
 # end ======================= Loader Tested, No Touch =======================
