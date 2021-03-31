@@ -160,6 +160,7 @@ class Loader():
 
 class Loader_Symmetry(Loader):
   def __init__(self, ds, half, batch):
+    print(f'init Loader_Symmetry half={half}, batch={batch}')
     self.half = ds.half = half
     self.ss_len = ds.ss_len = half * 2
     self.ds = self.dataset = ds
