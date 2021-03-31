@@ -571,9 +571,9 @@ def init_G(half = 1):
   G['devld'] = Loader(ds = data.dev_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
 
 def init_G_Symmetry(half = 1):
-  G['ld'] = Loader_Symmetry(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 4)
-  G['testld'] = Loader_Symmetry(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 4)
-  G['devld'] = Loader_Symmetry(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 4)
+  G['ld'] = Loader_Symmetry(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
+  G['testld'] = Loader_Symmetry(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
+  G['devld'] = Loader_Symmetry(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
 
 def get_datas(index, epoch, desc):
   return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], G['devld'], desc)

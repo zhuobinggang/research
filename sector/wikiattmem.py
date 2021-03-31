@@ -339,7 +339,7 @@ class Att_FL_Ordering(Att_FL):
     # NOTE: 增加classfier2
     return chain(self.classifier.parameters(), self.sentence_compressor.parameters(), self.sentence_integrator.parameters(), self.ember.parameters(), self.classifier2.parameters())
 
-  def get_ordering_loss(self, ss, pos):
+  def get_ordering_loss(self, ss):
     ss_disturbed = ss.copy() # 
     ss_disturbed = [''.join(words) for words in ss_disturbed]
     if random.randrange(100) > 50: # 1/2的概率倒序
@@ -351,10 +351,10 @@ class Att_FL_Ordering(Att_FL):
     self.empty_memory()
     self.cat2memory((ss_disturbed_tensor, sentence_words))
     out, _, _ = self.memory_self_attention() # (seq_len + current_memory_size, feature)
-    out = out[-seq_len:] # 剪掉记忆储存部分 (seq_len, feature)
-    out = out[pos] # (feature)
-    out = self.classfier2(out) # (1)
-    out.view(1, 1)
+    self.empty_memory()
+    out = out[-1] # (feature)
+    out = self.classifier2(out) # (1)
+    out = out.view(1, 1)
     return self.cal_loss(out, label_ordering)
 
   # inpts: ss_tensor, ss
@@ -379,7 +379,7 @@ class Att_FL_Ordering(Att_FL):
     o = o.view(1, self.feature)
     o = self.classifier(o) # (1, 1)
     loss_sector = self.cal_loss(o, label)
-    loss_ordering = self.get_ordering_loss(ss, pos)
+    loss_ordering = self.get_ordering_loss(ss)
     loss = loss_sector + loss_ordering
     self.zero_grad()
     loss.backward()
