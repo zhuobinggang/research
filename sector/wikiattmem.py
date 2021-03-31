@@ -330,6 +330,8 @@ class Att_FL_Ordering(Att_FL):
       nn.Linear(int(self.feature / 2), 1),
       nn.Sigmoid()
     )
+    G['ordering_results'] = []
+    G['ordering_labels'] = []
     self.init_selfatt_layers()
     self.init_working_memory()
     self.ember = nn.Embedding(3, self.feature)
@@ -344,8 +346,14 @@ class Att_FL_Ordering(Att_FL):
     ss_disturbed = [''.join(words) for words in ss_disturbed]
     if random.randrange(100) > 50: # 1/2的概率倒序
       random.shuffle(ss_disturbed)
-      label_ordering = t.LongTensor([0 if ss_disturbed == ss else 1])
+      if ss_disturbed == ss:
+        label_ordering = t.LongTensor([0])
+        G['ordering_labels'].append(0)
+      else:
+        G['ordering_labels'].append(1)
+        label_ordering = t.LongTensor([1])
     else:
+      G['ordering_labels'].append(0)
       label_ordering = t.LongTensor([0])
     ss_disturbed_tensor, sentence_words = w2v(ss_disturbed, 64, require_words = True) # (seq_len, ?, feature)
     self.empty_memory()
@@ -354,6 +362,10 @@ class Att_FL_Ordering(Att_FL):
     self.empty_memory()
     out = out[-1] # (feature)
     out = self.classifier2(out) # (1)
+    if out.item() < 0.5:
+      G['ordering_results'].append(0)
+    else:
+      G['ordering_results'].append(1)
     out = out.view(1, 1)
     return self.cal_loss(out, label_ordering)
 

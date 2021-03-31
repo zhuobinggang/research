@@ -507,6 +507,7 @@ class Double_Sentence_Plus_Ordering(Double_Sentence_CLS):
       nn.Linear(self.bert_size, 1),
       nn.Sigmoid()
     )
+    self.ordering_loss_rate = 0.5
 
   def get_should_update(self):
     return chain(self.bert.parameters(), self.classifier.parameters(), self.classifier2.parameters())
@@ -543,7 +544,7 @@ class Double_Sentence_Plus_Ordering(Double_Sentence_CLS):
     o_ordering = self.classifier2(ordering_embs) # (batch, 1)
     loss_sector = self.cal_loss(o, labels)
     loss_ordering = self.cal_loss(o_ordering, ordering_labels)
-    loss = loss_sector + loss_ordering
+    loss = loss_sector + self.ordering_loss_rate * loss_ordering
     self.zero_grad()
     loss.backward()
     self.optim.step()
@@ -744,14 +745,24 @@ def ordering_with_mean():
 
 def run_double_sentence_exp():
   init_G_Symmetry(2) 
-  G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
-  get_datas(1, 1, f'1:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate}, 1')
-  get_datas(2, 1, f'1:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate}, 2')
-  
+  for i in range(5):
+    G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
+    m.ordering_loss_rate = 1
+    get_datas(i, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
+  for i in range(3):
+    G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
+    m.ordering_loss_rate = 0.5
+    get_datas(i + 10, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
+  for i in range(3):
+    G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
+    m.ordering_loss_rate = 0.3
+    get_datas(i + 20, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
 
-def run():
+def run_v1():
   left_right_flrate3_run()
   ordering_with_cls()
   ordering_with_mean()
 
+def run():
+  run_double_sentence_exp()
 
