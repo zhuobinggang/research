@@ -18,6 +18,7 @@ def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing'):
   dic = {
     'testdic': G[f'testdic_{index}'],
     'devdic': G[f'devdic_{index}'],
+    'losses': losses
   }
   request_my_logger(dic, desc)
   return losses
