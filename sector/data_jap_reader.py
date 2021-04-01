@@ -197,6 +197,7 @@ class Loader_SGD():
       self.masses.append((ss, labels, pos))
     if shuffle:
       random.shuffle(self.masses)
+      print('Loader_SGD: Shuffled')
     else:
       print('Loader_SGD: No Shuffle')
 
@@ -235,5 +236,24 @@ class Loader_SGD():
 
   def shuffle(self):
     random.shuffle(self.masses)
+
+class Loader_Symmetry_SGD(Loader_SGD):
+  def __init__(self, ds, half, batch, shuffle = True):
+    print(f'init Loader_Symmetry_SGD half={half}, batch={batch}')
+    self.half = ds.half = half
+    self.ss_len = ds.ss_len = half * 2
+    self.ds = self.dataset = ds
+    self.batch = self.batch_size = batch
+    self.start = self.start_point()
+    ld = Loader_Symmetry(ds, half, batch=1)
+    self.masses = []
+    for mass in ld:
+      ss, labels, pos = mass[0]
+      self.masses.append((ss, labels, pos))
+    if shuffle:
+      random.shuffle(self.masses)
+      print('Loader_Symmetry_SGD: Shuffled')
+    else:
+      print('Loader_Symmetry_SGD: No Shuffle')
   
 # end ======================= Loader Tested, No Touch =======================
