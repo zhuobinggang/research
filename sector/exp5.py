@@ -796,5 +796,6 @@ def run():
   # get_datas(1, 1, f'左右池化，跑五次，和2vs2对比, flrate={m.fl_rate}')
   init_G_Symmetry(2, sgd = True) 
   G['m'] = m = Double_Sentence_CLS(rate=0)
-  get_datas(i + 10, 2, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
+  get_datas(0, 1, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
+  get_datas(1, 1, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
 
