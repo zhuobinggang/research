@@ -28,9 +28,12 @@ def read_sentences(data_id = 1):
   sentences = []
   for line in lines:
     ss = line.split('。')
-    for s in ss:
-      if len(s) > 1:
-        sentences.append(s)
+    if len(ss) == 1: # 如果句中没有句号，说明是根据换行分的，大概是对话
+      sentences.append(ss[0])
+    else:
+      for s in ss:
+        if len(s) > 1: # 恢复句号，因为句号重要，可也需要提防空白的情况
+          sentences.append(s + '。')
   return sentences
 
 def read_trains():
