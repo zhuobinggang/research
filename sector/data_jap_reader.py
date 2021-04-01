@@ -28,9 +28,15 @@ def read_sentences(data_id = 1):
   sentences = []
   for line in lines:
     ss = line.split('。')
-    for s in ss:
-      if len(s) > 1:
-        sentences.append(s)
+    if len(ss) == 1: # 如果句中没有句号，说明是根据换行分的，大概是对话
+      sentences.append(ss[0])
+    else:
+      for i,s in enumerate(ss):
+        if len(s) > 1: # 恢复句号，因为句号重要，但是最后一句不需要，也需要提防空白的情况
+          if i != len(ss) - 1: 
+            sentences.append(s + '。')
+          else:
+            sentences.append(s) # 最后一句不需要加句号
   return sentences
 
 def read_trains():
@@ -175,4 +181,79 @@ class Loader_Symmetry(Loader):
     correct_start = max(start, 0)
     pos = idx - correct_start
     return ss, labels, pos # 只需要中间的label
+
+
+class Loader_SGD():
+  def __init__(self, ds, half, batch, shuffle = True):
+    self.half = ds.half = half
+    self.ss_len = ds.ss_len = half * 2 + 1
+    self.ds = self.dataset = ds
+    self.batch = self.batch_size = batch
+    self.start = self.start_point()
+    ld = Loader(ds, half, batch=1)
+    self.masses = []
+    for mass in ld:
+      ss, labels, pos = mass[0]
+      self.masses.append((ss, labels, pos))
+    if shuffle:
+      random.shuffle(self.masses)
+      print('Loader_SGD: Shuffled')
+    else:
+      print('Loader_SGD: No Shuffle')
+
+  def __iter__(self):
+    return self
+
+  def __len__(self):
+    return len(self.masses)
+
+  def start_point(self):
+    return 0
+
+  def end_point(self):
+    return len(self.masses) - 1
+
+  def get_data_by_index(self, idx):
+    assert idx >= self.start_point()
+    assert idx <= self.end_point()
+    return self.masses[idx]
+
+  # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
+  # raise StopIteration()
+  def __next__(self):
+    start = self.start
+    if start > self.end_point():
+      self.start = self.start_point()
+      raise StopIteration()
+    else:
+      results = []
+      end = min(start + self.batch - 1, self.end_point())
+      for i in range(start, end + 1):
+        ss, label, pos = self.get_data_by_index(i)
+        results.append((ss, label, pos))
+      self.start = end + 1
+      return results
+
+  def shuffle(self):
+    random.shuffle(self.masses)
+
+class Loader_Symmetry_SGD(Loader_SGD):
+  def __init__(self, ds, half, batch, shuffle = True):
+    print(f'init Loader_Symmetry_SGD half={half}, batch={batch}')
+    self.half = ds.half = half
+    self.ss_len = ds.ss_len = half * 2
+    self.ds = self.dataset = ds
+    self.batch = self.batch_size = batch
+    self.start = self.start_point()
+    ld = Loader_Symmetry(ds, half, batch=1)
+    self.masses = []
+    for mass in ld:
+      ss, labels, pos = mass[0]
+      self.masses.append((ss, labels, pos))
+    if shuffle:
+      random.shuffle(self.masses)
+      print('Loader_Symmetry_SGD: Shuffled')
+    else:
+      print('Loader_Symmetry_SGD: No Shuffle')
+  
 # end ======================= Loader Tested, No Touch =======================

@@ -130,12 +130,16 @@ def compress_by_ss_pos_get_emb(bert, toker, ss, pos):
   assert out_target.shape[0] == len(target)
   return out_target
 
-# return: (784)
-def compress_by_ss_pos_get_cls(bert, toker, ss, pos):
+def get_left_right_ids_no_special_token(toker, ss, pos):
   idss = [encode_without_special_tokens(toker, s) for s in ss]
   target = idss[pos]
   left = flatten_num_lists(idss[0: pos])
   right = flatten_num_lists(idss[pos:])
+  return left, right
+
+# return: (784)
+def compress_by_ss_pos_get_cls(bert, toker, ss, pos):
+  left, right = get_left_right_ids_no_special_token(toker, ss, pos)
   ids = add_special_token_for_ids_pair(toker, left, right)
   ids = t.LongTensor(ids).view(1, -1)
   if GPU_OK:
@@ -147,10 +151,7 @@ def compress_by_ss_pos_get_cls(bert, toker, ss, pos):
   return out[0] # (784)
 
 def compress_by_ss_pos_get_sep(bert, toker, ss, pos):
-  idss = [encode_without_special_tokens(toker, s) for s in ss]
-  target = idss[pos]
-  left = flatten_num_lists(idss[0: pos])
-  right = flatten_num_lists(idss[pos:])
+  left, right = get_left_right_ids_no_special_token(toker, ss, pos)
   ids = add_special_token_for_ids_pair(toker, left, right)
   ids = t.LongTensor(ids).view(1, -1)
   if GPU_OK:

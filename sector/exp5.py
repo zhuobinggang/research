@@ -566,15 +566,26 @@ def fit_sigmoided_to_label(out):
   return t.LongTensor(results)
 
 
-def init_G(half = 1):
-  G['ld'] = Loader(ds = data.train_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
-  G['testld'] = Loader(ds = data.test_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
-  G['devld'] = Loader(ds = data.dev_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+def init_G(half = 1, sgd = False):
+  if not sgd:
+    G['ld'] = data.Loader(ds = data.train_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+    G['testld'] = data.Loader(ds = data.test_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+    G['devld'] = data.Loader(ds = data.dev_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+  else:
+    G['ld'] = data.Loader_SGD(ds = data.train_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+    G['testld'] = data.Loader_SGD(ds = data.test_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+    G['devld'] = data.Loader_SGD(ds = data.dev_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
+    
 
-def init_G_Symmetry(half = 1):
-  G['ld'] = Loader_Symmetry(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
-  G['testld'] = Loader_Symmetry(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
-  G['devld'] = Loader_Symmetry(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
+def init_G_Symmetry(half = 1, sgd = False):
+  if not sgd:
+    G['ld'] = data.Loader_Symmetry(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
+    G['testld'] = data.Loader_Symmetry(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
+    G['devld'] = data.Loader_Symmetry(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
+  else: 
+    G['ld'] = data.Loader_Symmetry_SGD(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
+    G['testld'] = data.Loader_Symmetry_SGD(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
+    G['devld'] = data.Loader_Symmetry_SGD(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = 2)
 
 def get_datas(index, epoch, desc):
   return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], G['devld'], desc)
@@ -767,6 +778,23 @@ def run_v1():
   ordering_with_cls()
   ordering_with_mean()
 
+def run_left_right_vs_double_sentence():
+  epoch_num = 6
+  for i in range(epoch_num): # 交替跑
+    init_G(1, sgd = True)
+    G['m'] = m = Model_Fuck(rate=0)
+    get_datas(i, 2, f'左右池化，跑五次，和2vs2对比, flrate={m.fl_rate}')
+    init_G_Symmetry(2, sgd = True) 
+    G['m'] = m = Double_Sentence_CLS(rate=0)
+    get_datas(i + 10, 2, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
+  
+
 def run():
-  run_double_sentence_exp()
+  init_G(1, sgd = True)
+  G['m'] = m = Model_Fuck(rate=0)
+  get_datas(0, 1, f'左右池化，跑五次，和2vs2对比, flrate={m.fl_rate}')
+  get_datas(1, 1, f'左右池化，跑五次，和2vs2对比, flrate={m.fl_rate}')
+  # init_G_Symmetry(2, sgd = True) 
+  # G['m'] = m = Double_Sentence_CLS(rate=0)
+  # get_datas(i + 10, 2, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
 
