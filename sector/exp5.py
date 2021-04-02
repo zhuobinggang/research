@@ -297,6 +297,8 @@ class Model_Baseline(Model_Fuck):
     sss, labels, poss = handle_mass(mass) 
     pools = []
     for ss, pos in zip(sss, poss): 
+      if len(ss) != 3:
+        print(f'Warining: len(ss) = {len(ss)}, pos = {pos}')
       pooled = self.pool_policy(ss, pos) # (784)
       pools.append(pooled)
     pools = t.stack(pools) # (batch, 784)
@@ -670,20 +672,8 @@ def run_left_right_fl():
     m.fl_rate = 5
     get_datas(0, 2, f'左右池化, flrate={m.fl_rate}')
 
-def run_neo_without_fl():
-  init_G(1)
-  for i in range(epoch_num):
-    G['m'] = m = Model_Baseline() # [CLS]
-    m.fl_rate = 0
-    get_datas(i + 0, 2, f'1:2 [CLS]池化, flrate={m.fl_rate}')
-  for i in range(epoch_num):
-    G['m'] = m = Model_Baseline_SEP() # [SEP]
-    m.fl_rate = 0
-    get_datas(i + 10, 2, f'1:2 [SEP]池化, flrate={m.fl_rate}')
-  for i in range(epoch_num):
-    G['m'] = m = Model_Mean_Pool() # mean
-    m.fl_rate = 0
-    get_datas(i + 20, 2, f'1:2 [MEAN]池化, flrate={m.fl_rate}')
+
+
 
 def run_neo_fl():
   init_G(1)
@@ -795,14 +785,23 @@ def run_single_sentence():
     G['m'] = m = Double_Sentence_CLS(rate=0)
     get_datas(i + 10, 2, f'1:1 Double_Sentence_CLS, flrate={m.fl_rate}')
   
+def run_1vs2_cls():
+  init_G(1, sgd=True)
+  epoch_num = 2
+  for i in range(epoch_num):
+    G['m'] = m = Model_Baseline(rate = 0) # [CLS]
+    print(f'1:2 [CLS]池化, flrate={m.fl_rate}')
+    get_datas(i + 0, 2, f'1:2 [CLS]池化, flrate={m.fl_rate}')
 
 def run():
-  # init_G(1, sgd = True)
-  # G['m'] = m = Model_Fuck(rate=0)
-  # get_datas(0, 1, f'左右池化，跑五次，和2vs2对比, flrate={m.fl_rate}')
-  # get_datas(1, 1, f'左右池化，跑五次，和2vs2对比, flrate={m.fl_rate}')
-  init_G_Symmetry(2, sgd = True) 
-  G['m'] = m = Double_Sentence_CLS(rate=0)
-  get_datas(0, 1, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
-  get_datas(1, 1, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
+  epoch_num = 6
+  for i in range(epoch_num): # 交替跑
+    init_G(1, sgd=True)
+    G['m'] = m = Model_Baseline(rate = 0) # [CLS]
+    print(f'SGD 1:2 [CLS]池化, flrate={m.fl_rate}')
+    get_datas(i + 0, 2, f'SGD 1:2 [CLS]池化, flrate={m.fl_rate}')
+    init_G_Symmetry(1, sgd = True) 
+    G['m'] = m = Double_Sentence_CLS(rate=0)
+    get_datas(i + 10, 2, f'1:1 Sentence_CLS, flrate={m.fl_rate}')
+
 
