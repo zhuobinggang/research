@@ -234,16 +234,21 @@ def get_test_results_batch(m, testld, logger = print):
   logger(f'Tested! Time cost: {end - start} seconds')
   return results, targets
 
-def get_test_results_single_point(m, testld, logger = print):
+def get_test_results_single_point(m, testld, logger = print, with_label = False):
   targets = []
   results = []
   start = time.time()
   length = len(testld.dataset)
   for inpts, labels in testld:
     label, pos = labels
-    targets.append(label.item())
+    if not with_label:
+      targets.append(label.item())
+      results.append(m.dry_run(inpts, labels))
+    else:
+      o,l = m.dry_run(inpts, labels, with_label = True)
+      results.append(o)
+      targets.append(l)
     # targets.append(label[pos.item()].item())
-    results.append(m.dry_run(inpts, labels))
   end = time.time()
   logger(f'Tested! Time cost: {end - start} seconds')
   return results, targets

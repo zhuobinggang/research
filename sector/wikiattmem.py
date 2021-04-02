@@ -1,6 +1,8 @@
 from wikiatt import *
 from self_attention import Multihead_SelfAtt, Multihead_Official, Multihead_Official_Scores
 import random
+import data_jap_reader as data
+import time
 
 def fit_sigmoided_to_label(out):
   assert len(out.shape) == 2
@@ -186,7 +188,6 @@ class AttMemNet_Parameter2(AttMemNet):
 class AttMemNet_FL(AttMemNet):
   def init_hook(self):
     self.feature = 300
-    self.fl_rate = 5
     self.max_seq_len = 64
     self.classifier = nn.Sequential(
       nn.Linear(self.feature, int(self.feature / 2)),
@@ -315,7 +316,6 @@ class Att_FL(AttMemNet_FL):
 class Att_FL_Ordering(Att_FL):
   def init_hook(self):
     self.feature = 300
-    self.fl_rate = 0
     self.max_seq_len = 64
     self.classifier = nn.Sequential(
       nn.Linear(self.feature, int(self.feature / 2)),
@@ -399,17 +399,147 @@ class Att_FL_Ordering(Att_FL):
     self.print_train_info(o, label, loss.detach().item())
     return loss.detach().item()
 
+
+class Ordering_Only(Att_FL_Ordering):
+  # inpts: ss_tensor, ss
+  # ss_tensor: [seq_len, (?, feature)], 不定长复数句子
+  # ss: [seq_len, string]
+  # labels: (label, pos)
+  def train(self, inpts, labels, checking = False):
+    label, pos = labels # (1), LongTensor
+    ss_tensor, ss = inpts
+    ss_disturbed = ss.copy() # 
+    ss_disturbed = [''.join(words) for words in ss_disturbed]
+    label_ordering = None
+    if random.randrange(100) > 50: # 1/2的概率倒序
+      random.shuffle(ss_disturbed)
+      if ss_disturbed == ss:
+        label_ordering = t.LongTensor([0])
+        G['ordering_labels'].append(0)
+      else:
+        G['ordering_labels'].append(1)
+        label_ordering = t.LongTensor([1])
+    else:
+      G['ordering_labels'].append(0)
+      label_ordering = t.LongTensor([0])
+    ss_disturbed_tensor, sentence_words = w2v(ss_disturbed, 64, require_words = True) # (seq_len, ?, feature)
+    self.empty_memory()
+    self.cat2memory((ss_disturbed_tensor, sentence_words))
+    out, _, _ = self.memory_self_attention() # (seq_len + current_memory_size, feature)
+    self.empty_memory()
+    out = out[-1] # (feature)
+    out = self.classifier2(out) # (1)
+    if out.item() < 0.5:
+      G['ordering_results'].append(0)
+    else:
+      G['ordering_results'].append(1)
+    out = out.view(1, 1)
+    loss = self.cal_loss(out, label_ordering)
+    self.zero_grad()
+    loss.backward()
+    self.optim.step()
+    return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, inpts, labels=None, checking = False, with_label = False):
+    label, pos = labels # (1), LongTensor
+    ss_tensor, ss = inpts
+    ss_disturbed = ss.copy() # 
+    ss_disturbed = [''.join(words) for words in ss_disturbed]
+    label_ordering = None
+    if random.randrange(100) > 50: # 1/2的概率倒序
+      random.shuffle(ss_disturbed)
+      if ss_disturbed == ss:
+        label_ordering = t.LongTensor([0])
+        G['ordering_labels_dry'].append(0)
+      else:
+        G['ordering_labels_dry'].append(1)
+        label_ordering = t.LongTensor([1])
+    else:
+      G['ordering_labels_dry'].append(0)
+      label_ordering = t.LongTensor([0])
+    ss_disturbed_tensor, sentence_words = w2v(ss_disturbed, 64, require_words = True) # (seq_len, ?, feature)
+    self.empty_memory()
+    self.cat2memory((ss_disturbed_tensor, sentence_words))
+    out, sentence_scores, word_scores_per_sentence = self.memory_self_attention() # (seq_len + current_memory_size, feature)
+    memory_info_copy = self.working_memory_info.copy() if checking else None
+    self.empty_memory()
+    out = out[-1] # (feature)
+    out = self.classifier2(out) # (1)
+    if out.item() < 0.5:
+      G['ordering_results_dry'].append(0)
+    else:
+      G['ordering_results_dry'].append(1)
+    o = out
+    probability = o.item()
+    self.print_train_info(o, label_ordering, -1)
+    result = 0 if o < 0.5 else 1
+    if checking:
+      if with_label: 
+        return result, sentence_scores, word_scores_per_sentence, memory_info_copy, probability
+      else:
+        return result, sentence_scores, word_scores_per_sentence, memory_info_copy, probability, label_ordering.item()
+    else:
+      if with_label: 
+        return result, label_ordering.item()
+      else:
+        return result
+
+
+# ===============================
+
+class LoaderAdaptor():
+  def __init__(self, ld):
+    self.ld = ld
+    self.max_len = 64
+    self.start = ld.start
+    self.batch_size = 1
+    self.ds = self.dataset = self.ld.dataset
+
+  def __iter__(self):
+    return self
+
+  def handle_mass(self, mass):
+    assert len(mass) == 1
+    s,l,p = mass[0]
+    ss = s
+    label = l[p]
+    pos_relative = p
+    # 将ss转成ss_tensor & ss
+    # 将labels & pos转成labels
+    ss_tensor, words_per_sentence = w2v(ss, self.max_len, require_words = True) # (seq_len, ?, 300), list
+    return (ss_tensor, words_per_sentence), (t.LongTensor([label]), t.LongTensor([pos_relative]))
+
+  # return: left: (batch, 128, 300), right: (batch, 128, 300), label: (batch)
+  # raise StopIteration()
+  def __next__(self):
+    self.start = self.ld.start
+    mass = next(self.ld)
+    return self.handle_mass(mass)
+
+  def __len__(self):
+    return len(self.ld)
+
+  def shuffle(self):
+    self.ld.shuffle()
+
+  
+
+def init_G(half = 1, sgd = True):
+  print('Init G symmetry as exp5')
+  batch = 1 # 不能更改
+  assert batch == 1
+  if not sgd:
+    G['ld'] = LoaderAdaptor(data.Loader_Symmetry(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch))
+    G['testld'] = LoaderAdaptor(data.Loader_Symmetry(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch))
+    G['devld'] = LoaderAdaptor(data.Loader_Symmetry(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch))
+  else: 
+    G['ld'] = LoaderAdaptor(data.Loader_Symmetry_SGD(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch))
+    G['testld'] = LoaderAdaptor(data.Loader_Symmetry_SGD(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch))
+    G['devld'] = LoaderAdaptor(data.Loader_Symmetry_SGD(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch))
+    
+
 # ===========================
-
-def run():
-  init_G(2)
-  head = 6
-  memsize = 0
-  G['m'] = m = Att_FL_Ordering(hidden_size = 256, head=head, memory_size = memsize)
-  m.fl_rate = 0
-  epochs = 1
-  get_datas(0, epochs, f'Ordering, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
-
 
 def get_analysis_data(m):
   G['results'] = results = []
@@ -443,3 +573,19 @@ def draw_by_results_and_index(results, index):
     print(f'Warning: just 1 sentence: {memory_info_copy}')
     U.draw_head_attention(word_scores_per_sentence[0], memory_info_copy[0], path = 'begin.png', desc = 'att_score: 1')
     
+def run():
+  init_G(1, sgd=True)
+  head = 6
+  memsize = 0
+  G['m'] = m = Att_FL_Ordering(hidden_size = 256, head=head, memory_size = memsize, rate = 0)
+  epochs = 1
+  get_datas(0, epochs, f'Ordering, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
+
+
+def run_ordering_only():
+  init_G(1, sgd=True)
+  head = 6
+  memsize = 0
+  G['m'] = m = Ordering_Only(hidden_size = 256, head=head, memory_size = memsize, rate = 0)
+  epochs = 1
+  get_datas(0, epochs, f'Ordering, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}', with_label = True)

@@ -11,10 +11,10 @@ import requests
 
 G = {}
 
-def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing'):
+def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing', with_label = False):
   losses = train_simple(m, ld, epoch) # only one epoch for order matter model
-  G[f'testdic_{index}'] = get_test_result_long(m, testld)
-  G[f'devdic_{index}'] = get_test_result_long(m, devld)
+  G[f'testdic_{index}'] = get_test_result_long(m, testld, with_label = with_label)
+  G[f'devdic_{index}'] = get_test_result_long(m, devld, with_label = with_label)
   dic = {
     'testdic': G[f'testdic_{index}'],
     'devdic': G[f'devdic_{index}'],
@@ -120,13 +120,13 @@ def get_test_result(m, testld):
     dic['bacc'] = bacc
   return dic
 
-def get_test_result_long(m, testld):
+def get_test_result_long(m, testld, with_label = False):
   if testld is None:
     return none_dic()
   else: 
     dic = {}
     testld.start = 0
-    outputs, targets = U.get_test_results_single_point(m, testld, U.logging.debug)
+    outputs, targets = U.get_test_results_single_point(m, testld, U.logging.debug, with_label)
     prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
     dic['prec'] = prec
     dic['rec'] = rec
