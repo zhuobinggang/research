@@ -458,8 +458,8 @@ class Double_Sentence_CLS(Model_Fuck):
     sss, labels, poss = handle_mass(mass) 
     pooled_embs = [] 
     for ss, pos in zip(sss, poss):
-      if pos != 2:
-        print(f'Warning: pos={pos}')
+      # if pos != 2:
+      #   print(f'Warning: pos={pos}')
       emb = self.pool_policy(ss, pos)
       pooled_embs.append(emb)
     pooled_embs = t.stack(pooled_embs) # (batch, 784)
@@ -480,8 +480,8 @@ class Double_Sentence_CLS(Model_Fuck):
     sss, labels, poss = handle_mass(mass) 
     pooled_embs = [] 
     for ss, pos in zip(sss, poss):
-      if pos != 2:
-        print(f'Warning: pos={pos}')
+      # if pos != 2:
+      #   print(f'Warning: pos={pos}')
       emb = self.pool_policy(ss, pos)
       pooled_embs.append(emb)
     pooled_embs = t.stack(pooled_embs) # (batch, 784)
@@ -519,8 +519,8 @@ class Double_Sentence_Plus_Ordering(Double_Sentence_CLS):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
-      if pos != 2:
-        print(f'Warning: pos={pos}')
+      # if pos != 2:
+      #   print(f'Warning: pos={pos}')
       pooled_embs.append(self.pool_policy(ss, pos))
       # Ordering
       ss_disturbed = ss.copy()
@@ -787,6 +787,13 @@ def run_left_right_vs_double_sentence():
     init_G_Symmetry(2, sgd = True) 
     G['m'] = m = Double_Sentence_CLS(rate=0)
     get_datas(i + 10, 2, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
+  
+def run_single_sentence():
+  epoch_num = 6
+  for i in range(epoch_num): # 交替跑
+    init_G_Symmetry(1, sgd = True) 
+    G['m'] = m = Double_Sentence_CLS(rate=0)
+    get_datas(i + 10, 2, f'1:1 Double_Sentence_CLS, flrate={m.fl_rate}')
   
 
 def run():
