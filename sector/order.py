@@ -133,7 +133,7 @@ class Ordering_Sector(Ordering_Only):
     sss, sector_labels, poss = handle_mass(mass) 
     sector_loss, sector_output = self.get_sector_loss(sss, poss, sector_labels, return_output = True)
     self.print_train_info(sector_output, sector_labels, -1)
-    return fit_sigmoided_to_label(sector_output), sector_labels
+    return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
 
 # ===========================================
 
@@ -151,7 +151,7 @@ def run2vs2():
 
 def run_order_sector():
   init_G_Symmetry(2, sgd = True, batch = 2)
-  for i in range(5):
+  for i in range(6):
     G['m'] = m = Ordering_Sector(rate=0)
     get_datas(i, 2, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
     G['m'] = m = Ordering_Sector(rate=3)
