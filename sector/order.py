@@ -155,7 +155,7 @@ def run_order_sector():
     G['m'] = m = Ordering_Sector(rate=0)
     get_datas(i, 2, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
     G['m'] = m = Ordering_Sector(rate=3)
-    get_datas(i, 2, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
+    get_datas(i + 10, 2, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
 
 
 
