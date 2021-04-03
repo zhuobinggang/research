@@ -41,7 +41,10 @@ class AttMemNet(WikiAttOfficial):
     for inpt in inpts: # (?, feature)
       cls = self.cls_embedding()
       inpt = t.cat([cls, inpt])
-      inpt = inpt + self.get_pos_encoding(inpt)# NOTE: pos encoding
+      if self.with_pos: # NOTE: pos encoding
+        inpt = inpt + self.get_pos_encoding(inpt)
+      else:
+        pass
       embs, score = self.sentence_compressor(inpt) # (? + 1, feature), (?+1, ?+1)
       cls_pool = embs[0] # (feature)
       results.append(cls_pool) # mean pool
@@ -53,14 +56,17 @@ class AttMemNet(WikiAttOfficial):
 
   def memory_self_attention(self):
     # get cls
-    cls, word_scores_per_sentence = self.cls(self.working_memory, checking = True)
+    cls, word_scores_per_sentence = self.cls(self.working_memory, checking = True) # (seq_len, feature)
     # self attend
     integrated, sentence_scores = self.integrate_sentences_info_with_scores(cls)
     return integrated, sentence_scores, word_scores_per_sentence
 
   def integrate_sentences_info_with_scores(self, cls):
     seq_len, feature = cls.shape
-    cls = cls + self.get_pos_encoding(cls)# NOTE: pos encoding
+    if self.with_pos: # NOTE: pos encoding
+      cls = cls + self.get_pos_encoding(cls)
+    else:
+      pass
     integrated, scores = self.sentence_integrator(cls) # (seq_len, feature), (seq_len, seq_len)
     return integrated, scores
 
@@ -332,6 +338,8 @@ class Att_FL_Ordering(Att_FL):
     )
     G['ordering_results'] = []
     G['ordering_labels'] = []
+    G['ordering_labels_dry'] = []
+    G['ordering_results_dry'] = []
     self.init_selfatt_layers()
     self.init_working_memory()
     self.ember = nn.Embedding(3, self.feature)
@@ -589,3 +597,11 @@ def run_ordering_only():
   G['m'] = m = Ordering_Only(hidden_size = 256, head=head, memory_size = memsize, rate = 0)
   epochs = 1
   get_datas(0, epochs, f'Ordering, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}', with_label = True)
+
+def run_sector_only():
+  init_G(1, sgd=True)
+  head = 6
+  memsize = 0
+  G['m'] = m = Att_FL(hidden_size = 256, head=head, memory_size = memsize, rate = 0)
+  epochs = 1
+  get_datas(0, epochs, f'Sector only, length=1:1, epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
