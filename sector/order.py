@@ -133,7 +133,7 @@ class Ordering_Sector(Ordering_Only):
     sss, sector_labels, poss = handle_mass(mass) 
     sector_loss, sector_output = self.get_sector_loss(sss, poss, sector_labels, return_output = True)
     self.print_train_info(sector_output, sector_labels, -1)
-    return fit_sigmoided_to_label(sector_output), sector_labels
+    return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
 
 # ===========================================
 
