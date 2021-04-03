@@ -1,6 +1,11 @@
 from exp5 import *
 
 class Ordering_Only(Double_Sentence_Plus_Ordering):
+
+  def print_train_info(self, o, ordering_labels, loss):
+    if self.verbose:
+      print(f'Got: {o.tolist()}, Want: {ordering_labels.tolist()}')
+
   def train(self, mass):
     batch = len(mass)
     sss, labels, poss = handle_mass(mass) 

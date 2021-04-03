@@ -470,9 +470,10 @@ class Ordering_Only(Att_FL_Ordering):
     self.empty_memory()
     self.cat2memory((ss_disturbed_tensor, sentence_words))
     out, sentence_scores, word_scores_per_sentence = self.memory_self_attention() # (seq_len + current_memory_size, feature)
+    assert out.shape[0] == len(ss) + 1 
     memory_info_copy = self.working_memory_info.copy() if checking else None
     self.empty_memory()
-    out = out[-1] # (feature)
+    out = out[0] # (feature)
     out = self.classifier2(out) # (1)
     if out.item() < 0.5:
       G['ordering_results_dry'].append(0)
@@ -492,6 +493,18 @@ class Ordering_Only(Att_FL_Ordering):
         return result, label_ordering.item()
       else:
         return result
+
+  def integrate_sentences_info_with_scores(self, pooled):
+    seq_len, feature = pooled.shape
+    # NOTE: 增加cls
+    cls = self.cls_embedding()
+    pooled = t.cat([cls, pooled])
+    if self.with_pos:
+      pooled = pooled + self.get_pos_encoding(pooled) # (seq_len, feature)
+    else:
+      pass
+    integrated, scores = self.sentence_integrator(pooled) # (seq_len, feature), (seq_len, seq_len)
+    return integrated, scores
 
 
 # ===============================
@@ -594,14 +607,14 @@ def run_ordering_only():
   init_G(1, sgd=True)
   head = 6
   memsize = 0
-  G['m'] = m = Ordering_Only(hidden_size = 256, head=head, memory_size = memsize, rate = 0)
+  G['m'] = m = Ordering_Only(hidden_size = 256, head=head, memory_size = memsize, rate = 0, with_pos = True)
   epochs = 1
-  get_datas(0, epochs, f'Ordering, length=2:2 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}', with_label = True)
+  get_datas(0, epochs, f'Ordering, length=1:1 epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}', with_label = True)
 
 def run_sector_only():
   init_G(1, sgd=True)
   head = 6
   memsize = 0
-  G['m'] = m = Att_FL(hidden_size = 256, head=head, memory_size = memsize, rate = 0)
+  G['m'] = m = Att_FL(hidden_size = 256, head=head, memory_size = memsize, rate = 0, with_pos = True)
   epochs = 1
   get_datas(0, epochs, f'Sector only, length=1:1, epochs = {epochs}, head = {head}, size = {memsize}, fl_rate = {m.fl_rate}')
