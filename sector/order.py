@@ -36,7 +36,7 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     self.zero_grad()
     loss.backward()
     self.optim.step()
-    self.print_train_info(o, labels, loss.detach().item())
+    self.print_train_info(o, ordering_labels, loss.detach().item())
     return loss.detach().item()
 
   @t.no_grad()
