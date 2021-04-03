@@ -14,8 +14,8 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
-      if pos != 1:
-        print(f'Warning: pos={pos}, Will not train for {ss}')
+      if len(ss) != 4:
+        print(f'Warning: pos={pos}, Will not train for {ss[0], ss[1]}')
       else:
         # Ordering
         ss_disturbed = ss.copy()
@@ -48,8 +48,8 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
-      if pos != 1:
-        print(f'Warning: pos={pos}, Will not train for {ss}')
+      if len(ss) != 4:
+        print(f'Warning: pos={pos}, Will not train for {ss[0], ss[1]}')
       else:
         # Ordering
         ss_disturbed = ss.copy()
@@ -76,3 +76,9 @@ def run():
   G['m'] = m = Ordering_Only(rate=0)
   get_datas(0, 1, f'1:1 Ordering Only, flrate={m.fl_rate}')
   get_datas(1, 1, f'1:1 Ordering Only, flrate={m.fl_rate}')
+
+def run2vs2():
+  init_G_Symmetry(2, sgd = True)
+  G['m'] = m = Ordering_Only(rate=0)
+  get_datas(0, 1, f'2:2 Ordering Only, flrate={m.fl_rate}')
+  get_datas(1, 1, f'2:2 Ordering Only, flrate={m.fl_rate}')
