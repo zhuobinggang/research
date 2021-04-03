@@ -4,7 +4,9 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
 
   def print_train_info(self, o, ordering_labels, loss):
     if self.verbose:
-      print(f'Got: {[round(item, 2) for item in o.tolist()]}, Want: {ordering_labels.tolist()}')
+      o = o.tolist()
+      o = [round(item, 2) for item in o]
+      print(f'Got: {o}, Want: {ordering_labels.tolist()}')
 
   def train(self, mass):
     batch = len(mass)
