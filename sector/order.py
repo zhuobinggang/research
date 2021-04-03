@@ -151,7 +151,7 @@ def run2vs2():
 
 def run_order_sector():
   init_G_Symmetry(2, sgd = True, batch = 2)
-  for i in range(5):
+  for i in range(6):
     G['m'] = m = Ordering_Sector(rate=0)
     get_datas(i, 2, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
     G['m'] = m = Ordering_Sector(rate=3)
