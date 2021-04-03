@@ -132,7 +132,6 @@ def compress_by_ss_pos_get_emb(bert, toker, ss, pos):
 
 def get_left_right_ids_no_special_token(toker, ss, pos):
   idss = [encode_without_special_tokens(toker, s) for s in ss]
-  target = idss[pos]
   left = flatten_num_lists(idss[0: pos])
   right = flatten_num_lists(idss[pos:])
   return left, right
