@@ -15,19 +15,20 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     ordering_labels = []
     for ss, pos in zip(sss, poss):
       if len(ss) != 4:
-        print(f'Warning: pos={pos}, Will not train for {ss[0], ss[1]}')
+        print(f'Warning: pos={pos}, ss={ss[0]}')
       else:
-        # Ordering
-        ss_disturbed = ss.copy()
-        if random.randrange(100) > 50: # 1/2的概率倒序
-          random.shuffle(ss_disturbed)
-        else:
-          pass
-        ordering_embs.append(self.pool_policy(ss_disturbed, pos))
-        if ss_disturbed == ss:
-          ordering_labels.append(0)
-        else:
-          ordering_labels.append(1)
+        pass
+      # Ordering
+      ss_disturbed = ss.copy()
+      if random.randrange(100) > 50: # 1/2的概率倒序
+        random.shuffle(ss_disturbed)
+      else:
+        pass
+      ordering_embs.append(self.pool_policy(ss_disturbed, len(ss)))
+      if ss_disturbed == ss:
+        ordering_labels.append(0)
+      else:
+        ordering_labels.append(1)
     ordering_embs = t.stack(ordering_embs)
     ordering_labels = t.LongTensor(ordering_labels)
     if GPU_OK:
@@ -48,22 +49,21 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
-      print(len(ss))
-      print(ss)
       if len(ss) != 4:
-        print(f'Warning: pos={pos}, Will not train for {ss[0], ss[1]}')
+        print(f'Warning: pos={pos}, ss={ss[0]}')
       else:
-        # Ordering
-        ss_disturbed = ss.copy()
-        if random.randrange(100) > 50: # 1/2的概率倒序
-          random.shuffle(ss_disturbed)
-        else:
-          pass
-        ordering_embs.append(self.pool_policy(ss_disturbed, pos))
-        if ss_disturbed == ss:
-          ordering_labels.append(0)
-        else:
-          ordering_labels.append(1)
+        pass
+      # Ordering
+      ss_disturbed = ss.copy()
+      if random.randrange(100) > 50: # 1/2的概率倒序
+        random.shuffle(ss_disturbed)
+      else:
+        pass
+      ordering_embs.append(self.pool_policy(ss_disturbed, len(ss)))
+      if ss_disturbed == ss:
+        ordering_labels.append(0)
+      else:
+        ordering_labels.append(1)
     ordering_embs = t.stack(ordering_embs)
     ordering_labels = t.LongTensor(ordering_labels)
     if GPU_OK:
