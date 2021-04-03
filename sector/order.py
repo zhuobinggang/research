@@ -48,6 +48,8 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
+      print(len(ss))
+      print(ss)
       if len(ss) != 4:
         print(f'Warning: pos={pos}, Will not train for {ss[0], ss[1]}')
       else:
