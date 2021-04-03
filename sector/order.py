@@ -26,6 +26,7 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     if GPU_OK:
       ordering_labels = ordering_labels.cuda()
     o_ordering = self.classifier2(ordering_embs) # (batch, 1)
+    o = o_ordering
     loss = self.cal_loss(o_ordering, ordering_labels)
     self.zero_grad()
     loss.backward()
@@ -58,7 +59,8 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     ordering_labels = t.LongTensor(ordering_labels)
     if GPU_OK:
       ordering_labels = ordering_labels.cuda()
-    o = self.classifier2(ordering_embs) # (batch, 1)
+    o_ordering = self.classifier2(ordering_embs) # (batch, 1)
+    o = o_ordering
     self.print_train_info(o, ordering_labels, -1)
     return fit_sigmoided_to_label(o), ordering_labels
 
