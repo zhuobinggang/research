@@ -510,6 +510,8 @@ class Double_Sentence_Plus_Ordering(Double_Sentence_CLS):
       nn.Sigmoid()
     )
     self.ordering_loss_rate = 0.5
+    self.dry_run_labels = []
+    self.dry_run_output = []
 
   def get_should_update(self):
     return chain(self.bert.parameters(), self.classifier.parameters(), self.classifier2.parameters())
