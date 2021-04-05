@@ -148,8 +148,8 @@ class Ordering_Sector_Save_Dry_Run(Ordering_Sector):
     sector_loss, sector_output = self.get_sector_loss(sss, poss, sector_labels, return_output = True)
     # 保存dry_run结果到自身
     o_ordering, ordering_labels = self.get_ordering_output_and_label(sss, poss)
-    self.dry_run_output += self.o_ordering.view(-1).tolist()
-    self.dry_run_labels += self.ordering_labels.view(-1).tolist()
+    self.dry_run_output += o_ordering.view(-1).tolist()
+    self.dry_run_labels += ordering_labels.view(-1).tolist()
     self.print_train_info(sector_output, sector_labels, -1)
     return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
 
