@@ -89,7 +89,7 @@ class Ordering_Sector(Ordering_Only):
     else:
       return sector_loss
 
-  def get_ordering_loss(self, sss, poss):
+  def get_ordering_output_and_label(self, sss, poss):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
@@ -113,6 +113,10 @@ class Ordering_Sector(Ordering_Only):
     if GPU_OK:
       ordering_labels = ordering_labels.cuda()
     o_ordering = self.classifier2(ordering_embs) # (batch, 1)
+    return o_ordering, ordering_labels
+
+  def get_ordering_loss(self, sss, poss):
+    o_ordering, ordering_labels = self.get_ordering_output_and_label(sss, poss)
     ordering_loss = self.cal_loss(o_ordering, ordering_labels)
     return ordering_loss
 
@@ -132,6 +136,20 @@ class Ordering_Sector(Ordering_Only):
     batch = len(mass)
     sss, sector_labels, poss = handle_mass(mass) 
     sector_loss, sector_output = self.get_sector_loss(sss, poss, sector_labels, return_output = True)
+    self.print_train_info(sector_output, sector_labels, -1)
+    return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
+
+
+class Ordering_Sector_Save_Dry_Run(Ordering_Sector):
+  @t.no_grad()
+  def dry_run(self, mass):
+    batch = len(mass)
+    sss, sector_labels, poss = handle_mass(mass) 
+    sector_loss, sector_output = self.get_sector_loss(sss, poss, sector_labels, return_output = True)
+    # 保存dry_run结果到自身
+    o_ordering, ordering_labels = self.get_ordering_output_and_label(sss, poss)
+    self.dry_run_output += self.o_ordering.view(-1).tolist()
+    self.dry_run_labels += self.ordering_labels.view(-1).tolist()
     self.print_train_info(sector_output, sector_labels, -1)
     return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
 
@@ -157,5 +175,19 @@ def run_order_sector():
     G['m'] = m = Ordering_Sector(rate=3)
     get_datas(i + 10, 2, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
 
-
+def run_save_dryrun():
+  init_G_Symmetry(2, sgd = True, batch = 2)
+  G['m'] = m = Ordering_Sector_Save_Dry_Run(rate=0)
+  get_datas(0, 1, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
+  G['epoch_1_dry_run'] = {
+    'label': m.dry_run_labels.copy(),
+    'output': m.dry_run_output.copy()
+  }
+  m.dry_run_labels = []
+  m.dry_run_output = []
+  get_datas(1, 1, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
+  G['epoch_2_dry_run'] = {
+    'label': m.dry_run_labels.copy(),
+    'output': m.dry_run_output.copy()
+  }
 
