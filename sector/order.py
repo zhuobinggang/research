@@ -74,10 +74,16 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     return fit_sigmoided_to_label(o), ordering_labels
 
 class Ordering_Sector(Ordering_Only):
+  def pool_policy_sectoring(self, ss, pos):
+    return B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos) # (784)
+
+  def pool_policy_ordering(self, ss, pos):
+    return self.pool_policy_sectoring(ss, len(ss)) # NOTE: 无视pos
+  
   def get_sector_loss(self, sss, poss, sector_labels, return_output = True):
     sector_embs = []
     for ss, pos in zip(sss, poss):
-      sector_embs.append(self.pool_policy(ss, pos)) # 用于判断分割点的embs
+      sector_embs.append(self.pool_policy_sectoring(ss, pos)) # 用于判断分割点的embs
     sector_embs = t.stack(sector_embs) # (batch, feature)
     sector_labels = t.LongTensor(sector_labels) # (batch), (0 or 1)
     if GPU_OK:
@@ -103,7 +109,7 @@ class Ordering_Sector(Ordering_Only):
         random.shuffle(ss_disturbed)
       else:
         pass
-      ordering_embs.append(self.pool_policy(ss_disturbed, len(ss)))
+      ordering_embs.append(self.pool_policy_ordering(ss_disturbed, pos))
       if ss_disturbed == ss:
         ordering_labels.append(0)
       else:
@@ -153,6 +159,13 @@ class Ordering_Sector_Save_Dry_Run(Ordering_Sector):
     self.print_train_info(sector_output, sector_labels, -1)
     return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
 
+class Sector_SEP_Order_CLS(Ordering_Sector_Save_Dry_Run):
+  def pool_policy_sectoring(self, ss, pos):
+    return B.compress_by_ss_pos_get_sep(self.bert, self.toker, ss, pos) # (784)
+
+  def pool_policy_ordering(self, ss, pos):
+    return B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, len(ss)) # (784)
+
 # ===========================================
 
 def run():
@@ -177,17 +190,17 @@ def run_order_sector():
 
 def run_save_dryrun():
   init_G_Symmetry(2, sgd = True, batch = 2)
-  G['m'] = m = Ordering_Sector_Save_Dry_Run(rate=0)
-  get_datas(0, 1, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
-  G['epoch_1_dry_run'] = {
-    'label': m.dry_run_labels.copy(),
-    'output': m.dry_run_output.copy()
-  }
-  m.dry_run_labels = []
-  m.dry_run_output = []
-  get_datas(1, 1, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
-  G['epoch_2_dry_run'] = {
-    'label': m.dry_run_labels.copy(),
-    'output': m.dry_run_output.copy()
-  }
+  for i in range(6):
+    G['m'] = m = Sector_SEP_Order_CLS(rate=0)
+    get_datas(i, 2, f'2:2 Sector_SEP_Order_CLS, flrate={m.fl_rate}')
+    R.request_my_logger({
+      'ordering_result': U.cal_prec_rec_f1_v2(m.dry_run_output, m.dry_run_labels)
+    }, 'dd')
+    G['m'] = m = Ordering_Sector_Save_Dry_Run(rate=0)
+    get_datas(i + 10, 2, f'2:2 Ordering_Sector_Save_Dry_Run+Sector, flrate={m.fl_rate}')
+    R.request_my_logger({
+      'ordering_result': U.cal_prec_rec_f1_v2(m.dry_run_output, m.dry_run_labels)
+    }, 'dd')
+
+
 
