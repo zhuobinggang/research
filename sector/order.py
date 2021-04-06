@@ -203,4 +203,7 @@ def run_save_dryrun():
     }, 'dd')
 
 
-
+def run_save_dryrun():
+  init_G_Symmetry(2, sgd = True, batch = 2)
+  G['m'] = m = Sector_SEP_Order_CLS(rate=0)
+  get_datas(1, 1, f'2:2 Sector_SEP_Order_CLS, flrate={m.fl_rate}')
