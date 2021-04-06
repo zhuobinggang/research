@@ -154,7 +154,7 @@ class Ordering_Sector_Save_Dry_Run(Ordering_Sector):
     sector_loss, sector_output = self.get_sector_loss(sss, poss, sector_labels, return_output = True)
     # 保存dry_run结果到自身
     o_ordering, ordering_labels = self.get_ordering_output_and_label(sss, poss)
-    self.dry_run_output += o_ordering.view(-1).tolist()
+    self.dry_run_output += fit_sigmoided_to_label(o_ordering).view(-1).tolist()
     self.dry_run_labels += ordering_labels.view(-1).tolist()
     self.print_train_info(sector_output, sector_labels, -1)
     return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
@@ -205,5 +205,6 @@ def run_save_dryrun():
 
 def run_save_dryrun():
   init_G_Symmetry(2, sgd = True, batch = 2)
-  G['m'] = m = Sector_SEP_Order_CLS(rate=0)
-  get_datas(1, 1, f'2:2 Sector_SEP_Order_CLS, flrate={m.fl_rate}')
+  for i in range(10):
+    G['m'] = m = Sector_SEP_Order_CLS(rate=0)
+    get_datas(i + 10, 2, f'2:2 Sector_SEP_Order_CLS, flrate={m.fl_rate}')
