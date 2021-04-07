@@ -808,7 +808,25 @@ sector_sep_ordering_cls = [
   ],
   "desc": "2:2 Sector_SEP_Order_CLS, flrate=0"
 },
-
+{
+  "testdic": {
+    "prec": 0.895040369088812,
+    "rec": 0.7767767767767768,
+    "f1": 0.8317256162915327,
+    "bacc": 0.8785452299243538
+  },
+  "devdic": {
+    "prec": 0.7094188376753507,
+    "rec": 0.5221238938053098,
+    "f1": 0.6015293118096856,
+    "bacc": 0.7444980903799224
+  },
+  "losses": [
+    26510.692346453667,
+    21877.041479830164
+  ],
+  "desc": "2:2 Sector_SEP_Order_CLS, flrate=0"
+},
 ]
 
 def analyse(datas, dicname = 'testdic'):
