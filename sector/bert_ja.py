@@ -131,8 +131,10 @@ def compress_by_ss_pos_get_emb(bert, toker, ss, pos):
   assert out_target.shape[0] == len(target)
   return out_target
 
-def get_left_right_ids_no_special_token(toker, ss, pos):
-  idss = [encode_without_special_tokens(toker, s, max_len = 240) for s in ss] # 左右两边不应过长
+def get_left_right_ids_no_special_token(toker, ss, pos, max_len = None):
+  if max_len is None:
+    max_len = int(500 / len(ss)) # 4句时候125 tokens/句, 2句250 tokens/句
+  idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
   left = flatten_num_lists(idss[0: pos])
   right = flatten_num_lists(idss[pos:])
   return left, right
