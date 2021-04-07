@@ -570,7 +570,7 @@ def fit_sigmoided_to_label(out):
   return t.LongTensor(results)
 
 
-def init_G(half = 1, sgd = False):
+def init_G(half = 1, sgd = True):
   if not sgd:
     G['ld'] = data.Loader(ds = data.train_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
     G['testld'] = data.Loader(ds = data.test_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
@@ -581,7 +581,7 @@ def init_G(half = 1, sgd = False):
     G['devld'] = data.Loader_SGD(ds = data.dev_dataset(ss_len = half * 2 + 1, max_ids = 64), half = half, batch = 4)
     
 
-def init_G_Symmetry(half = 1, sgd = False, batch = 4):
+def init_G_Symmetry(half = 1, sgd = True, batch = 4):
   if not sgd:
     G['ld'] = data.Loader_Symmetry(ds = data.train_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch)
     G['testld'] = data.Loader_Symmetry(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch)
