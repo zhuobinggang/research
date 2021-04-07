@@ -22,8 +22,9 @@ def batch_get_embs(ss):
   outputs = model(input_ids, attention_mask, return_dict=True)
   return outputs.pooler_output # [CLS] : (batch_size, 768) 
 
-def encode_without_special_tokens(toker, s):
-  return toker.encode(s, add_special_tokens = False)
+def encode_without_special_tokens(toker, s, max_len = 240):
+  ids = toker.encode(s, add_special_tokens = False)
+  return ids[:max_len]
 
 def encode_with_special_tokens(toker, s):
   return toker.encode(s)
@@ -130,8 +131,10 @@ def compress_by_ss_pos_get_emb(bert, toker, ss, pos):
   assert out_target.shape[0] == len(target)
   return out_target
 
-def get_left_right_ids_no_special_token(toker, ss, pos):
-  idss = [encode_without_special_tokens(toker, s) for s in ss]
+def get_left_right_ids_no_special_token(toker, ss, pos, max_len = None):
+  if max_len is None:
+    max_len = int(500 / len(ss)) # 4句时候125 tokens/句, 2句250 tokens/句
+  idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
   left = flatten_num_lists(idss[0: pos])
   right = flatten_num_lists(idss[pos:])
   return left, right

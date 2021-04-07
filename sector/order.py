@@ -79,16 +79,20 @@ class Ordering_Sector(Ordering_Only):
 
   def pool_policy_ordering(self, ss, pos):
     return self.pool_policy_sectoring(ss, len(ss)) # NOTE: 无视pos
-  
-  def get_sector_loss(self, sss, poss, sector_labels, return_output = True):
+
+  def get_sector_output(self, sss, poss):
     sector_embs = []
     for ss, pos in zip(sss, poss):
       sector_embs.append(self.pool_policy_sectoring(ss, pos)) # 用于判断分割点的embs
     sector_embs = t.stack(sector_embs) # (batch, feature)
+    o_sector = self.classifier(sector_embs) # (batch, 1)
+    return o_sector
+  
+  def get_sector_loss(self, sss, poss, sector_labels, return_output = True):
+    o_sector = self.get_sector_output(sss, poss) # (batch, 1)
     sector_labels = t.LongTensor(sector_labels) # (batch), (0 or 1)
     if GPU_OK:
       sector_labels = sector_labels.cuda()
-    o_sector = self.classifier(sector_embs) # (batch, 1)
     sector_loss = self.cal_loss(o_sector, sector_labels)
     if return_output:
       return sector_loss, o_sector
@@ -141,7 +145,7 @@ class Ordering_Sector(Ordering_Only):
   def dry_run(self, mass):
     batch = len(mass)
     sss, sector_labels, poss = handle_mass(mass) 
-    sector_loss, sector_output = self.get_sector_loss(sss, poss, sector_labels, return_output = True)
+    sector_output = self.get_sector_output(sss, poss)
     self.print_train_info(sector_output, sector_labels, -1)
     return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
 
@@ -151,7 +155,7 @@ class Ordering_Sector_Save_Dry_Run(Ordering_Sector):
   def dry_run(self, mass):
     batch = len(mass)
     sss, sector_labels, poss = handle_mass(mass) 
-    sector_loss, sector_output = self.get_sector_loss(sss, poss, sector_labels, return_output = True)
+    sector_output = self.get_sector_output(sss, poss)
     # 保存dry_run结果到自身
     o_ordering, ordering_labels = self.get_ordering_output_and_label(sss, poss)
     self.dry_run_output += fit_sigmoided_to_label(o_ordering).view(-1).tolist()
@@ -159,7 +163,14 @@ class Ordering_Sector_Save_Dry_Run(Ordering_Sector):
     self.print_train_info(sector_output, sector_labels, -1)
     return fit_sigmoided_to_label(sector_output), t.LongTensor(sector_labels)
 
-class Sector_SEP_Order_CLS(Ordering_Sector_Save_Dry_Run):
+class Sector_SEP_Order_CLS(Ordering_Sector):
+  def pool_policy_sectoring(self, ss, pos):
+    return B.compress_by_ss_pos_get_sep(self.bert, self.toker, ss, pos) # (784)
+
+  def pool_policy_ordering(self, ss, pos):
+    return B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, len(ss)) # (784)
+
+class Sector_SEP_Order_CLS_Save_Ordering_Result(Ordering_Sector_Save_Dry_Run):
   def pool_policy_sectoring(self, ss, pos):
     return B.compress_by_ss_pos_get_sep(self.bert, self.toker, ss, pos) # (784)
 
@@ -202,9 +213,16 @@ def run_save_dryrun():
       'ordering_result': U.cal_prec_rec_f1_v2(m.dry_run_output, m.dry_run_labels)
     }, 'dd')
 
+def run():
+  for i in range(20): 
+    init_G_Symmetry(2, sgd = True, batch = 2)
+    G['m'] = m = Sector_SEP_Order_CLS(rate=0) # 2 vs 2, ordering
+    get_datas(i + 40, 2, f'2vs2, plus ordering')
+    init_G_Symmetry(1, sgd = True, batch = 4)
+    G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
+    get_datas(i, 2, f'1vs1')
+    init_G_Symmetry(2, sgd = True, batch = 2)
+    G['m'] = m = Double_Sentence_CLS(rate=0) # 2 vs 2
+    get_datas(i + 20, 2, f'2vs2')
 
-def run_save_dryrun():
-  init_G_Symmetry(2, sgd = True, batch = 2)
-  for i in range(10):
-    G['m'] = m = Sector_SEP_Order_CLS(rate=0)
-    get_datas(i + 10, 2, f'2:2 Sector_SEP_Order_CLS, flrate={m.fl_rate}')
+    
