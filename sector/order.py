@@ -216,13 +216,16 @@ def run_save_dryrun():
 
 def run():
   for i in range(20): 
-    init_G_Symmetry(2, sgd = True, batch = 2)
-    G['m'] = m = Double_Sentence_CLS(rate=0) # 2 vs 2
-    get_datas(i + 20, 2, f'2vs2')
-    init_G_Symmetry(2, sgd = True, batch = 2)
-    G['m'] = m = Sector_SEP_Order_CLS(rate=0) # 2 vs 2, ordering
-    get_datas(i + 40, 2, f'2vs2, plus ordering')
-    # init_G_Symmetry(1, sgd = True, batch = 4)
-    # G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
-    # get_datas(i, 2, f'1vs1')
+    # init_G_Symmetry(2, sgd = True, batch = 2)
+    # G['m'] = m = Double_Sentence_CLS(rate=0) # 2 vs 2
+    # get_datas(i + 20, 2, f'2vs2')
+    # init_G_Symmetry(2, sgd = True, batch = 2)
+    # G['m'] = m = Sector_SEP_Order_CLS(rate=0) # 2 vs 2, ordering
+    # get_datas(i + 40, 2, f'2vs2, plus ordering')
+    init_G_Symmetry(1, sgd = True, batch = 4)
+    G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
+    get_datas(i, 2, f'1vs1')
+    G['m'] = m = Sector_SEP_Order_CLS(rate=0) # 1 vs 1
+    get_datas(i + 20, 2, f'1vs1 ordering')
+
     
