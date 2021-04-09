@@ -236,7 +236,7 @@ def init_G_Symmetry_Mainichi(half = 1, batch = 4):
   ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests())
   G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
 
-def run_mainichi()    
+def run_mainichi():
   init_G_Symmetry_Mainichi(half = 1, batch = 4)
   G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
   get_datas(0, 1, '1 vs 1, mainichi news', with_dev = False)
