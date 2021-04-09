@@ -1366,6 +1366,33 @@ mainichi_1vs1_1by1_no_sepecial_char = [
 },
 ]
 
+mainichi_2vs2_1by1_no_special = [
+{
+  "testdic": {
+    "prec": 0.711352657004831,
+    "rec": 0.7339563862928349,
+    "f1": 0.7224777675559645,
+    "bacc": 0.7965805495528975
+  },
+  "losses": [
+    4667.068539037835
+  ],
+  "desc": "2 vs 2, mainichi news epoch 1"
+},
+{
+  "testdic": {
+    "prec": 0.7297633872976339,
+    "rec": 0.7302180685358255,
+    "f1": 0.7299906571161633,
+    "bacc": 0.8011915084947169
+  },
+  "losses": [
+    2286.724190486246
+  ],
+  "desc": "2 vs 2, mainichi news epoch 2"
+},
+]
+
 
 # 有【符号的情况
 # NOTE: 下降了
@@ -1395,6 +1422,8 @@ mainichi_2vs2_1by1 = [
   "desc": "2 vs 2, mainichi news"
 }
 ]
+
+
 
 def analyse(datas, dicname = 'testdic'):
   precs = []
