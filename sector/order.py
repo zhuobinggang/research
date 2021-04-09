@@ -1,4 +1,5 @@
 from exp5 import *
+import mainichi
 
 class Ordering_Only(Double_Sentence_Plus_Ordering):
 
@@ -14,10 +15,10 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
-      if len(ss) != 4:
-        print(f'Warning: pos={pos}, ss={ss[0]}')
-      else:
-        pass
+      # if len(ss) != 4:
+      #   print(f'Warning: pos={pos}, ss={ss[0]}')
+      # else:
+      #   pass
       # Ordering
       ss_disturbed = ss.copy()
       if random.randrange(100) > 50: # 1/2的概率倒序
@@ -49,10 +50,10 @@ class Ordering_Only(Double_Sentence_Plus_Ordering):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
-      if len(ss) != 4:
-        print(f'Warning: pos={pos}, ss={ss[0]}')
-      else:
-        pass
+      # if len(ss) != 4:
+      #   print(f'Warning: pos={pos}, ss={ss[0]}')
+      # else:
+      #   pass
       # Ordering
       ss_disturbed = ss.copy()
       if random.randrange(100) > 50: # 1/2的概率倒序
@@ -103,10 +104,10 @@ class Ordering_Sector(Ordering_Only):
     ordering_embs = []
     ordering_labels = []
     for ss, pos in zip(sss, poss):
-      if len(ss) != 4:
-        print(f'Warning: pos={pos}, ss={ss[0]}')
-      else:
-        pass
+      # if len(ss) != 4:
+      #   print(f'Warning: pos={pos}, ss={ss[0]}')
+      # else:
+      #   pass
       # Ordering
       ss_disturbed = ss.copy()
       if random.randrange(100) > 50: # 1/2的概率倒序
@@ -228,4 +229,20 @@ def run():
     G['m'] = m = Sector_SEP_Order_CLS(rate=0) # 1 vs 1
     get_datas(i + 20, 2, f'1vs1 ordering')
 
-    
+
+def init_G_Symmetry_Mainichi(half = 1, batch = 4):
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_trains())
+  G['ld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests())
+  G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+
+def run_mainichi()    
+  init_G_Symmetry_Mainichi(half = 1, batch = 4)
+  G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
+  get_datas(0, 1, '1 vs 1, mainichi news', with_dev = False)
+  get_datas(1, 1, '1 vs 1, mainichi news', with_dev = False)
+  init_G_Symmetry_Mainichi(half = 2, batch = 2)
+  G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
+  get_datas(2, 1, '2 vs 2, mainichi news', with_dev = False)
+  get_datas(3, 1, '2 vs 2, mainichi news', with_dev = False)
+  

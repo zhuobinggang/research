@@ -591,8 +591,11 @@ def init_G_Symmetry(half = 1, sgd = True, batch = 4):
     G['testld'] = data.Loader_Symmetry_SGD(ds = data.test_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch)
     G['devld'] = data.Loader_Symmetry_SGD(ds = data.dev_dataset(ss_len = half * 2, max_ids = -1), half = half, batch = batch)
 
-def get_datas(index, epoch, desc, dic_to_send = None):
-  return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], G['devld'], desc, dic_to_send)
+def get_datas(index, epoch, desc, dic_to_send = None, with_dev = True):
+  if with_dev:
+    return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], devld = G['devld'], desc = desc, dic_to_send = dic_to_send)
+  else:
+    return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], desc = desc, dic_to_send = dic_to_send)
 
 def train_simple(m, loader, epoch):
   logger = logging.debug
@@ -612,16 +615,17 @@ def train_simple(m, loader, epoch):
   logger(f'Trained! Epochs: {epoch}, Batch size: {loader.batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
   return loss_per_epoch
 
-def get_datas_org(index, epoch, m, ld, testld, devld,  desc='Nothing', dic_to_send = None):
+def get_datas_org(index, epoch, m, ld, testld, devld = None,  desc='Nothing', dic_to_send = None):
   losses = train_simple(m, ld, epoch) # only one epoch for order matter model
   G[f'testdic_{index}'] = get_test_result_dic(m, testld)
-  G[f'devdic_{index}'] = get_test_result_dic(m, devld)
   G[f'losses_{index}'] = losses
   dic = {
     'testdic': G[f'testdic_{index}'],
-    'devdic': G[f'devdic_{index}'],
     'losses': losses
   }
+  if devld is not None:
+    G[f'devdic_{index}'] = get_test_result_dic(m, devld)
+    dic['devdic'] = G[f'devdic_{index}']
   if dic_to_send is not None:
     dic = {**dic, **dic_to_send}
   R.request_my_logger(dic, desc)

@@ -53,10 +53,10 @@ def no_indicator(ss):
 
 
 class Dataset():
-  def __init__(self, ss_len = 8, max_ids = 64):
+  def __init__(self, ss_len = 8, datas=[]):
     super().__init__()
     self.ss_len = ss_len
-    self.max_ids = max_ids
+    self.datas = datas
     self.init_datas_hook()
     self.init_hook()
     self.start = 0
@@ -65,7 +65,7 @@ class Dataset():
     pass
 
   def init_datas_hook(self):
-    self.datas = []
+    pass
 
   def set_datas(self, datas):
     self.datas = datas
@@ -100,17 +100,17 @@ class Dataset():
 
 
 def train_dataset(ss_len, max_ids):
-  ds = Dataset(ss_len = ss_len, max_ids = max_ids)
+  ds = Dataset(ss_len = ss_len)
   ds.set_datas(read_trains())
   return ds
 
 def test_dataset(ss_len, max_ids):
-  ds = Dataset(ss_len = ss_len, max_ids = max_ids)
+  ds = Dataset(ss_len = ss_len)
   ds.set_datas(read_tests())
   return ds
 
 def dev_dataset(ss_len, max_ids):
-  ds = Dataset(ss_len = ss_len, max_ids = max_ids)
+  ds = Dataset(ss_len = ss_len)
   ds.set_datas(read_devs())
   return ds
 
