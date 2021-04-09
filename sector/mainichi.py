@@ -43,7 +43,7 @@ def line_without_period_removed(articles):
   return new_articles
 
 def remove_special_tokens(line):
-  special_tokens = ['\u3000', '\n', '＼Ｔ２＼']
+  special_tokens = ['\u3000', '\n', '＼Ｔ２＼', '「', '」', '（','）', '○', '＜', '＞', '◆', '〓', '｝', '｛', '■']
   result = line
   for token in special_tokens:
     result = result.replace(token, '')
@@ -87,6 +87,13 @@ def paragraph_only_one_sentence_removed(articles):
     results.append(paras)
   return results
 
+def paragraph_with_special_token_removed(articles):
+  results = []
+  for art in articles:
+    paras = [para for para in art if para.find('【') == -1]
+    results.append(paras)
+  return results
+
 def standard_process():
   articles = get_articles_raw()
   articles = special_type_articles_filtered(articles) # NO.1
@@ -96,6 +103,7 @@ def standard_process():
   # articles = line_with_special_token_removed(articles) # NO.2
   articles = paragraph_only_one_sentence_removed(articles) # NO.2
   articles = paragraph_less_then_num_removed(articles, num = 2) # NO.3
+  articles = paragraph_with_special_token_removed(articles) # NO.2
   articles = build_structure(articles)
   return articles
 
