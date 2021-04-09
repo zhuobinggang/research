@@ -237,12 +237,13 @@ def init_G_Symmetry_Mainichi(half = 1, batch = 4):
   G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
 
 def run_mainichi():
-  init_G_Symmetry_Mainichi(half = 1, batch = 4)
-  G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
-  get_datas(0, 1, '1 vs 1, mainichi news', with_dev = False)
-  get_datas(1, 1, '1 vs 1, mainichi news', with_dev = False)
-  init_G_Symmetry_Mainichi(half = 2, batch = 2)
-  G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
-  get_datas(2, 1, '2 vs 2, mainichi news', with_dev = False)
-  get_datas(3, 1, '2 vs 2, mainichi news', with_dev = False)
+  # init_G_Symmetry_Mainichi(half = 1, batch = 4)
+  # G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
+  # get_datas(0, 1, '1 vs 1, mainichi news', with_dev = False)
+  # get_datas(1, 1, '1 vs 1, mainichi news', with_dev = False)
+  for i in range(10):
+    init_G_Symmetry_Mainichi(half = 2, batch = 2)
+    G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
+    get_datas(i, 1, '2 vs 2, mainichi news epoch 1', with_dev = False)
+    get_datas(i + 10, 1, '2 vs 2, mainichi news epoch 2', with_dev = False)
   
