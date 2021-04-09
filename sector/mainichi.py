@@ -115,3 +115,15 @@ def save_origin_train_ds(structed_articles):
     for line in test:
       the_file.write(f'{line}\n')
 
+def no_line_breaks(texts):
+  return [text.replace('\n', '') for text in texts]
+
+def read_trains():
+  with open('train.txt') as the_file:
+    lines = no_line_breaks(the_file.readlines())
+  return lines
+
+def read_tests():
+  with open('test.txt') as the_file:
+    lines = no_line_breaks(the_file.readlines())
+  return lines
