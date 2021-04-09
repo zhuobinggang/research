@@ -37,9 +37,10 @@ def get_left_right_by_ss_pos(ss, pos, distant = 1):
   return left, right
 
 class Model_Fuck(nn.Module):
-  def __init__(self, weight_one = 1, hidden_size = 256, head = 8, dropout=0, rate = 0):
+  def __init__(self, weight_one = 1, hidden_size = 256, head = 8, dropout=0, fl_rate = 0, learning_rate = 2e-5):
     super().__init__()
-    self.fl_rate = rate
+    self.fl_rate = fl_rate
+    self.learning_rate = learning_rate
     self.max_memory_batch = 6
     self.hidden_size = hidden_size
     self.head = head
@@ -56,7 +57,7 @@ class Model_Fuck(nn.Module):
       _ = self.cuda()
 
   def learning_rate(self):
-    return 2e-5
+    return self.learning_rate
 
   def init_hook(self):
     self.classifier = nn.Sequential(
@@ -736,37 +737,37 @@ def left_right_flrate3_run():
 
 def run_sector_plus_ordering():
   init_G(1)
-  G['m'] = m = Model_Sector_Plus(rate = 0)
+  G['m'] = m = Model_Sector_Plus(fl_rate = 0)
   get_datas(1, 1, f'1:2 左右横跳 + ordering, flrate={m.fl_rate}, 1')
   get_datas(2, 1, f'1:2 左右横跳 + ordering, flrate={m.fl_rate}, 2')
 
 def ordering_with_cls():
   init_G(1)
   for i in range(3):
-    G['m'] = m = Model_Sector_Plus(rate = 0)
+    G['m'] = m = Model_Sector_Plus(fl_rate = 0)
     get_datas(i + 10, 2, f'1:2 左右横跳 + [CLS] ordering, flrate={m.fl_rate}')
 
 def ordering_with_mean():
   init_G(1)
   for i in range(3):
-    G['m'] = m = Model_Sector_Plus_V2(rate = 0)
+    G['m'] = m = Model_Sector_Plus_V2(fl_rate = 0)
     get_datas(i + 20, 2, f'1:2 左右横跳 + [MEAN] ordering, flrate={m.fl_rate}')
 
 def run_double_sentence_exp():
   init_G_Symmetry(2) 
   for i in range(2):
-    G['m'] = m = Double_Sentence_CLS(rate = 0)
+    G['m'] = m = Double_Sentence_CLS(fl_rate = 0)
     get_datas(i + 30, 2, f'2:2 Double_Sentence_CLS, flrate={m.fl_rate}')
   for i in range(3):
-    G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
+    G['m'] = m = Double_Sentence_Plus_Ordering(fl_rate = 0)
     m.ordering_loss_rate = 1
     get_datas(i, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
   for i in range(3):
-    G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
+    G['m'] = m = Double_Sentence_Plus_Ordering(fl_rate = 0)
     m.ordering_loss_rate = 0.5
     get_datas(i + 10, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
   for i in range(3):
-    G['m'] = m = Double_Sentence_Plus_Ordering(rate = 0)
+    G['m'] = m = Double_Sentence_Plus_Ordering(fl_rate = 0)
     m.ordering_loss_rate = 2
     get_datas(i + 20, 2, f'2:2 Double_Sentence_Plus_Ordering, flrate={m.fl_rate},ordering_loss_rate= {m.ordering_loss_rate}')
 
@@ -797,7 +798,7 @@ def run_1vs2_cls():
   init_G(1, sgd=True)
   epoch_num = 2
   for i in range(epoch_num):
-    G['m'] = m = Model_Baseline(rate = 0) # [CLS]
+    G['m'] = m = Model_Baseline(fl_rate = 0) # [CLS]
     print(f'1:2 [CLS]池化, flrate={m.fl_rate}')
     get_datas(i + 0, 2, f'1:2 [CLS]池化, flrate={m.fl_rate}')
 
@@ -805,7 +806,7 @@ def run():
   epoch_num = 6
   for i in range(epoch_num): # 交替跑
     init_G(1, sgd=True)
-    G['m'] = m = Model_Baseline(rate = 0) # [CLS]
+    G['m'] = m = Model_Baseline(fl_rate = 0) # [CLS]
     print(f'SGD 1:2 [CLS]池化, flrate={m.fl_rate}')
     get_datas(i + 0, 2, f'SGD 1:2 [CLS]池化, flrate={m.fl_rate}')
     init_G_Symmetry(1, sgd = True) 

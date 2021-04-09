@@ -182,33 +182,33 @@ class Sector_SEP_Order_CLS_Save_Ordering_Result(Ordering_Sector_Save_Dry_Run):
 
 def run():
   init_G_Symmetry(1, sgd = True) 
-  G['m'] = m = Ordering_Only(rate=0)
+  G['m'] = m = Ordering_Only(fl_rate=0)
   get_datas(0, 1, f'1:1 Ordering Only, flrate={m.fl_rate}')
   get_datas(1, 1, f'1:1 Ordering Only, flrate={m.fl_rate}')
 
 def run2vs2():
   init_G_Symmetry(2, sgd = True)
-  G['m'] = m = Ordering_Only(rate=0)
+  G['m'] = m = Ordering_Only(fl_rate=0)
   get_datas(0, 1, f'2:2 Ordering Only, flrate={m.fl_rate}')
   get_datas(1, 1, f'2:2 Ordering Only, flrate={m.fl_rate}')
 
 def run_order_sector():
   init_G_Symmetry(2, sgd = True, batch = 2)
   for i in range(6):
-    G['m'] = m = Ordering_Sector(rate=0)
+    G['m'] = m = Ordering_Sector(fl_rate=0)
     get_datas(i, 2, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
-    G['m'] = m = Ordering_Sector(rate=3)
+    G['m'] = m = Ordering_Sector(fl_rate=3)
     get_datas(i + 10, 2, f'2:2 Ordering+Sector, flrate={m.fl_rate}')
 
 def run_save_dryrun():
   init_G_Symmetry(2, sgd = True, batch = 2)
   for i in range(6):
-    G['m'] = m = Sector_SEP_Order_CLS(rate=0)
+    G['m'] = m = Sector_SEP_Order_CLS(fl_rate=0)
     get_datas(i, 2, f'2:2 Sector_SEP_Order_CLS, flrate={m.fl_rate}')
     R.request_my_logger({
       'ordering_result': U.cal_prec_rec_f1_v2(m.dry_run_output, m.dry_run_labels)
     }, 'dd')
-    G['m'] = m = Ordering_Sector_Save_Dry_Run(rate=0)
+    G['m'] = m = Ordering_Sector_Save_Dry_Run(fl_rate=0)
     get_datas(i + 10, 2, f'2:2 Ordering_Sector_Save_Dry_Run+Sector, flrate={m.fl_rate}')
     R.request_my_logger({
       'ordering_result': U.cal_prec_rec_f1_v2(m.dry_run_output, m.dry_run_labels)
@@ -224,9 +224,9 @@ def run():
     # G['m'] = m = Sector_SEP_Order_CLS(rate=0) # 2 vs 2, ordering
     # get_datas(i + 40, 2, f'2vs2, plus ordering')
     init_G_Symmetry(1, sgd = True, batch = 4)
-    G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
+    G['m'] = m = Double_Sentence_CLS(fl_rate=0) # 1 vs 1
     get_datas(i, 2, f'1vs1')
-    G['m'] = m = Sector_SEP_Order_CLS(rate=0) # 1 vs 1
+    G['m'] = m = Sector_SEP_Order_CLS(fl_rate=0) # 1 vs 1
     get_datas(i + 20, 2, f'1vs1 ordering')
 
 
@@ -243,7 +243,7 @@ def run_mainichi():
   # get_datas(1, 1, '1 vs 1, mainichi news', with_dev = False)
   for i in range(10):
     init_G_Symmetry_Mainichi(half = 2, batch = 2)
-    G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
+    G['m'] = m = Double_Sentence_CLS(fl_rate=0, learning_rate = 5e-6) # 1 vs 1
     get_datas(i, 1, '2 vs 2, mainichi news epoch 1', with_dev = False)
     get_datas(i + 10, 1, '2 vs 2, mainichi news epoch 2', with_dev = False)
   
