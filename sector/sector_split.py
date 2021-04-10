@@ -422,7 +422,7 @@ def run():
   init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
   for i in range(20):
     G['m'] = m = Sector_Split2(learning_rate = 5e-6)
-    get_datas(i, 2, f'Sector_Split2', with_dev = False)
+    get_datas(i, 2, f'Sector_Split2 mean', with_dev = False)
     G['m'] = m = Sector_Split3(learning_rate = 5e-6)
-    get_datas(i + 100, 2, f'Sector_Split3', with_dev = False)
+    get_datas(i + 100, 2, f'Sector_Split3 cls', with_dev = False)
 
