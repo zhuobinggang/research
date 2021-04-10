@@ -377,5 +377,7 @@ def run():
 def run2():
   init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
   G['m'] = m = Sector_Split2(learning_rate = 5e-6)
-  get_datas(0, 1, f'分裂sector v2', with_dev = False)
+  get_datas(0, 1, f'分裂sector v2 1', with_dev = False)
+  get_datas(0, 1, f'分裂sector v2 2', with_dev = False)
+  get_datas(0, 1, f'分裂sector v2 3', with_dev = False)
 
