@@ -195,4 +195,48 @@ def compress_by_ss_pos_get_mean(bert, toker, ss, pos):
   assert len(out.shape) == 1 and out.shape[0] == hidden_size
   return out
 
+def get_idss_multiple_seps(toker, ss, pos, max_len = None):
+  if max_len is None:
+    max_len = int(500 / len(ss)) # 4句时候125 tokens/句, 2句250 tokens/句
+  idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
+  cls_id = toker.cls_token_id
+  sep_id = toker.sep_token_id
+  idss = [ids.append(sep_id) for ids in idss]
+  ids = flatten_num_lists(idss)
+  ids = [cls_id] + ids
+  return ids
+
+# [cls] s1 [sep] s2 [sep] s3 [sep]
+# 返回[[cls],[sep],[sep],[sep]]
+def compress_by_ss_get_special_tokens(bert, toker, ss, max_len = None):
+  if max_len is None:
+    max_len = int(500 / len(ss)) # 4句时候125 tokens/句, 2句250 tokens/句
+  idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
+  origin_lengths = [len(ids) for ids in idss]
+  cls_id = toker.cls_token_id
+  sep_id = toker.sep_token_id
+  idss = [ids + [sep_id] for ids in idss] # Add [SEP]
+  ids = flatten_num_lists(idss)
+  ids = [cls_id] + ids # Add [CLS]
+  ids = t.LongTensor(ids).view(1, -1)
+  if GPU_OK:
+    ids = ids.cuda()
+  out = bert(input_ids = ids, return_dict = True)['last_hidden_state']
+  batch, length, hidden_size = out.shape
+  assert length == sum(origin_lengths) + len(ss) + 1
+  out = out.view(length, hidden_size)
+  cls = out[0]
+  out = out[1:] # 剪掉cls
+  outs = []
+  for l in origin_lengths:
+    outs.append(out[:l + 1])
+    out = out[l + 1:]
+  for o, org_length in zip(outs, origin_lengths):
+    assert o.shape[0] == org_length + 1 # 因为带了SEP
+  seps = [o[-1] for o in outs]
+  assert len(seps) == len(ss)
+  seps = t.stack(seps)
+  assert len(seps.shape) == 2
+  return cls, seps
+
 
