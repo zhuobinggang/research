@@ -225,7 +225,7 @@ class Sector_Split(nn.Module):
     assert len(pos_outs.shape) == 2 
     assert len(pos_labels.shape) == 1
     assert pos_outs.shape[0] == pos_labels.shape[0]
-    self.print_train_info(o, labels, loss.detach().item())
+    self.print_train_info(pos_outs, pos_labels, -1)
     return fit_sigmoided_to_label(pos_outs), pos_labels
 
 def init_G_Symmetry_Mainichi(half = 1, batch = 4):
