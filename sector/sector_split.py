@@ -250,11 +250,18 @@ class Sector_Split2(Sector_Split):
       nn.Sigmoid()
     )
     self.classifier2 = nn.Sequential( # 中间分类
-      nn.Linear(self.bert_size * 2, 1),
+      nn.Linear(self.bert_size * 2, 10),
+      nn.LeakyReLU(0.1),
+      nn.Linear(10, 10),
+      nn.LeakyReLU(0.1),
+      nn.Linear(10, 1),
       nn.Sigmoid()
     )
     self.dry_run_labels = []
     self.dry_run_output = []
+
+  def get_should_update(self):
+    return chain(self.bert.parameters(), self.classifier.parameters(), self.classifier2.parameters())
 
   def cal_loss_return_left(self, ss, label, dry = False):
     assert len(ss) == 2
