@@ -206,9 +206,7 @@ def get_idss_multiple_seps(toker, ss, pos, max_len = None):
   ids = [cls_id] + ids
   return ids
 
-# [cls] s1 [sep] s2 [sep] s3 [sep]
-# 返回[[cls],[sep],[sep],[sep]]
-def compress_by_ss_get_special_tokens(bert, toker, ss, max_len = None):
+def compress_by_ss_pos_get_all_tokens(bert, toker, ss, max_len = None):
   if max_len is None:
     max_len = int(500 / len(ss)) # 4句时候125 tokens/句, 2句250 tokens/句
   idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
@@ -234,9 +232,14 @@ def compress_by_ss_get_special_tokens(bert, toker, ss, max_len = None):
   for o, org_length in zip(outs, origin_lengths):
     assert o.shape[0] == org_length + 1 # 因为带了SEP
   seps = [o[-1] for o in outs]
+  sentence_tokens = [o[:-1] for o in outs]
   assert len(seps) == len(ss)
   seps = t.stack(seps)
   assert len(seps.shape) == 2
+  return cls, seps, sentence_tokens
+
+# [cls] s1 [sep] s2 [sep] s3 [sep]
+# 返回[[cls],[sep],[sep],[sep]]
+def compress_by_ss_get_special_tokens(bert, toker, ss, max_len = None):
+  cls, seps, sentence_tokens = compress_by_ss_pos_get_all_tokens(bert, toker, ss, max_len)
   return cls, seps
-
-

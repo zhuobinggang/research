@@ -139,7 +139,7 @@ class Sector_Split(nn.Module):
     pos = []
     for s,l,p in mass:
       ss.append(s)
-      labels.append(l[1:]) # s1 [sep1] s2 [sep2] s3 [sep3] => [sep1, sep2]
+      labels.append(l) # s1 [sep1] s2 [sep2] s3 [sep3] => [sep1, sep2]
       pos.append(p)
     return ss, labels, pos
 
@@ -203,6 +203,7 @@ class Sector_Split(nn.Module):
         print(f'Warning: less than 4 sentences. {ss[0]}')
       cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
       seps = seps[:-1] # 最后一个SEP不需要
+      ls = ls[1:] # 第一个label不需要
       ls = t.LongTensor(ls) # (ss_len), (0 or 1)
       if GPU_OK:
         ls = ls.cuda()
@@ -241,10 +242,127 @@ class Sector_Split(nn.Module):
     self.print_train_info(pos_outs, pos_labels, -1)
     return fit_sigmoided_to_label(pos_outs), pos_labels
 
-def init_G_Symmetry_Mainichi(half = 1, batch = 4):
-  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_trains())
+class Sector_Split2(Sector_Split):
+  def init_hook(self): 
+    self.classifier = nn.Sequential( # 普通分类
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
+    )
+    self.classifier2 = nn.Sequential( # 中间分类
+      nn.Linear(self.bert_size * 2, 1),
+      nn.Sigmoid()
+    )
+    self.dry_run_labels = []
+    self.dry_run_output = []
+
+  def cal_loss_return_left(self, ss, label, dry = False):
+    assert len(ss) == 2
+    cls, seps, sentence_tokens = B.compress_by_ss_pos_get_all_tokens(self.bert, self.toker, ss)
+    # 用cls来判断分割点
+    assert len(sentence_tokens) == 2
+    tokens = sentence_tokens[0] # (?, 784)
+    mean = tokens.mean(0)
+    if not dry:
+      label = t.LongTensor([label]) # (1)
+      if GPU_OK:
+        label = label.cuda()
+      o = self.classifier(cls.view(1, -1)) # (1, 1)
+      loss = self.cal_loss(o, label)
+      return loss, mean
+    else:
+      return mean
+
+  def cal_loss_return_right(self, ss, label, dry = False):
+    assert len(ss) == 2
+    cls, seps, sentence_tokens = B.compress_by_ss_pos_get_all_tokens(self.bert, self.toker, ss)
+    # 用cls来判断分割点
+    assert len(sentence_tokens) == 2
+    tokens = sentence_tokens[1] # (?, 784)
+    mean = tokens.mean(0)
+    if not dry:
+      label = t.LongTensor([label]) # (1)
+      if GPU_OK:
+        label = label.cuda()
+      o = self.classifier(cls.view(1, -1)) # (1, 1)
+      loss = self.cal_loss(o, label)
+      return loss, mean
+    else:
+      return mean
+
+  def cal_loss_middle(self, mean_left, mean_right, label, dry = False):
+    cat_emb = t.cat((mean_left, mean_right)).view(1, -1) # (1, 2 * 784)
+    assert cat_emb.shape[1] == self.bert_size * 2
+    o = self.classifier2(cat_emb) # (1, 1)
+    if not dry:
+      label = t.LongTensor([label]) # (1)
+      if GPU_OK:
+        label = label.cuda()
+      loss = self.cal_loss(o, label)
+      return loss
+    else:
+      return o
+
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    losses = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss):
+      if len(ss) != 4: # 不训练
+        print(f'Warning: less than 4 sentences. {ss[0]}')
+        pass
+      else:
+        left_loss, left_mean = self.cal_loss_return_left([ss[0], ss[1]], ls[1]) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
+        right_loss, right_mean = self.cal_loss_return_right([ss[2], ss[3]], ls[3]) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
+        middle_loss = self.cal_loss_middle(left_mean, right_mean, ls[2])
+        loss = left_loss + right_loss + middle_loss
+        losses.append(loss)
+    if len(losses) < 1:
+      return 0
+    else:
+      loss = t.stack(losses).sum()
+      self.zero_grad()
+      loss.backward()
+      self.optim.step()
+      # self.print_train_info(o, labels, loss.detach().item())
+      return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, mass):
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    pos_outs = []
+    pos_labels = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss):
+      if len(ss) != 4: # 不训练
+        print(f'Warning: less than 4 sentences. {ss[0]}')
+        pass
+      else:
+        left_mean = self.cal_loss_return_left([ss[0], ss[1]], ls[1], dry = True) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
+        right_mean = self.cal_loss_return_right([ss[2], ss[3]], ls[3], dry = True)
+        o = self.cal_loss_middle(left_mean, right_mean, ls[2], dry = True)
+        pos_outs.append(o.view(1))
+        pos_labels.append(ls[2])
+    if len(pos_outs) < 1:
+      return t.LongTensor([]), t.LongTensor([])
+    else:
+      pos_outs = t.stack(pos_outs)
+      pos_labels = t.LongTensor(pos_labels)
+      if GPU_OK:
+        pos_labels = pos_labels.cuda()
+      assert len(pos_outs.shape) == 2 
+      assert len(pos_labels.shape) == 1
+      assert pos_outs.shape[0] == pos_labels.shape[0]
+      self.print_train_info(pos_outs, pos_labels, -1)
+      return fit_sigmoided_to_label(pos_outs), pos_labels
+
+# =============================== Model ===========================
+
+def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_trains(mini))
   G['ld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
-  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests())
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests(mini))
   G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
 
 def run():
@@ -255,3 +373,9 @@ def run():
     get_datas(0, 1, f'分裂sector E2', with_dev = False)
     get_datas(0, 1, f'分裂sector E3', with_dev = False)
   
+
+def run2():
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = True)
+  G['m'] = m = Sector_Split2(learning_rate = 5e-6)
+  get_datas(0, 1, f'分裂sector v2', with_dev = False)
+
