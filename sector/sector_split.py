@@ -359,10 +359,10 @@ class Sector_Split2(Sector_Split):
 
 # =============================== Model ===========================
 
-def init_G_Symmetry_Mainichi(half = 1, batch = 4):
-  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_trains())
+def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_trains(mini))
   G['ld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
-  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests())
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests(mini))
   G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
 
 def run():
@@ -375,7 +375,7 @@ def run():
   
 
 def run2():
-  init_G_Symmetry_Mainichi(half = 2, batch = 2)
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = True)
   G['m'] = m = Sector_Split2(learning_rate = 5e-6)
   get_datas(0, 1, f'分裂sector v2', with_dev = False)
 
