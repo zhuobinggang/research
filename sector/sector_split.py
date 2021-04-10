@@ -23,6 +23,9 @@ import mainichi
 GPU_OK = t.cuda.is_available()
 G = {} 
 
+# 初始化logging
+U.init_logger('spsc.log')
+
 # ==================== 功能函数 ============================
 
 def get_datas(index, epoch, desc, dic_to_send = None, with_dev = True):
