@@ -201,7 +201,7 @@ def get_idss_multiple_seps(toker, ss, pos, max_len = None):
   idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
   cls_id = toker.cls_token_id
   sep_id = toker.sep_token_id
-  idss = [ids.append(sep_id) for ids in idss]
+  idss = [ids + [sep_id] for ids in idss] # Add [SEP]
   ids = flatten_num_lists(idss)
   ids = [cls_id] + ids
   return ids

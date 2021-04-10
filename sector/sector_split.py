@@ -41,6 +41,7 @@ def train_simple(m, loader, epoch):
   start = time.time()
   length = len(loader.ds.datas)
   for e in range(epoch):
+    loader.shuffle()
     logger(f'start epoch{e}')
     total_loss = 0
     for mass in loader:
@@ -248,6 +249,9 @@ def init_G_Symmetry_Mainichi(half = 1, batch = 4):
 
 def run():
   init_G_Symmetry_Mainichi(half = 2, batch = 2)
-  G['m'] = m = Sector_Split(learning_rate = 5e-6)
-  get_datas(0, 1, f'分裂sector', with_dev = False)
+  for i in range(5):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6)
+    get_datas(0, 1, f'分裂sector E1', with_dev = False)
+    get_datas(0, 1, f'分裂sector E2', with_dev = False)
+    get_datas(0, 1, f'分裂sector E3', with_dev = False)
   
