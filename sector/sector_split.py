@@ -312,8 +312,8 @@ class Sector_Split2(Sector_Split):
         print(f'Warning: less than 4 sentences. {ss[0]}')
         pass
       else:
-        left_loss, left_mean = self.cal_loss_return_left([ss[0], ss[1]], ls[1]) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
-        right_loss, right_mean = self.cal_loss_return_right([ss[2], ss[3]], ls[3]) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
+        left_loss, left_mean = self.cal_loss_return_right([ss[0], ss[1]], ls[1]) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
+        right_loss, right_mean = self.cal_loss_return_left([ss[2], ss[3]], ls[3]) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
         middle_loss = self.cal_loss_middle(left_mean, right_mean, ls[2])
         loss = left_loss + right_loss + middle_loss
         losses.append(loss)
@@ -375,7 +375,7 @@ def run():
   
 
 def run2():
-  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = True)
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
   G['m'] = m = Sector_Split2(learning_rate = 5e-6)
   get_datas(0, 1, f'分裂sector v2', with_dev = False)
 
