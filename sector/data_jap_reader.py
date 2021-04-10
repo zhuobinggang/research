@@ -196,7 +196,7 @@ class Loader_SGD():
       ss, labels, pos = mass[0]
       self.masses.append((ss, labels, pos))
     if shuffle:
-      random.shuffle(self.masses)
+      self.shuffle()
       print('Loader_SGD: Shuffled')
     else:
       print('Loader_SGD: No Shuffle')
