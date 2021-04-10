@@ -242,6 +242,7 @@ class Sector_Split(nn.Module):
     self.print_train_info(pos_outs, pos_labels, -1)
     return fit_sigmoided_to_label(pos_outs), pos_labels
 
+# 两边cls中间mean
 class Sector_Split2(Sector_Split):
   def init_hook(self): 
     self.classifier = nn.Sequential( # 普通分类
@@ -357,6 +358,42 @@ class Sector_Split2(Sector_Split):
       self.print_train_info(pos_outs, pos_labels, -1)
       return fit_sigmoided_to_label(pos_outs), pos_labels
 
+# 两边cls中间也cls
+class Sector_Split3(Sector_Split2):
+  def cal_loss_return_left(self, ss, label, dry = False):
+    assert len(ss) == 2
+    cls, seps, sentence_tokens = B.compress_by_ss_pos_get_all_tokens(self.bert, self.toker, ss)
+    # 用cls来判断分割点
+    assert len(sentence_tokens) == 2
+    tokens = sentence_tokens[0] # (?, 784)
+    mean = tokens.mean(0)
+    if not dry:
+      label = t.LongTensor([label]) # (1)
+      if GPU_OK:
+        label = label.cuda()
+      o = self.classifier(cls.view(1, -1)) # (1, 1)
+      loss = self.cal_loss(o, label)
+      return loss, cls
+    else:
+      return cls
+
+  def cal_loss_return_right(self, ss, label, dry = False):
+    assert len(ss) == 2
+    cls, seps, sentence_tokens = B.compress_by_ss_pos_get_all_tokens(self.bert, self.toker, ss)
+    # 用cls来判断分割点
+    assert len(sentence_tokens) == 2
+    tokens = sentence_tokens[1] # (?, 784)
+    mean = tokens.mean(0)
+    if not dry:
+      label = t.LongTensor([label]) # (1)
+      if GPU_OK:
+        label = label.cuda()
+      o = self.classifier(cls.view(1, -1)) # (1, 1)
+      loss = self.cal_loss(o, label)
+      return loss, cls
+    else:
+      return cls
+
 # =============================== Model ===========================
 
 def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
@@ -365,7 +402,7 @@ def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
   ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests(mini))
   G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
 
-def run():
+def run_old():
   init_G_Symmetry_Mainichi(half = 2, batch = 2)
   for i in range(5):
     G['m'] = m = Sector_Split(learning_rate = 5e-6)
@@ -374,10 +411,11 @@ def run():
     get_datas(0, 1, f'分裂sector E3', with_dev = False)
   
 
-def run2():
+def run():
   init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
-  G['m'] = m = Sector_Split2(learning_rate = 5e-6)
-  get_datas(0, 1, f'分裂sector v2 1', with_dev = False)
-  get_datas(0, 1, f'分裂sector v2 2', with_dev = False)
-  get_datas(0, 1, f'分裂sector v2 3', with_dev = False)
+  for i in range(20):
+    G['m'] = m = Sector_Split2(learning_rate = 5e-6)
+    get_datas(i, 2, f'Sector_Split2', with_dev = False)
+    G['m'] = m = Sector_Split3(learning_rate = 5e-6)
+    get_datas(i + 100, 2, f'Sector_Split3', with_dev = False)
 
