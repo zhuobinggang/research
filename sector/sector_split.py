@@ -101,6 +101,18 @@ def get_test_result_dic(m, testld):
     dic['bacc'] = bacc
   return dic
 
+
+def fit_sigmoided_to_label(out):
+  assert len(out.shape) == 2
+  results = []
+  for item in out:
+    assert item >= 0 and item <= 1
+    if item < 0.5:
+      results.append(0) 
+    else:
+      results.append(1) 
+  return t.LongTensor(results)
+
 # ==================== 功能函数 ============================
 
 # 分裂sector, 2vs2的时候，同时判断三个分割点
