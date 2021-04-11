@@ -120,6 +120,7 @@ def fit_sigmoided_to_label(out):
 class Sector_Split(nn.Module):
   def __init__(self, fl_rate = 0, learning_rate = 2e-5, ss_len_limit = 4):
     super().__init__()
+    self.ss_len_limit = ss_len_limit
     self.fl_rate = fl_rate
     self.learning_rate = learning_rate
     self.max_memory_batch = 6
