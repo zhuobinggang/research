@@ -118,7 +118,7 @@ def fit_sigmoided_to_label(out):
 
 # 分裂sector, 2vs2的时候，同时判断三个分割点
 class Sector_Split(nn.Module):
-  def __init__(self, fl_rate = 0, learning_rate = 2e-5):
+  def __init__(self, fl_rate = 0, learning_rate = 2e-5, ss_len_limit = 4):
     super().__init__()
     self.fl_rate = fl_rate
     self.learning_rate = learning_rate
@@ -199,8 +199,8 @@ class Sector_Split(nn.Module):
     losses = []
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss):
-      if len(ss) != 4:
-        print(f'Warning: less than 4 sentences. {ss[0]}')
+      if len(ss) != self.ss_len_limit:
+        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
       cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
       seps = seps[:-1] # 最后一个SEP不需要
       ls = ls[1:] # 第一个label不需要
@@ -226,8 +226,8 @@ class Sector_Split(nn.Module):
     pos_labels = []
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss):
-      if len(ss) != 4:
-        print(f'Warning: less than 4 sentences. {ss[0]}')
+      if len(ss) != self.ss_len_limit:
+        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
       cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
       emb = seps[pos - 1] # dry run只需要判断必要部分, (784)
       pos_outs.append(self.classifier(emb).view(1))
@@ -405,7 +405,6 @@ class Sector_Split3(Sector_Split2):
 class Sector_Standard(Sector_Split):
   def get_pooled(self, ss, pos):
     cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
-    assert pos == 2
     emb = seps[pos] # s0 s1 s2 s3, (784)
     assert len(ls) == len(seps)
     return emb
@@ -416,13 +415,13 @@ class Sector_Standard(Sector_Split):
     losses = []
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss):
-      if len(ss) != 4: # 不训练
+      if len(ss) != self.ss_len_limit: # 不训练
         print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
         pass
       else:
         emb = self.get_pooled(ss, pos)
         o = self.classifier(emb).view(1, 1) # (1,1)
-        l = ls[2]
+        l = ls[pos]
         l = t.LongTensor([l]) # (1)
         if GPU_OK:
           l = l.cuda()
@@ -446,14 +445,14 @@ class Sector_Standard(Sector_Split):
     pos_labels = []
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss):
-      if len(ss) != 4: # 不训练
+      if len(ss) != self.ss_len_limit: # 不训练
         print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
         pass
       else:
         emb = self.get_pooled(ss, pos)
         o = self.classifier(emb).view(1) # (1,1)
         pos_outs.append(o)
-        pos_labels.append(ls[2])
+        pos_labels.append(ls[pos])
     if len(pos_outs) < 1:
       return t.LongTensor([]), t.LongTensor([])
     else:
@@ -471,14 +470,12 @@ class Sector_Standard(Sector_Split):
 class Sector_Standard_CLS(Sector_Standard):
   def get_pooled(self, ss, pos):
     cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
-    assert pos == 2
     assert len(ls) == len(seps)
     emb = cls # s0 s1 s2 s3, (784)
     return emb
 
 class Sector_Standard_One_SEP_One_CLS_Pool_CLS(Sector_Standard):
   def get_pooled(self, ss, pos):
-    assert pos == 2
     cls = B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos)
     return cls
 
@@ -512,7 +509,7 @@ def run():
 def run_standard():
   init_G_Symmetry_Mainichi(half = 1, batch = 2, mini = True)
   # G['m'] = m = Sector_Standard(learning_rate = 5e-6)
-  G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6)
+  G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 2)
   get_datas(0, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 1', with_dev = False)
   get_datas(1, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2', with_dev = False)
   get_datas(2, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3', with_dev = False)
