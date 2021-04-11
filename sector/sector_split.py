@@ -451,7 +451,6 @@ class Sector_Standard(Sector_Split):
         pass
       else:
         emb = self.get_pooled(ss, pos)
-        assert len(ls) == len(seps)
         o = self.classifier(emb).view(1) # (1,1)
         pos_outs.append(o)
         pos_labels.append(ls[2])
