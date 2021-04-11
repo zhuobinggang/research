@@ -555,7 +555,8 @@ def run():
 # 用于测试多个sep是不是会掉精度
 def run_standard():
   init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = True)
-  G['m'] = m = Sector_Standard(learning_rate = 5e-6)
+  # G['m'] = m = Sector_Standard(learning_rate = 5e-6)
+  G['m'] = m = Sector_Standard_CLS(learning_rate = 5e-6)
   get_datas(0, 1, f'Sector_Standard 2vs2', with_dev = False)
   get_datas(1, 1, f'Sector_Standard 2vs2', with_dev = False)
   get_datas(2, 1, f'Sector_Standard 2vs2', with_dev = False)
