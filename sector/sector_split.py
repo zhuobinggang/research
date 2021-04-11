@@ -510,11 +510,11 @@ def run():
 
 # 用于测试多个sep是不是会掉精度
 def run_standard():
-  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = True)
+  init_G_Symmetry_Mainichi(half = 1, batch = 2, mini = True)
   # G['m'] = m = Sector_Standard(learning_rate = 5e-6)
   G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6)
-  get_datas(0, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 1', with_dev = False)
-  get_datas(1, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2', with_dev = False)
-  get_datas(2, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3', with_dev = False)
+  get_datas(0, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 1', with_dev = False)
+  get_datas(1, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2', with_dev = False)
+  get_datas(2, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3', with_dev = False)
   
 
