@@ -465,6 +465,68 @@ class Sector_Standard(Sector_Split):
       return fit_sigmoided_to_label(pos_outs), pos_labels
   
 
+class Sector_Standard_CLS(Sector_Split):
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    losses = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss):
+      if len(ss) != 4: # 不训练
+        print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
+        pass
+      else:
+        cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
+        emb = cls # s0 s1 s2 s3, (784)
+        assert len(ls) == len(seps)
+        o = self.classifier(emb).view(1, 1) # (1,1)
+        l = ls[2]
+        l = t.LongTensor([l]) # (1)
+        if GPU_OK:
+          l = l.cuda()
+        loss = self.cal_loss(o, l)
+        losses.append(loss)
+    if len(losses) < 1:
+      return 0
+    else:
+      loss = t.stack(losses).sum()
+      self.zero_grad()
+      loss.backward()
+      self.optim.step()
+      # self.print_train_info(o, labels, loss.detach().item())
+      return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, mass):
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    pos_outs = []
+    pos_labels = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss):
+      if len(ss) != 4: # 不训练
+        print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
+        pass
+      else:
+        cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
+        emb = cls # s0 s1 s2 s3, (784)
+        assert len(ls) == len(seps)
+        o = self.classifier(emb).view(1) # (1,1)
+        pos_outs.append(o)
+        pos_labels.append(ls[2])
+    if len(pos_outs) < 1:
+      return t.LongTensor([]), t.LongTensor([])
+    else:
+      pos_outs = t.stack(pos_outs)
+      pos_labels = t.LongTensor(pos_labels)
+      if GPU_OK:
+        pos_labels = pos_labels.cuda()
+      assert len(pos_outs.shape) == 2 
+      assert len(pos_labels.shape) == 1
+      assert pos_outs.shape[0] == pos_labels.shape[0]
+      self.print_train_info(pos_outs, pos_labels, -1)
+      return fit_sigmoided_to_label(pos_outs), pos_labels
+
 # =============================== Model ===========================
 
 def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
@@ -492,7 +554,7 @@ def run():
 
 # 用于测试多个sep是不是会掉精度
 def run_standard():
-  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = True)
   G['m'] = m = Sector_Standard(learning_rate = 5e-6)
   get_datas(0, 1, f'Sector_Standard 2vs2', with_dev = False)
   get_datas(1, 1, f'Sector_Standard 2vs2', with_dev = False)
