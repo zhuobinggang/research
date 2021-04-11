@@ -6,7 +6,9 @@
 - [X] NOTE: 关于epoch数，每日新闻数据集只需要跑一遍即可
 - [X] NOTE: 加上ordering之后的epoch数，第三epoch也一样有性能提升(第四开始下降)，但是估计拿不到有意差所以就放弃了把
 - [X] NOTE: 多个SEP + 用中间SEP来判断导致性能下降了4%左右
-- [ ] NOTE: 多个SEP + 用中间CLS来判断
+- [X] NOTE: 多个SEP + 用CLS来判断，性能下降了很多
+- [ ] NOTE: 单个SEP + 用CLS来判断
+- [ ] NOTE: 两个SEP + 用CLS来判断
 
 
 ## 数据收集
