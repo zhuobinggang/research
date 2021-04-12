@@ -241,11 +241,10 @@ def run_mainichi():
   # G['m'] = m = Double_Sentence_CLS(rate=0) # 1 vs 1
   # get_datas(0, 1, '1 vs 1, mainichi news', with_dev = False)
   # get_datas(1, 1, '1 vs 1, mainichi news', with_dev = False)
-  for i in range(10):
-    init_G_Symmetry_Mainichi(half = 2, batch = 2)
+  init_G_Symmetry_Mainichi(half = 2, batch = 2)
+  for i in range(4):
     G['m'] = m = Double_Sentence_CLS(fl_rate=0, learning_rate = 5e-6) # 1 vs 1
-    get_datas(i, 1, '2 vs 2, mainichi news epoch 1', with_dev = False)
-    get_datas(i + 10, 1, '2 vs 2, mainichi news epoch 2', with_dev = False)
+    get_datas(i, 2, '2 vs 2, mainichi, order.py', with_dev = False)
   
 def run_mainichi_order():
   init_G_Symmetry_Mainichi(half = 2, batch = 2)
