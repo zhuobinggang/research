@@ -420,6 +420,7 @@ class Sector_Standard(Sector_Split):
         print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
         pass
       else:
+        assert pos == self.ss_len_limit / 2
         emb = self.get_pooled(ss, pos)
         o = self.classifier(emb).view(1, 1) # (1,1)
         l = ls[pos]
@@ -450,6 +451,7 @@ class Sector_Standard(Sector_Split):
         print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
         pass
       else:
+        assert pos == self.ss_len_limit / 2
         emb = self.get_pooled(ss, pos)
         o = self.classifier(emb).view(1) # (1,1)
         pos_outs.append(o)
@@ -479,6 +481,13 @@ class Sector_Standard_One_SEP_One_CLS_Pool_CLS(Sector_Standard):
   def get_pooled(self, ss, pos):
     cls = B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos)
     return cls
+
+
+class Sector_Standard_Many_SEP(Sector_Standard):
+  def get_pooled(self, ss, pos):
+    cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
+    assert len(seps) == len(ss)
+    return seps[pos - 1]
 
 
 # =============================== Model ===========================
@@ -514,4 +523,20 @@ def run_standard():
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
     get_datas(i, 2, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2', with_dev = False)
   
+def run_1vs1():
+  init_G_Symmetry_Mainichi(half = 1, batch = 2, mini = False)
+  for i in range(20):
+    G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 2e-5, ss_len_limit = 2)
+    get_datas(i, 2, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2', with_dev = False)
+
+def run_many_seps():
+  for i in range(20):
+    init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
+    G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-6, ss_len_limit = 4)
+    get_datas(i + 100, 2, f'Sector_Standard_Many_SEP 2vs2 2', with_dev = False)
+    init_G_Symmetry_Mainichi(half = 1, batch = 2, mini = False)
+    G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 2e-5, ss_len_limit = 2)
+    get_datas(i, 2, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2', with_dev = False)
+
+
 
