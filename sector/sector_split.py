@@ -564,7 +564,8 @@ def run_many_seps():
     get_datas(i, 2, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2', with_dev = False)
 
 def run_split_with_auxiliary_rate():
-  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = True)
-  G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4)
-  get_datas(0, 1, f'Sector_Split with auxiliary rate 2vs2 1', with_dev = False)
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
+  for i in range(10):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4)
+    get_datas(i, 2, f'Sector_Split with auxiliary rate 2vs2 2', with_dev = False)
 
