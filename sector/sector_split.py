@@ -118,10 +118,11 @@ def fit_sigmoided_to_label(out):
 
 # 分裂sector, 2vs2的时候，同时判断三个分割点
 class Sector_Split(nn.Module):
-  def __init__(self, fl_rate = 0, learning_rate = 2e-5, ss_len_limit = 4):
+  def __init__(self, fl_rate = 0, learning_rate = 2e-5, ss_len_limit = 4, auxiliary_loss_rate = 0.5):
     super().__init__()
     self.ss_len_limit = ss_len_limit
     self.fl_rate = fl_rate
+    self.auxiliary_loss_rate = auxiliary_loss_rate
     self.learning_rate = learning_rate
     self.max_memory_batch = 6
     self.bert_size = 768
@@ -197,51 +198,75 @@ class Sector_Split(nn.Module):
   def train(self, mass):
     batch = len(mass)
     sss, labels, poss = self.handle_mass(mass) 
-    losses = []
+    loss = []
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
-    for ss, ls, pos in zip(sss, labels, poss):
-      if len(ss) != self.ss_len_limit:
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
+      if len(ss) != self.ss_len_limit: # 直接不训练
         print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
-      cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
-      seps = seps[:-1] # 最后一个SEP不需要
-      ls = ls[1:] # 第一个label不需要
-      ls = t.LongTensor(ls) # (ss_len), (0 or 1)
-      if GPU_OK:
-        ls = ls.cuda()
-      assert ls.shape[0] == seps.shape[0]
-      o = self.classifier(seps) #(ss_len, 1)
-      loss = self.cal_loss(o, ls)
-      losses.append(loss)
-    loss = t.stack(losses).sum()
-    self.zero_grad()
-    loss.backward()
-    self.optim.step()
-    self.print_train_info(o, labels, loss.detach().item())
-    return loss.detach().item()
+        pass
+      else: 
+        cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
+        seps = seps[:-1] # 最后一个SEP不需要
+        ls = ls[1:] # 第一个label不需要
+        ls = t.LongTensor(ls) # (ss_len), (0 or 1)
+        if GPU_OK:
+          ls = ls.cuda()
+        assert ls.shape[0] == seps.shape[0]
+        # 稍微做一点tricky的事情，将其他loss(除了中间那个) * 0.5
+        o = self.classifier(seps) #(ss_len, 1)
+        for index, (o_item, l_item) in enumerate(zip(o, ls)): # Different split point, only middle important
+          loss_part = self.cal_loss(o_item.view(1, self.bert_size), l_item.view(1))
+          if index != int((len(ls) / 2)):
+            loss_part = loss_part * self.auxiliary_loss_rate
+          else:
+            assert index == int(len(ss) / 2) - 1 == pos - 1
+            pass
+          loss.append(loss_part)
+    if len(loss) < 1:
+      return 0
+    else:
+      loss = t.stack(loss).sum()
+      self.zero_grad()
+      loss.backward()
+      self.optim.step()
+      self.print_train_info(o, labels, loss.detach().item())
+      return loss.detach().item()
 
   @t.no_grad()
   def dry_run(self, mass):
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     batch = len(mass)
     sss, labels, poss = self.handle_mass(mass) 
     pos_outs = []
     pos_labels = []
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
-    for ss, ls, pos in zip(sss, labels, poss):
-      if len(ss) != self.ss_len_limit:
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
+      if len(ss) != self.ss_len_limit: # 直接不跑
         print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
-      cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
-      emb = seps[pos - 1] # dry run只需要判断必要部分, (784)
-      pos_outs.append(self.classifier(emb).view(1))
-      pos_labels.append(ls[pos - 1])
-    pos_outs = t.stack(pos_outs)
-    pos_labels = t.LongTensor(pos_labels)
-    if GPU_OK:
-      pos_labels = pos_labels.cuda()
-    assert len(pos_outs.shape) == 2 
-    assert len(pos_labels.shape) == 1
-    assert pos_outs.shape[0] == pos_labels.shape[0]
-    self.print_train_info(pos_outs, pos_labels, -1)
-    return fit_sigmoided_to_label(pos_outs), pos_labels
+        pass
+      else: 
+        cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
+        seps = seps[:-1] # 最后一个SEP不需要
+        ls = ls[1:] # 第一个label不需要
+        ls = t.LongTensor(ls) # (ss_len), (0 or 1)
+        if GPU_OK:
+          ls = ls.cuda()
+        assert ls.shape[0] == seps.shape[0]
+        emb = seps[pos - 1] # 取中间那个
+        pos_outs.append(self.classifier(emb).view(self.bert_size))
+        pos_labels.append(ls[pos - 1])
+    if len(pos_outs) < 1:
+      return t.LongTensor([]), t.LongTensor([])
+    else:
+      pos_outs = t.stack(pos_outs)
+      pos_labels = t.LongTensor(pos_labels)
+      if GPU_OK:
+        pos_labels = pos_labels.cuda()
+      assert len(pos_outs.shape) == 2 
+      assert len(pos_labels.shape) == 1
+      assert pos_outs.shape[0] == pos_labels.shape[0]
+      self.print_train_info(pos_outs, pos_labels, -1)
+      return fit_sigmoided_to_label(pos_outs), pos_labels
 
 # 两边cls中间mean
 class Sector_Split2(Sector_Split):
@@ -538,5 +563,8 @@ def run_many_seps():
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 2e-5, ss_len_limit = 2)
     get_datas(i, 2, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2', with_dev = False)
 
-
+def run_split_with_auxiliary_rate():
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = True)
+  G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4)
+  get_datas(0, 1, f'Sector_Split with auxiliary rate 2vs2 1', with_dev = False)
 
