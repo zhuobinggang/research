@@ -215,7 +215,7 @@ class Sector_Split(nn.Module):
         # 稍微做一点tricky的事情，将其他loss(除了中间那个) * 0.5
         o = self.classifier(seps) #(ss_len, 1)
         for index, (o_item, l_item) in enumerate(zip(o, ls)): # Different split point, only middle important
-          loss_part = self.cal_loss(o_item.view(1, self.bert_size), l_item.view(1))
+          loss_part = self.cal_loss(o_item.view(1, 1), l_item.view(1))
           if index != int((len(ls) / 2)):
             loss_part = loss_part * self.auxiliary_loss_rate
           else:
@@ -253,7 +253,7 @@ class Sector_Split(nn.Module):
           ls = ls.cuda()
         assert ls.shape[0] == seps.shape[0]
         emb = seps[pos - 1] # 取中间那个
-        pos_outs.append(self.classifier(emb).view(self.bert_size))
+        pos_outs.append(self.classifier(emb).view(1))
         pos_labels.append(ls[pos - 1])
     if len(pos_outs) < 1:
       return t.LongTensor([]), t.LongTensor([])
