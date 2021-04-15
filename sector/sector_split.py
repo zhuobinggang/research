@@ -622,7 +622,8 @@ def run_3vs3_standard():
   # G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-7, ss_len_limit = 6)
   for i in range(15):
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 6, auxiliary_loss_rate = 0.5)
-    get_datas(i, 2, f'Sector_Split 3vs3 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
+    get_datas(i, 2, f'NO{i} Sector_Split 3vs3 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
+    get_datas(i + 20, 1, f'NO{i} Sector_Split 3vs3 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False)
   # for i in range(15):
   #   G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-7, ss_len_limit = 6)
   #   get_datas(i, 2, f'Sector_Standard_Many_SEP 3vs3 2', with_dev = False)
