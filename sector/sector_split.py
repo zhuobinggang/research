@@ -550,7 +550,6 @@ class Sector_Plus_Ordering(Sector_Split):
       self.zero_grad()
       loss.backward()
       self.optim.step()
-      self.print_train_info(o, labels, loss.detach().item())
       return loss.detach().item()
 
 # =============================== Model ===========================
