@@ -243,3 +243,10 @@ def compress_by_ss_pos_get_all_tokens(bert, toker, ss, max_len = None):
 def compress_by_ss_get_special_tokens(bert, toker, ss, max_len = None):
   cls, seps, sentence_tokens = compress_by_ss_pos_get_all_tokens(bert, toker, ss, max_len)
   return cls, seps
+
+def compress_by_ss_get_cls_and_middle_sep(bert, toker, ss, max_len = None):
+  cls, seps = compress_by_ss_get_special_tokens(bert, toker, ss, max_len)
+  seps_middle_pos = int(len(ss) / 2) - 1
+  return cls, seps[seps_middle_pos]
+
+
