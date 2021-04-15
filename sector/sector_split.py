@@ -515,6 +515,44 @@ class Sector_Standard_Many_SEP(Sector_Standard):
     return seps[pos - 1]
 
 
+class Sector_Plus_Ordering(Sector_Split): 
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    loss = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
+      if len(ss) != self.ss_len_limit: # 直接不训练
+        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        pass
+      else: 
+        cls, sep_middle = B.compress_by_ss_get_cls_and_middle_sep(self.bert, self.toker, ss)
+        label = t.LongTensor([ls[pos]]).view(1) # (ss_len), (0 or 1)
+        if GPU_OK:
+          label = label.cuda()
+        sector_loss = self.cal_loss(self.classifier(sep_middle).view(1,1), label)
+        # 计算order loss 
+        ss_shuffled = ss.copy()
+        if random.random() > 0.5: # 50%交换中间两句话
+          ss_shuffled[1], ss_shuffled[2] = ss_shuffled[2], ss_shuffled[1]
+          label_order = t.LongTensor([1]).view(1)
+        else:
+          label_order = t.LongTensor([0]).view(1)
+        cls_shuffled, _ = B.compress_by_ss_get_cls_and_middle_sep(self.bert, self.toker, ss_shuffled)
+        if GPU_OK:
+          label_order = label_order.cuda()
+        order_loss = self.cal_loss(self.classifier2(cls_shuffled).view(1,1), label_order)
+        loss.append(sector_loss + self.auxiliary_loss_rate * order_loss)
+    if len(loss) < 1:
+      return 0
+    else:
+      loss = t.stack(loss).sum()
+      self.zero_grad()
+      loss.backward()
+      self.optim.step()
+      self.print_train_info(o, labels, loss.detach().item())
+      return loss.detach().item()
+
 # =============================== Model ===========================
 
 def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
@@ -569,3 +607,9 @@ def run_split_with_auxiliary_rate():
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.3)
     get_datas(i, 2, f'Sector_Split with auxiliary rate {m.auxiliary_loss_rate} 2vs2 2', with_dev = False)
 
+
+def run_sector_ordering():
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
+  for i in range(10):
+    G['m'] = m = Sector_Plus_Ordering(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    get_datas(i, 2, f'Sector_Plus_Ordering with auxiliary rate {m.auxiliary_loss_rate} 2vs2 2', with_dev = False)
