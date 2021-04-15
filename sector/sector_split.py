@@ -613,8 +613,16 @@ def run_sector_ordering(auxiliary_loss_rate = 0.5):
     G['m'] = m = Sector_Plus_Ordering(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = auxiliary_loss_rate)
     get_datas(i, 2, f'Sector_Plus_Ordering with auxiliary rate {m.auxiliary_loss_rate} 2vs2 2', with_dev = False)
 
-
 def run():
   run_sector_ordering()
   run_split_with_auxiliary_rate(0.8)
+
+def run_3vs3_standard():
+  init_G_Symmetry_Mainichi(half = 3, batch = 2, mini = False)
+  for i in range(15):
+    G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-6, ss_len_limit = 6)
+    get_datas(i, 2, f'Sector_Standard_Many_SEP 3vs3 2', with_dev = False)
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 6, auxiliary_loss_rate = 0.5)
+    get_datas(i+20, 2, f'Sector_Split with auxiliary rate {m.auxiliary_loss_rate} 3vs3 2', with_dev = False)
+
 
