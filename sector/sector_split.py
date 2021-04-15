@@ -619,10 +619,14 @@ def run():
 
 def run_3vs3_standard():
   init_G_Symmetry_Mainichi(half = 3, batch = 2, mini = False)
-  for i in range(15):
-    G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-6, ss_len_limit = 6)
-    get_datas(i, 2, f'Sector_Standard_Many_SEP 3vs3 2', with_dev = False)
-    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 6, auxiliary_loss_rate = 0.5)
-    get_datas(i+20, 2, f'Sector_Split with auxiliary rate {m.auxiliary_loss_rate} 3vs3 2', with_dev = False)
+  G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-7, ss_len_limit = 6)
+  get_datas(0, 1, f'Sector_Standard_Many_SEP 3vs3 1', with_dev = False)
+  get_datas(1, 1, f'Sector_Standard_Many_SEP 3vs3 2', with_dev = False)
+  get_datas(2, 1, f'Sector_Standard_Many_SEP 3vs3 3', with_dev = False)
+  # for i in range(15):
+  #   G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-7, ss_len_limit = 6)
+  #   get_datas(i, 2, f'Sector_Standard_Many_SEP 3vs3 2', with_dev = False)
+  #   G['m'] = m = Sector_Split(learning_rate = 5e-7, ss_len_limit = 6, auxiliary_loss_rate = 0.5)
+  #   get_datas(i+20, 2, f'Sector_Split with auxiliary rate {m.auxiliary_loss_rate} 3vs3 2', with_dev = False)
 
 
