@@ -601,15 +601,21 @@ def run_many_seps():
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 2e-5, ss_len_limit = 2)
     get_datas(i, 2, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2', with_dev = False)
 
-def run_split_with_auxiliary_rate():
+def run_split_with_auxiliary_rate(auxiliary_loss_rate = 0.8):
   init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
-  for i in range(10):
-    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.3)
+  for i in range(15):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = auxiliary_loss_rate)
     get_datas(i, 2, f'Sector_Split with auxiliary rate {m.auxiliary_loss_rate} 2vs2 2', with_dev = False)
 
 
-def run_sector_ordering():
+def run_sector_ordering(auxiliary_loss_rate = 0.5):
   init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
-  for i in range(10):
-    G['m'] = m = Sector_Plus_Ordering(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+  for i in range(15):
+    G['m'] = m = Sector_Plus_Ordering(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = auxiliary_loss_rate)
     get_datas(i, 2, f'Sector_Plus_Ordering with auxiliary rate {m.auxiliary_loss_rate} 2vs2 2', with_dev = False)
+
+
+def run():
+  run_sector_ordering()
+  run_split_with_auxiliary_rate(0.8)
+
