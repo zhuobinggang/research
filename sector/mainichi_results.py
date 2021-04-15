@@ -732,7 +732,7 @@ origin_2vs2_in_orderpy = [
 ]
 
 
-sector_split_with_auxiliary_rate_2vs2_2 = [
+sector_split_with_auxiliary_rate_zero5_2vs2_2 = [
 {
   "testdic": {
     "prec": 0.7300454250486696,
@@ -866,6 +866,77 @@ sector_split_with_auxiliary_rate_2vs2_2 = [
 },
 ]
 
+sector_split_with_auxiliary_rate_zero3_2vs2_2 = [
+{
+  "testdic": {
+    "prec": 0.7773467804499612,
+    "rec": 0.6250779787897692,
+    "f1": 0.6929460580912863,
+    "bacc": 0.7702584944037237
+  },
+  "losses": [
+    9023.554144948721,
+    4666.588419824839
+  ],
+  "desc": "Sector_Split with auxiliary rate 0.3 2vs2 2"
+},
+{
+  "testdic": {
+    "prec": 0.7707203718048025,
+    "rec": 0.620711166562695,
+    "f1": 0.6876295784381479,
+    "bacc": 0.7667492191092791
+  },
+  "losses": [
+    7319.460451692343,
+    3506.6117709055543
+  ],
+  "desc": "Sector_Split with auxiliary rate 0.3 2vs2 2"
+},
+]
+
+
+sector_plus_ordering_with_auxiliary_rate_zero5_2vs2 = [
+{
+  "testdic": {
+    "prec": 0.7516059957173448,
+    "rec": 0.6568933250155957,
+    "f1": 0.7010652463382157,
+    "bacc": 0.7771797208460418
+  },
+  "losses": [
+    9608.496939957142,
+    7715.22359931469
+  ],
+  "desc": "Sector_Plus_Ordering with auxiliary rate 0.5 2vs2 2"
+},
+{
+  "testdic": {
+    "prec": 0.727445997458704,
+    "rec": 0.7142857142857143,
+    "f1": 0.7208057916273214,
+    "bacc": 0.7939430928529337
+  },
+  "losses": [
+    9628.376031398773,
+    8011.985770404339
+  ],
+  "desc": "Sector_Plus_Ordering with auxiliary rate 0.5 2vs2 2"
+},
+{
+  "testdic": {
+    "prec": 0.7007110536522301,
+    "rec": 0.6762320648783531,
+    "f1": 0.6882539682539682,
+    "bacc": 0.7699074290213804
+  },
+  "losses": [
+    9628.527478635311,
+    8101.27191221714
+  ],
+  "desc": "Sector_Plus_Ordering with auxiliary rate 0.5 2vs2 2"
+},
+]
 
 def analyse(datas, dicname = 'testdic'):
   precs = []
