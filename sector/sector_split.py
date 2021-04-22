@@ -28,11 +28,11 @@ U.init_logger('spsc.log')
 
 # ==================== 功能函数 ============================
 
-def get_datas(index, epoch, desc, dic_to_send = None, with_dev = True):
+def get_datas(index, epoch, desc, dic_to_send = None, with_dev = True, url = None):
   if with_dev:
-    return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], devld = G['devld'], desc = desc, dic_to_send = dic_to_send)
+    return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], devld = G['devld'], desc = desc, dic_to_send = dic_to_send, url = url)
   else:
-    return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], desc = desc, dic_to_send = dic_to_send)
+    return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], desc = desc, dic_to_send = dic_to_send, url = url)
 
 def train_simple(m, loader, epoch):
   logger = logging.debug
@@ -53,7 +53,7 @@ def train_simple(m, loader, epoch):
   logger(f'Trained! Epochs: {epoch}, Batch size: {loader.batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
   return loss_per_epoch
 
-def get_datas_org(index, epoch, m, ld, testld, devld = None,  desc='Nothing', dic_to_send = None):
+def get_datas_org(index, epoch, m, ld, testld, devld = None,  desc='Nothing', dic_to_send = None, url = None):
   losses = train_simple(m, ld, epoch) # only one epoch for order matter model
   G[f'testdic_{index}'] = get_test_result_dic(m, testld)
   G[f'losses_{index}'] = losses
@@ -66,7 +66,7 @@ def get_datas_org(index, epoch, m, ld, testld, devld = None,  desc='Nothing', di
     dic['devdic'] = G[f'devdic_{index}']
   if dic_to_send is not None:
     dic = {**dic, **dic_to_send}
-  R.request_my_logger(dic, desc)
+  R.request_my_logger(dic, desc, url)
   return losses
 
 def get_test_result(m, loader):
