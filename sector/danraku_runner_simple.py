@@ -10,8 +10,9 @@ import requests
 # ld = data.Loader(data.Train_DS(), 8)
 
 G = {}
+default_url = 'https://hookb.in/r17l8BBwnDTzWWJVy9PW'
 
-def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing', with_label = False, url = 'https://hookb.in/r17l8BBwnDTzWWJVy9PW'):
+def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing', with_label = False, url = None):
   losses = train_simple(m, ld, epoch) # only one epoch for order matter model
   G[f'testdic_{index}'] = get_test_result_long(m, testld, with_label = with_label)
   G[f'devdic_{index}'] = get_test_result_long(m, devld, with_label = with_label)
@@ -25,13 +26,14 @@ def get_datas(m, ld, testld, devld, index, epoch, desc='Nothing', with_label = F
 
 def request_my_logger(dic, desc = 'No describe', url = None):
   if url is None:
-    pass
+    url = default_url
   else:
-    try:
-      dic['desc'] = desc
-      requests.post(url, json=dic)
-    except:
-      print('Something went wrong in request_my_logger()')
+    pass
+  try:
+    dic['desc'] = desc
+    requests.post(url, json=dic)
+  except:
+    print('Something went wrong in request_my_logger()')
 
 
 def plot_loss(epoch, train_loss, test_loss):
