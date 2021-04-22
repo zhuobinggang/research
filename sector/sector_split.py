@@ -632,10 +632,31 @@ def run_3vs3_standard_split():
 
 def run_2vs2_standard():
   init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
-  for i in range(15):
+  for i in range(18):
     G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-6, ss_len_limit = 4)
     get_datas(i, 2, f'NO.{i} Sector_Standard_Many_SEP 2vs2 2', with_dev = False)
     get_datas(i + 20, 1, f'NO.{i} Sector_Standard_Many_SEP 2vs2 3', with_dev = False)
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
     get_datas(i + 100, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
     get_datas(i + 120, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False)
+
+def auxiliary_rate_test():
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
+  for i in range(10):
+    # Rate = 0.2
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False) 
+    # Rate = 0.8
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.8)
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False) 
+    # Rate = 1
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 1.0)
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False) 
+    # Rate = 1.5
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 1.5)
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False) 
+
