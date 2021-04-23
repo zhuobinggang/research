@@ -675,7 +675,7 @@ def run_4vs4():
   init_G_Symmetry_Mainichi(half = 4, batch = 2, mini = False)
   panther_url = 'https://hookb.in/Z2dBDBMP39uR33eLJXYO'
   for i in range(20):
-    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 6, auxiliary_loss_rate = 0.5)
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 8, auxiliary_loss_rate = 0.5)
     get_datas(0, 2, f'NO{i} Sector_Split 4vs4 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
     get_datas(0, 1, f'NO{i} Sector_Split 4vs4 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url)
 
