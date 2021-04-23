@@ -21,7 +21,9 @@ import mainichi
 
 # Global Variable
 GPU_OK = t.cuda.is_available()
-G = {} 
+G = {
+  'mess_list': [] # 用来存储结果，不用每次都从网上扒累死了
+} 
 
 # 初始化logging
 U.init_logger('spsc.log')
@@ -66,6 +68,7 @@ def get_datas_org(index, epoch, m, ld, testld, devld = None,  desc='Nothing', di
     dic['devdic'] = G[f'devdic_{index}']
   if dic_to_send is not None:
     dic = {**dic, **dic_to_send}
+  G['mess_list'].append(dic) # 存到mess里到时直接复制到结果
   R.request_my_logger(dic, desc, url)
   return losses
 
@@ -668,5 +671,11 @@ def run_3vs3():
     get_datas(0, 2, f'NO{i} Sector_Split 3vs3 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
     get_datas(0, 1, f'NO{i} Sector_Split 3vs3 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url)
 
-
+def run_4vs4():
+  init_G_Symmetry_Mainichi(half = 4, batch = 2, mini = False)
+  panther_url = 'https://hookb.in/Z2dBDBMP39uR33eLJXYO'
+  for i in range(20):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 6, auxiliary_loss_rate = 0.5)
+    get_datas(0, 2, f'NO{i} Sector_Split 4vs4 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
+    get_datas(0, 1, f'NO{i} Sector_Split 4vs4 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url)
 
