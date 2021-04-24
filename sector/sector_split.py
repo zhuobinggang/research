@@ -517,7 +517,6 @@ class Sector_Standard_Many_SEP(Sector_Standard):
     assert len(seps) == len(ss)
     return seps[pos - 1]
 
-
 class Sector_Plus_Ordering(Sector_Split): 
   def train(self, mass):
     batch = len(mass)
@@ -679,3 +678,11 @@ def run_4vs4():
     get_datas(0, 2, f'NO{i} Sector_Split 4vs4 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
     get_datas(0, 1, f'NO{i} Sector_Split 4vs4 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url)
 
+
+def run_2vs2_1cls_1sep_optimal():
+  init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
+  # G['m'] = m = Sector_Standard(learning_rate = 5e-6)
+  for i in range(20):
+    G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
+    get_datas(i, 2, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2', with_dev = False)
+    get_datas(i + 100, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3', with_dev = False)
