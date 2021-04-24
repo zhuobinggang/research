@@ -562,6 +562,16 @@ def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
   ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests(mini))
   G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
 
+def init_G_Symmetry_Syosetu(half = 1, batch = 4):
+  ds = data.Dataset(ss_len = half * 2, datas = data.read_trains())
+  G['ld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+  ds = data.Dataset(ss_len = half * 2, datas = data.read_tests())
+  G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+
+# =============================== Dataset =========================
+
+
+
 def run_old():
   init_G_Symmetry_Mainichi(half = 2, batch = 2)
   for i in range(5):
@@ -686,3 +696,38 @@ def run_2vs2_1cls_1sep_optimal():
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
     get_datas(i, 2, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2', with_dev = False)
     get_datas(i + 100, 1, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3', with_dev = False)
+
+def run_syosetu_my_computer():
+  panther_url = 'https://hookb.in/BYj9ewaWLwhLDDx31JrN'
+  init_G_Symmetry_Syosetu(half = 1, batch = 4)
+  for i in range(10):
+    G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 2)
+    get_datas(i, 2, f'小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2', with_dev = False, url = panther_url)
+    get_datas(i + 100, 1, f'小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3', with_dev = False, url = panther_url)
+  init_G_Symmetry_Syosetu(half = 2, batch = 2)
+  for i in range(10):
+    G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
+    get_datas(i, 2, f'小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2', with_dev = False, url = panther_url)
+    get_datas(i + 100, 1, f'小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3', with_dev = False, url = panther_url)
+  for i in range(10):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    get_datas(i, 2, f'小说Sector_Split 2vs2 0.5 2', with_dev = False, url = panther_url)
+    get_datas(i + 100, 1, f'小说Sector_Split 2vs2 0.5 3', with_dev = False, url = panther_url)
+  for i in range(10):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
+    get_datas(i, 2, f'小说Sector_Split 2vs2 0.2 2', with_dev = False, url = panther_url)
+    get_datas(i + 100, 1, f'小说Sector_Split 2vs2 0.2 3', with_dev = False, url = panther_url)
+     
+
+def run_syosetu_panther():
+  panther_url = 'https://hookb.in/aBe1JqzJjQf1oobLKD0E'
+  init_G_Symmetry_Syosetu(half = 3, batch = 2)
+  for i in range(10):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 6, auxiliary_loss_rate = 0.5)
+    get_datas(i, 2, f'小说Sector_Split 3vs3 0.5 2', with_dev = False, url = panther_url)
+    get_datas(i + 100, 1, f'小说Sector_Split 3vs3 0.5 3', with_dev = False, url = panther_url)
+  init_G_Symmetry_Syosetu(half = 4, batch = 2)
+  for i in range(10):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 8, auxiliary_loss_rate = 0.5)
+    get_datas(i, 2, f'小说Sector_Split 4vs4 0.5 2', with_dev = False, url = panther_url)
+    get_datas(i + 100, 1, f'小说Sector_Split 4vs4 0.5 3', with_dev = False, url = panther_url)
