@@ -1,7 +1,7 @@
 # 每日新闻处理脚本
 from importlib import reload
 
-the_path = '/home/taku/dataset/mainichi/cdrom2019/mai2019.utf8.txt'
+the_path = './datasets/mai2019.utf8.txt'
 
 def read_lines():
   with open(the_path) as fin:
@@ -134,6 +134,18 @@ def read_trains(mini = False):
 
 def read_tests(mini = False):
   file_path = 'test.mini.txt' if mini else 'test.txt'
+  with open(file_path) as the_file:
+    lines = no_line_breaks(the_file.readlines())
+  return lines
+
+def read_trains_big(mini = False):
+  file_path = 'train.big.txt'
+  with open(file_path) as the_file:
+    lines = no_line_breaks(the_file.readlines())
+  return lines
+
+def read_tests_big(mini = False):
+  file_path = 'test.big.txt'
   with open(file_path) as the_file:
     lines = no_line_breaks(the_file.readlines())
   return lines

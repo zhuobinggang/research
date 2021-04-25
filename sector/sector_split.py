@@ -669,6 +669,12 @@ def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
   ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests(mini))
   G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
 
+def init_G_Symmetry_Mainichi_big(half = 1, batch = 4, mini = False):
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_trains_big(mini))
+  G['ld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests_big(mini))
+  G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+
 def init_G_Symmetry_Syosetu(half = 1, batch = 4):
   ds = data.Dataset(ss_len = half * 2, datas = data.read_trains())
   G['ld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
@@ -840,9 +846,22 @@ def run_syosetu_panther():
     get_datas(i + 100, 1, f'小说Sector_Split 4vs4 0.5 3', with_dev = False, url = panther_url)
 
 def run_lstm():
-  panther_url = 'https://hookb.in/aBe1JqzJjQf1oobLKD0E'
-  init_G_Symmetry_Syosetu(half = 2, batch = 2)
-  for i in range(10):
+  panther_url = 'https://hookb.in/Dr3ZXpaMnoSdNNEwe9kD'
+  init_G_Symmetry_Mainichi(half = 2, batch = 2)
+  for i in range(20):
     G['m'] = m = Split_GRU(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
     get_datas(i, 2, f'GRU 2vs2 0.5 2', with_dev = False, url = panther_url)
     get_datas(i + 100, 1, f'GRU 2vs2 0.5 3', with_dev = False, url = panther_url)
+
+# TODO: 记录的时候要分开
+def run_big():
+  panther_url = 'https://hookb.in/jekwxj6je2teBB23OK8y'
+  init_G_Symmetry_Mainichi_big(half = 2, batch = 2)
+  for i in range(20):
+    G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-6, ss_len_limit = 4)
+    get_datas(i + 100, 2, f'BIG Sector_Standard_Many_SEP 2vs2 2', with_dev = False, url = panther_url)
+    get_datas(i + 200, 1, f'BIG Sector_Standard_Many_SEP 2vs2 3', with_dev = False, url = panther_url)
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    get_datas(i, 2, f'BIG Sector_Split 2vs2 0.5 2', with_dev = False, url = panther_url)
+    get_datas(i + 20, 1, f'BIG Sector_Split 2vs2 0.5 3', with_dev = False, url = panther_url)
+
