@@ -859,9 +859,11 @@ def run_big():
   init_G_Symmetry_Mainichi_big(half = 2, batch = 2)
   for i in range(20):
     G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-6, ss_len_limit = 4)
-    get_datas(i + 100, 2, f'BIG Sector_Standard_Many_SEP 2vs2 2', with_dev = False, url = panther_url)
+    get_datas(i + 200, 1, f'BIG Sector_Standard_Many_SEP 2vs2 1', with_dev = False, url = panther_url)
+    get_datas(i + 200, 1, f'BIG Sector_Standard_Many_SEP 2vs2 2', with_dev = False, url = panther_url)
     get_datas(i + 200, 1, f'BIG Sector_Standard_Many_SEP 2vs2 3', with_dev = False, url = panther_url)
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
-    get_datas(i, 2, f'BIG Sector_Split 2vs2 0.5 2', with_dev = False, url = panther_url)
-    get_datas(i + 20, 1, f'BIG Sector_Split 2vs2 0.5 3', with_dev = False, url = panther_url)
+    get_datas(i, 1, f'BIG Sector_Split 2vs2 0.5 1', with_dev = False, url = panther_url)
+    get_datas(i, 1, f'BIG Sector_Split 2vs2 0.5 2', with_dev = False, url = panther_url)
+    get_datas(i, 1, f'BIG Sector_Split 2vs2 0.5 3', with_dev = False, url = panther_url)
 
