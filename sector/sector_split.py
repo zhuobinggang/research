@@ -554,6 +554,113 @@ class Sector_Plus_Ordering(Sector_Split):
       self.optim.step()
       return loss.detach().item()
 
+# ======= BiLSTM
+
+class Split_GRU(Sector_Split):
+  def init_hook(self): 
+    self.gru = nn.GRU(input_size=self.bert_size, hidden_size= int(self.bert_size / 2), batch_first = True, bidirectional = True) # in: (1, seq_len, 768) out:  (1, seq_len, 768)
+    self.classifier = nn.Sequential( # 因为要同时判断多种1[sep]3, 2[sep]2, 3[sep]1, 所以多加一点复杂度
+      nn.Linear(self.bert_size, 20),
+      nn.LeakyReLU(0.1),
+      nn.Linear(20, 20),
+      nn.LeakyReLU(0.1),
+      nn.Linear(20, 1),
+      nn.Sigmoid()
+    )
+    self.classifier2 = nn.Sequential( # 暂时没用上，但是也懒得删掉再加了
+      nn.Linear(self.bert_size, 1),
+      nn.Sigmoid()
+    )
+    self.dry_run_labels = []
+    self.dry_run_output = []
+
+  def get_should_update(self):
+    return chain(self.bert.parameters(), self.classifier.parameters(), self.classifier2.parameters(), self.gru.parameters())
+
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    loss = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
+      if len(ss) != self.ss_len_limit: # 直接不训练
+        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        pass
+      else: 
+        clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
+        # Put in context using bi-gru
+        clss = clss.view(1, len(ss), self.bert_size)
+        clss, _ = self.gru(clss) 
+        clss = clss.view(len(ss), self.bert_size)
+        clss = clss[1:] # 第一个cls不需要
+        # Process labels
+        ls = ls[1:] # 第一个label不需要
+        ls = t.LongTensor(ls) # (ss_len), (0 or 1)
+        if GPU_OK:
+          ls = ls.cuda()
+        assert ls.shape[0] == clss.shape[0]
+        # 稍微做一点tricky的事情，将其他loss(除了中间那个) * 0.5
+        o = self.classifier(clss) #(ss_len, 1)
+        for index, (o_item, l_item) in enumerate(zip(o, ls)): # Different split point, only middle important
+          loss_part = self.cal_loss(o_item.view(1, 1), l_item.view(1))
+          if index != int((len(ls) / 2)):
+            loss_part = loss_part * self.auxiliary_loss_rate
+          else:
+            assert index == int(len(ss) / 2) - 1 == pos - 1
+            pass
+          loss.append(loss_part)
+    if len(loss) < 1:
+      return 0
+    else:
+      loss = t.stack(loss).sum()
+      self.zero_grad()
+      loss.backward()
+      self.optim.step()
+      self.print_train_info(o, labels, loss.detach().item())
+      return loss.detach().item()
+
+  @t.no_grad()
+  def dry_run(self, mass):
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    pos_outs = []
+    pos_labels = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
+      if len(ss) != self.ss_len_limit: # 直接不跑
+        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        pass
+      else: 
+        clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
+        # Put in context using bi-gru
+        clss = clss.view(1, len(ss), self.bert_size)
+        clss, _ = self.gru(clss) 
+        clss = clss.view(len(ss), self.bert_size)
+        clss = clss[1:] # 第一个cls不需要
+        # labels processing
+        ls = ls[1:] # 第一个label不需要
+        ls = t.LongTensor(ls) # (ss_len), (0 or 1)
+        if GPU_OK:
+          ls = ls.cuda()
+        assert ls.shape[0] == clss.shape[0]
+        emb = clss[pos - 1] # 取中间那个
+        pos_outs.append(self.classifier(emb).view(1))
+        pos_labels.append(ls[pos - 1])
+    if len(pos_outs) < 1:
+      return t.LongTensor([]), t.LongTensor([])
+    else:
+      pos_outs = t.stack(pos_outs)
+      pos_labels = t.LongTensor(pos_labels)
+      if GPU_OK:
+        pos_labels = pos_labels.cuda()
+      assert len(pos_outs.shape) == 2 
+      assert len(pos_labels.shape) == 1
+      assert pos_outs.shape[0] == pos_labels.shape[0]
+      self.print_train_info(pos_outs, pos_labels, -1)
+      return fit_sigmoided_to_label(pos_outs), pos_labels
+
+
 # =============================== Model ===========================
 
 def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
@@ -731,3 +838,11 @@ def run_syosetu_panther():
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 8, auxiliary_loss_rate = 0.5)
     get_datas(i, 2, f'小说Sector_Split 4vs4 0.5 2', with_dev = False, url = panther_url)
     get_datas(i + 100, 1, f'小说Sector_Split 4vs4 0.5 3', with_dev = False, url = panther_url)
+
+def run_lstm():
+  panther_url = 'https://hookb.in/aBe1JqzJjQf1oobLKD0E'
+  init_G_Symmetry_Syosetu(half = 2, batch = 2)
+  for i in range(10):
+    G['m'] = m = Split_GRU(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    get_datas(i, 2, f'GRU 2vs2 0.5 2', with_dev = False, url = panther_url)
+    get_datas(i + 100, 1, f'GRU 2vs2 0.5 3', with_dev = False, url = panther_url)

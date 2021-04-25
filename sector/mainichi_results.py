@@ -3586,6 +3586,310 @@ sector_split_4vs4_auxiliary_rate_05_mess = [{
     'NO19 Sector_Split 4vs4 auxiliary rate 0.5 3'
 }]
 
+syosetu_1vs1_1cls_1sep = [{
+    'testdic': {
+        'prec': 0.9139150943396226,
+        'rec': 0.7761642463695543,
+        'f1': 0.8394259409694016,
+        'bacc': 0.8801859630982438
+    },
+    'losses': [7387.912905059755, 5135.199081290513],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.8546042003231018,
+        'rec': 0.7946920380570857,
+        'f1': 0.823559937727037,
+        'bacc': 0.8827435311972827
+    },
+    'losses': [3595.903727551922],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9353049907578558,
+        'rec': 0.7601402103154732,
+        'f1': 0.8386740331491712,
+        'bacc': 0.8743913598900244
+    },
+    'losses': [7373.918029360473, 5285.082821693271],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.932674490426189,
+        'rec': 0.756134201301953,
+        'f1': 0.8351769911504424,
+        'bacc': 0.8721720222302085
+    },
+    'losses': [3691.0317562026903],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9963476990504018,
+        'rec': 0.6830245368052078,
+        'f1': 0.8104575163398693,
+        'bacc': 0.8412418519612843
+    },
+    'losses': [9078.525857076049, 6105.749859139323],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.9016298020954598,
+        'rec': 0.7756634952428643,
+        'f1': 0.8339165545087482,
+        'bacc': 0.8786916719048286
+    },
+    'losses': [4659.874754514545],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9655857048312376,
+        'rec': 0.7305958938407612,
+        'f1': 0.8318129988597492,
+        'bacc': 0.8624856159306564
+    },
+    'losses': [8495.154011070728, 5560.747077181935],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.9149191132414619,
+        'rec': 0.7646469704556835,
+        'f1': 0.8330605564648117,
+        'bacc': 0.8746436582943642
+    },
+    'losses': [3978.2698799073696],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9853760445682451,
+        'rec': 0.7085628442663996,
+        'f1': 0.8243518788231867,
+        'bacc': 0.8531456730796574
+    },
+    'losses': [12866.77312374115, 7697.787176422775],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.9858657243816255,
+        'rec': 0.6985478217325989,
+        'f1': 0.8177022274325909,
+        'bacc': 0.8481922451010209
+    },
+    'losses': [5911.352090332657],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9676985195154778,
+        'rec': 0.7200801201802705,
+        'f1': 0.8257249497559576,
+        'bacc': 0.8574440622534667
+    },
+    'losses': [7261.415209241211, 5072.632746946067],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.9027283511269276,
+        'rec': 0.7621432148222334,
+        'f1': 0.8265001357588921,
+        'bacc': 0.8722019481358327
+    },
+    'losses': [3382.266362483613],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9730458221024259,
+        'rec': 0.7230846269404106,
+        'f1': 0.8296466532605574,
+        'bacc': 0.8593789819396482
+    },
+    'losses': [7375.79345292598, 5216.526786740869],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.9106078665077473,
+        'rec': 0.7651477215823735,
+        'f1': 0.8315646258503402,
+        'bacc': 0.8744613675515978
+    },
+    'losses': [3761.081954944879],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9866197183098592,
+        'rec': 0.7015523284927391,
+        'f1': 0.8200175592625109,
+        'bacc': 0.8497485817693549
+    },
+    'losses': [9710.16147005558, 6020.388467274606],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.9623513870541611,
+        'rec': 0.729594391587381,
+        'f1': 0.8299629735118199,
+        'bacc': 0.8617144483626467
+    },
+    'losses': [4465.518453774974],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9188701923076923,
+        'rec': 0.7656484727090636,
+        'f1': 0.8352909041245562,
+        'bacc': 0.8755229924389016
+    },
+    'losses': [7222.754788421094, 5168.848230499774],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.9087656529516994,
+        'rec': 0.7631447170756134,
+        'f1': 0.8296135002721828,
+        'bacc': 0.873297615433426
+    },
+    'losses': [3518.146697478369],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}, {
+    'testdic': {
+        'prec': 0.9585194639438417,
+        'rec': 0.7521281922884326,
+        'f1': 0.8428731762065095,
+        'bacc': 0.8725486824070612
+    },
+    'losses': [7391.855894833803, 5169.057176548988],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 2'
+}, {
+    'testdic': {
+        'prec': 0.9504504504504504,
+        'rec': 0.7396094141211818,
+        'f1': 0.8318783441284144,
+        'bacc': 0.8656402938642686
+    },
+    'losses': [3607.8367950897664],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 3'
+}]
+
+syosetu_2vs2_1cls_1sep = [{
+    'testdic': {
+        'prec': 0.9787525702535984,
+        'rec': 0.7150726089133701,
+        'f1': 0.826388888888889,
+        'bacc': 0.8558593597417656
+    },
+    'losses': [7894.028077676892, 5166.080050608143],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2'
+}, {
+    'testdic': {
+        'prec': 0.9167657550535078,
+        'rec': 0.7721582373560341,
+        'f1': 0.8382712693666757,
+        'bacc': 0.8785058199654778
+    },
+    'losses': [3345.832178139128],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3'
+}, {
+    'testdic': {
+        'prec': 0.9628099173553719,
+        'rec': 0.700050075112669,
+        'f1': 0.8106697593505364,
+        'bacc': 0.8471039080529266
+    },
+    'losses': [8860.952849708498, 5775.748175504617],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2'
+}, {
+    'testdic': {
+        'prec': 0.9325421611492817,
+        'rec': 0.7476214321482223,
+        'f1': 0.8299055030572541,
+        'bacc': 0.8679684570672952
+    },
+    'losses': [4157.5343182832],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3'
+}, {
+    'testdic': {
+        'prec': 0.9285714285714286,
+        'rec': 0.7551326990485728,
+        'f1': 0.8329190831262083,
+        'bacc': 0.8712913305910397
+    },
+    'losses': [8750.377741873264, 5817.026571424678],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2'
+}, {
+    'testdic': {
+        'prec': 0.8720670391061452,
+        'rec': 0.7816725087631448,
+        'f1': 0.8243992606284658,
+        'bacc': 0.8784485014874903
+    },
+    'losses': [4240.065669291653],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3'
+}, {
+    'testdic': {
+        'prec': 0.96494708994709,
+        'rec': 0.7305958938407612,
+        'f1': 0.8315759475634084,
+        'bacc': 0.8624309124077765
+    },
+    'losses': [7986.3849489577115, 5151.801980952732],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2'
+}, {
+    'testdic': {
+        'prec': 0.8909620991253644,
+        'rec': 0.7651477215823735,
+        'f1': 0.8232758620689654,
+        'bacc': 0.8724580975108664
+    },
+    'losses': [3253.224782117177],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3'
+}, {
+    'testdic': {
+        'prec': 0.962214983713355,
+        'rec': 0.7396094141211818,
+        'f1': 0.8363533408833523,
+        'bacc': 0.8666671975939675
+    },
+    'losses': [7240.18632299453, 4828.801706335507],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 2'
+}, {
+    'testdic': {
+        'prec': 0.8628944504896626,
+        'rec': 0.7941912869303956,
+        'f1': 0.8271186440677966,
+        'bacc': 0.8834637057826272
+    },
+    'losses': [3081.0037107528187],
+    'desc':
+    '小说Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 3'
+}]
+
 
 def analyse(datas, dicname='testdic'):
     precs = []
