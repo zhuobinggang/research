@@ -805,24 +805,29 @@ def run_2vs2_standard():
     get_datas(i + 120, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False)
 
 def auxiliary_rate_test():
+  panther_url = 'https://hookb.in/Z2dBDBMP39uR33eLJXYO'
   init_G_Symmetry_Mainichi(half = 2, batch = 2, mini = False)
   for i in range(10):
+    # Rate = 0.1
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.1)
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url) 
     # Rate = 0.2
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
-    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
-    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False) 
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url) 
     # Rate = 0.8
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.8)
-    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
-    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False) 
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url) 
     # Rate = 1
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 1.0)
-    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
-    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False) 
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url) 
     # Rate = 1.5
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 1.5)
-    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False)
-    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False) 
+    get_datas(0, 2, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 2', with_dev = False, url = panther_url)
+    get_datas(0, 1, f'NO.{i} Sector_Split 2vs2 auxiliary rate {m.auxiliary_loss_rate} 3', with_dev = False, url = panther_url) 
 
 def run_3vs3():
   init_G_Symmetry_Mainichi(half = 3, batch = 2, mini = False)
@@ -888,8 +893,8 @@ def run_lstm():
   panther_url = 'https://hookb.in/Dr3ZXpaMnoSdNNEwe9kD'
   init_G_Symmetry_Mainichi(half = 2, batch = 2)
   for i in range(20):
-    # G['m'] = m = Split_GRU(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
-    G['m'] = m = GRU_Standard(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    G['m'] = m = Split_GRU(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    # G['m'] = m = GRU_Standard(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
     get_datas(i, 1, f'GRU 2vs2 0.5 1', with_dev = False, url = panther_url)
     get_datas(i, 1, f'GRU 2vs2 0.5 2', with_dev = False, url = panther_url)
     get_datas(i, 1, f'GRU 2vs2 0.5 3', with_dev = False, url = panther_url)
