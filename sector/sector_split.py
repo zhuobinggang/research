@@ -661,6 +661,45 @@ class Split_GRU(Sector_Split):
       return fit_sigmoided_to_label(pos_outs), pos_labels
 
 
+class GRU_Standard(Split_GRU):
+  def train(self, mass):
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    loss = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
+      if len(ss) != self.ss_len_limit: # 直接不训练
+        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        pass
+      else: 
+        clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
+        # Put in context using bi-gru
+        clss = clss.view(1, len(ss), self.bert_size)
+        clss, _ = self.gru(clss) 
+        clss = clss.view(len(ss), self.bert_size)
+        clss = clss[1:] # 第一个cls不需要
+        # Process labels
+        ls = ls[1:] # 第一个label不需要
+        ls = t.LongTensor(ls) # (ss_len), (0 or 1)
+        if GPU_OK:
+          ls = ls.cuda()
+        assert ls.shape[0] == clss.shape[0]
+        # 稍微做一点tricky的事情，将其他loss(除了中间那个) * 0.5
+        l_item = ls[int((len(ls) / 2))]
+        o_item = clss[int((len(ls) / 2))]
+        o_item = self.classifier(o_item.view(1, self.bert_size))
+        loss_part = self.cal_loss(o_item.view(1, 1), l_item.view(1))
+        loss.append(loss_part)
+    if len(loss) < 1:
+      return 0
+    else:
+      loss = t.stack(loss).sum()
+      self.zero_grad()
+      loss.backward()
+      self.optim.step()
+      self.print_train_info(o_item, labels, loss.detach().item())
+      return loss.detach().item()
+
 # =============================== Model ===========================
 
 def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
@@ -849,9 +888,11 @@ def run_lstm():
   panther_url = 'https://hookb.in/Dr3ZXpaMnoSdNNEwe9kD'
   init_G_Symmetry_Mainichi(half = 2, batch = 2)
   for i in range(20):
-    G['m'] = m = Split_GRU(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
-    get_datas(i, 2, f'GRU 2vs2 0.5 2', with_dev = False, url = panther_url)
-    get_datas(i + 100, 1, f'GRU 2vs2 0.5 3', with_dev = False, url = panther_url)
+    # G['m'] = m = Split_GRU(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    G['m'] = m = GRU_Standard(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    get_datas(i, 1, f'GRU 2vs2 0.5 1', with_dev = False, url = panther_url)
+    get_datas(i, 1, f'GRU 2vs2 0.5 2', with_dev = False, url = panther_url)
+    get_datas(i, 1, f'GRU 2vs2 0.5 3', with_dev = False, url = panther_url)
 
 # TODO: 记录的时候要分开
 def run_big():
