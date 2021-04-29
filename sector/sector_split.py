@@ -246,7 +246,7 @@ class Sector_Split(nn.Module):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss): # Different Batch
       if len(ss) != self.ss_len_limit: # 直接不训练
-        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
         cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
@@ -289,7 +289,7 @@ class Sector_Split(nn.Module):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss): # Different Batch
       if len(ss) != self.ss_len_limit: # 直接不跑
-        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
         cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
@@ -389,7 +389,7 @@ class Sector_Split2(Sector_Split):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss):
       if len(ss) != 4: # 不训练
-        print(f'Warning: less than 4 sentences. {ss[0]}')
+        #print(f'Warning: less than 4 sentences. {ss[0]}')
         pass
       else:
         left_loss, left_mean = self.cal_loss_return_right([ss[0], ss[1]], ls[1]) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
@@ -415,7 +415,7 @@ class Sector_Split2(Sector_Split):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss):
       if len(ss) != 4: # 不训练
-        print(f'Warning: less than 4 sentences. {ss[0]}')
+        #print(f'Warning: less than 4 sentences. {ss[0]}')
         pass
       else:
         left_mean = self.cal_loss_return_left([ss[0], ss[1]], ls[1], dry = True) # s1 = l0, s2 = l1, s3 = l2, s4 = l3
@@ -486,7 +486,7 @@ class Sector_Standard(Sector_Split):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss):
       if len(ss) != self.ss_len_limit: # 不训练
-        print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
+        #print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
         pass
       else:
         assert pos == self.ss_len_limit / 2
@@ -509,7 +509,7 @@ class Sector_Standard(Sector_Split):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss):
       if len(ss) != self.ss_len_limit: # 不训练
-        print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
+        #print(f'Warning: No Train less with ss_len = {len(ss)}. {ss[0]}')
         pass
       else:
         assert pos == self.ss_len_limit / 2
@@ -557,7 +557,7 @@ class Sector_Plus_Ordering(Sector_Split):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss): # Different Batch
       if len(ss) != self.ss_len_limit: # 直接不训练
-        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
         cls, sep_middle = B.compress_by_ss_get_cls_and_middle_sep(self.bert, self.toker, ss)
@@ -616,7 +616,7 @@ class Split_GRU(Sector_Split):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss): # Different Batch
       if len(ss) != self.ss_len_limit: # 直接不训练
-        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
         clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
@@ -660,7 +660,7 @@ class Split_GRU(Sector_Split):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss): # Different Batch
       if len(ss) != self.ss_len_limit: # 直接不跑
-        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
         clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
@@ -699,7 +699,7 @@ class GRU_Standard(Split_GRU):
     # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
     for ss, ls, pos in zip(sss, labels, poss): # Different Batch
       if len(ss) != self.ss_len_limit: # 直接不训练
-        print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
+        #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
         clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
@@ -952,14 +952,14 @@ def run_big():
 
 def run_standard_early_stop():
   panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=True)
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=False)
   for i in range(20):
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
-    get_datas_early_stop(i, 4, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop')
+    get_datas_early_stop(i, 3, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop')
     
 def run_split_early_stop():
   panther_url = 'https://hookb.in/6JzYX9a69jSLbb031pgZ'
-  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=True)
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=False)
   for i in range(20):
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
-    get_datas_early_stop(i, 4, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop')
+    get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop')

@@ -166,7 +166,7 @@ class Loader():
 
 class Loader_Symmetry(Loader):
   def __init__(self, ds, half, batch):
-    print(f'init Loader_Symmetry half={half}, batch={batch}')
+    # print(f'init Loader_Symmetry half={half}, batch={batch}')
     self.half = ds.half = half
     self.ss_len = ds.ss_len = half * 2
     self.ds = self.dataset = ds
@@ -239,7 +239,7 @@ class Loader_SGD():
 
 class Loader_Symmetry_SGD(Loader_SGD):
   def __init__(self, ds, half, batch, shuffle = True):
-    print(f'init Loader_Symmetry_SGD half={half}, batch={batch}')
+    # print(f'init Loader_Symmetry_SGD half={half}, batch={batch}')
     self.half = ds.half = half
     self.ss_len = ds.ss_len = half * 2
     self.ds = self.dataset = ds
