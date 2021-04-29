@@ -708,6 +708,14 @@ def init_G_Symmetry_Mainichi(half = 1, batch = 4, mini = False):
   ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests(mini))
   G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
 
+def init_G_Symmetry_Mainichi_With_Valid(half = 1, batch = 4, mini = False):
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_trains(mini))
+  G['ld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_tests(mini))
+  G['testld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+  ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_valid(mini))
+  G['validld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
+
 def init_G_Symmetry_Mainichi_big(half = 1, batch = 4, mini = False):
   ds = data.Dataset(ss_len = half * 2, datas = mainichi.read_trains_big(mini))
   G['ld'] = data.Loader_Symmetry_SGD(ds = ds, half = half, batch = batch)
@@ -890,7 +898,7 @@ def run_syosetu_panther():
     get_datas(i + 100, 1, f'小说Sector_Split 4vs4 0.5 3', with_dev = False, url = panther_url)
 
 def run_lstm():
-  panther_url = 'https://hookb.in/Dr3ZXpaMnoSdNNEwe9kD'
+  panther_url = 'https://hookb.in/OeMdR0z87NinzzlkeNMj'
   init_G_Symmetry_Mainichi(half = 2, batch = 2)
   for i in range(20):
     G['m'] = m = Split_GRU(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
@@ -913,3 +921,12 @@ def run_big():
     get_datas(i, 1, f'BIG Sector_Split 2vs2 0.5 2', with_dev = False, url = panther_url)
     get_datas(i, 1, f'BIG Sector_Split 2vs2 0.5 3', with_dev = False, url = panther_url)
 
+
+def run_standard_early_stop():
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 2)
+  for i in range(20)
+    G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
+    get_datas_early_stop(i, 3, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop')
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
+    get_datas_early_stop(i + 100, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop')
+    

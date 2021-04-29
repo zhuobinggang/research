@@ -138,6 +138,12 @@ def read_tests(mini = False):
     lines = no_line_breaks(the_file.readlines())
   return lines
 
+def read_valid(mini = False):
+  file_path = 'valid.mini.txt' if mini else 'valid.txt'
+  with open(file_path) as the_file:
+    lines = no_line_breaks(the_file.readlines())
+  return lines
+
 def read_trains_big(mini = False):
   file_path = 'train.big.txt'
   with open(file_path) as the_file:
