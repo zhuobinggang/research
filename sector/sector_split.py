@@ -277,7 +277,6 @@ class Sector_Split(nn.Module):
       self.zero_grad()
       loss.backward()
       self.optim.step()
-      self.print_train_info(o, labels, loss.detach().item())
       return loss.detach().item()
 
   @t.no_grad()
@@ -313,7 +312,6 @@ class Sector_Split(nn.Module):
       assert len(pos_outs.shape) == 2 
       assert len(pos_labels.shape) == 1
       assert pos_outs.shape[0] == pos_labels.shape[0]
-      self.print_train_info(pos_outs, pos_labels, -1)
       return fit_sigmoided_to_label(pos_outs), pos_labels
 
 # 两边cls中间mean
@@ -406,7 +404,6 @@ class Sector_Split2(Sector_Split):
       self.zero_grad()
       loss.backward()
       self.optim.step()
-      # self.print_train_info(o, labels, loss.detach().item())
       return loss.detach().item()
 
   @t.no_grad()
@@ -436,7 +433,6 @@ class Sector_Split2(Sector_Split):
       assert len(pos_outs.shape) == 2 
       assert len(pos_labels.shape) == 1
       assert pos_outs.shape[0] == pos_labels.shape[0]
-      self.print_train_info(pos_outs, pos_labels, -1)
       return fit_sigmoided_to_label(pos_outs), pos_labels
 
 # 两边cls中间也cls
@@ -531,7 +527,6 @@ class Sector_Standard(Sector_Split):
       assert len(pos_outs.shape) == 2 
       assert len(pos_labels.shape) == 1
       assert pos_outs.shape[0] == pos_labels.shape[0]
-      self.print_train_info(pos_outs, pos_labels, -1)
       return fit_sigmoided_to_label(pos_outs), pos_labels
   
 
@@ -653,7 +648,6 @@ class Split_GRU(Sector_Split):
       self.zero_grad()
       loss.backward()
       self.optim.step()
-      self.print_train_info(o, labels, loss.detach().item())
       return loss.detach().item()
 
   @t.no_grad()
@@ -694,7 +688,6 @@ class Split_GRU(Sector_Split):
       assert len(pos_outs.shape) == 2 
       assert len(pos_labels.shape) == 1
       assert pos_outs.shape[0] == pos_labels.shape[0]
-      self.print_train_info(pos_outs, pos_labels, -1)
       return fit_sigmoided_to_label(pos_outs), pos_labels
 
 
@@ -734,7 +727,6 @@ class GRU_Standard(Split_GRU):
       self.zero_grad()
       loss.backward()
       self.optim.step()
-      self.print_train_info(o_item, labels, loss.detach().item())
       return loss.detach().item()
 
 # =============================== Model ===========================
@@ -959,13 +951,15 @@ def run_big():
     get_datas(i, 1, f'BIG Sector_Split 2vs2 0.5 3', with_dev = False, url = panther_url)
 
 def run_standard_early_stop():
-  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 2, mini=True)
+  panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=True)
   for i in range(20):
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
     get_datas_early_stop(i, 4, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop')
     
-def run_standard_early_stop():
-  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 2, mini=True)
+def run_split_early_stop():
+  panther_url = 'https://hookb.in/6JzYX9a69jSLbb031pgZ'
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=True)
   for i in range(20):
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
     get_datas_early_stop(i, 4, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop')
