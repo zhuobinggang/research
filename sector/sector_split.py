@@ -36,6 +36,7 @@ def get_datas(index, epoch, desc, dic_to_send = None, with_dev = True, url = Non
   else:
     return get_datas_org(index, epoch, G['m'], G['ld'], G['testld'], desc = desc, dic_to_send = dic_to_send, url = url)
 
+
 def train_simple(m, loader, epoch):
   logger = logging.debug
   loss_per_epoch = []
@@ -72,6 +73,30 @@ def get_datas_org(index, epoch, m, ld, testld, devld = None,  desc='Nothing', di
   R.request_my_logger(dic, desc, url)
   return losses
 
+def get_datas_early_stop(index, epochs, desc, dic_to_send = None, url = None):
+  valid_losses = []
+  train_losses = []
+  tested = []
+  for i in range(epochs):
+    train_losses += train_simple(G['m'], G['ld'], 1)
+    valid_loss = cal_valid_loss(G['m'], G['validld'])
+    valid_losses.append(valid_loss)
+    dic_to_analyse = get_test_result_dic(G['m'], G['testld'])
+    dic_to_analyse['index'] = i # Save index info
+    dic_to_analyse['valid_loss'] = valid_loss # Save index info
+    tested.append(dic_to_analyse)
+  test_result = tested[np.argmin(valid_losses)]
+  G['mess_list'].append(test_result) # 将valid loss最小对应的dic放进mess_list
+  dic = {
+    'result': test_result,
+    'valid_losses': valid_losses
+  }
+  if dic_to_send is not None:
+    dic = {**dic, **dic_to_send}
+  else:
+    pass
+  R.request_my_logger(dic, desc, url)
+
 def get_test_result(m, loader):
   logger = logging.debug
   loader.start = 0
@@ -105,6 +130,22 @@ def get_test_result_dic(m, testld):
     dic['bacc'] = bacc
   return dic
 
+def cal_valid_loss(m, loader):
+  logger = logging.debug
+  loader.start = 0
+  start = time.time()
+  length = len(loader.ds.datas)
+  loss = 0
+  for mass in loader:
+    logger(f'VALID: {loader.start}/{length}')
+    losses = m.get_loss(mass)
+    if len(losses) < 1:
+      loss += 0
+    else:
+      loss += t.stack(losses).detach().sum().item()
+  end = time.time()
+  logger(f'VALIDED! length={length} Time cost: {end - start} seconds')
+  return loss
 
 def fit_sigmoided_to_label(out):
   assert len(out.shape) == 2
@@ -198,7 +239,7 @@ class Sector_Split(nn.Module):
   def get_should_update(self):
     return chain(self.bert.parameters(), self.classifier.parameters(), self.classifier2.parameters())
 
-  def train(self, mass):
+  def get_loss(self, mass): 
     batch = len(mass)
     sss, labels, poss = self.handle_mass(mass) 
     loss = []
@@ -225,10 +266,14 @@ class Sector_Split(nn.Module):
             assert index == int(len(ss) / 2) - 1 == pos - 1
             pass
           loss.append(loss_part)
-    if len(loss) < 1:
+    return loss
+
+  def train(self, mass):
+    losses = self.get_loss(mass)
+    if len(losses) < 1:
       return 0
     else:
-      loss = t.stack(loss).sum()
+      loss = t.stack(losses).sum()
       self.zero_grad()
       loss.backward()
       self.optim.step()
@@ -438,7 +483,7 @@ class Sector_Standard(Sector_Split):
     assert len(ls) == len(seps)
     return emb
 
-  def train(self, mass):
+  def get_loss(self, mass):
     batch = len(mass)
     sss, labels, poss = self.handle_mass(mass) 
     losses = []
@@ -457,15 +502,7 @@ class Sector_Standard(Sector_Split):
           l = l.cuda()
         loss = self.cal_loss(o, l)
         losses.append(loss)
-    if len(losses) < 1:
-      return 0
-    else:
-      loss = t.stack(losses).sum()
-      self.zero_grad()
-      loss.backward()
-      self.optim.step()
-      # self.print_train_info(o, labels, loss.detach().item())
-      return loss.detach().item()
+    return losses
 
   @t.no_grad()
   def dry_run(self, mass):
@@ -921,12 +958,14 @@ def run_big():
     get_datas(i, 1, f'BIG Sector_Split 2vs2 0.5 2', with_dev = False, url = panther_url)
     get_datas(i, 1, f'BIG Sector_Split 2vs2 0.5 3', with_dev = False, url = panther_url)
 
-
 def run_standard_early_stop():
-  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 2)
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 2, mini=True)
   for i in range(20)
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
-    get_datas_early_stop(i, 3, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop')
-    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
-    get_datas_early_stop(i + 100, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop')
+    get_datas_early_stop(i, 4, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop')
     
+def run_standard_early_stop():
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 2, mini=True)
+  for i in range(20)
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
+    get_datas_early_stop(i, 4, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop')
