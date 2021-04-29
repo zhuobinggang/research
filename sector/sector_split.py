@@ -86,11 +86,9 @@ def get_datas_early_stop(index, epochs, desc, dic_to_send = None, url = None):
     dic_to_analyse['valid_loss'] = valid_loss # Save index info
     tested.append(dic_to_analyse)
   test_result = tested[np.argmin(valid_losses)]
+  test_result['valid_losses'] = valid_losses
   G['mess_list'].append(test_result) # 将valid loss最小对应的dic放进mess_list
-  dic = {
-    'result': test_result,
-    'valid_losses': valid_losses
-  }
+  dic = test_result
   if dic_to_send is not None:
     dic = {**dic, **dic_to_send}
   else:
@@ -955,11 +953,11 @@ def run_standard_early_stop():
   init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=False)
   for i in range(20):
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
-    get_datas_early_stop(i, 3, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop')
+    get_datas_early_stop(i, 3, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop', url = panther_url)
     
 def run_split_early_stop():
   panther_url = 'https://hookb.in/6JzYX9a69jSLbb031pgZ'
   init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=False)
   for i in range(20):
-    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
-    get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop')
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.5)
+    get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
