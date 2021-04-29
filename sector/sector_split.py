@@ -960,12 +960,12 @@ def run_big():
 
 def run_standard_early_stop():
   init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 2, mini=True)
-  for i in range(20)
+  for i in range(20):
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
     get_datas_early_stop(i, 4, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop')
     
 def run_standard_early_stop():
   init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 2, mini=True)
-  for i in range(20)
+  for i in range(20):
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
     get_datas_early_stop(i, 4, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop')
