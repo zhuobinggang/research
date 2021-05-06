@@ -974,3 +974,14 @@ def run_split_early_stop_rates_test():
     get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 1.5)
     get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
+
+def run_split_early_stop_rates_test2():
+  panther_url = 'https://hookb.in/6JzYX9a69jSLbb031pgZ'
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=False)
+  for i in range(20):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.1)
+    get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.3)
+    get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.4)
+    get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
