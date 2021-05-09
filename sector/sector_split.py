@@ -954,6 +954,13 @@ def run_standard_early_stop():
   for i in range(20):
     G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 4)
     get_datas_early_stop(i, 3, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 2vs2 early_stop', url = panther_url)
+
+def run_standard1_early_stop():
+  panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
+  init_G_Symmetry_Mainichi_With_Valid(half = 1, batch = 4, mini=False)
+  for i in range(20):
+    G['m'] = m = Sector_Standard_One_SEP_One_CLS_Pool_CLS(learning_rate = 5e-6, ss_len_limit = 2)
+    get_datas_early_stop(i, 3, f'Sector_Standard_One_SEP_One_CLS_Pool_CLS 1vs1 early_stop', url = panther_url)
     
 def run_split_early_stop():
   panther_url = 'https://hookb.in/6JzYX9a69jSLbb031pgZ'

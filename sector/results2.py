@@ -39,6 +39,36 @@ def get_fs_by_mess(raw, step=2):
         results.append(fs[i::step])
     return results
 
+def get_index_count(raw, len_max = 20, return_dic = True):
+    indexs = [item['index'] for item in raw]
+    indexs = indexs[:20]
+    dic = {
+        '0': len([idx for idx in indexs if idx == 0]),
+        '1': len([idx for idx in indexs if idx == 1]),
+        '2': len([idx for idx in indexs if idx == 2])
+    }
+    if return_dic:
+        return dic
+    else:
+        return f"{dic['0']} {dic['1']} {dic['2']}"
+
+def split_mess(raw, step):
+    results = []
+    for i in range(step):
+        results.append(raw[i::step])
+    return results
+
+def get_all_mess():
+    std = standard_cls_2vs2_early
+    r01, r03, r04 = split_mess(rate_mess2, 3)
+    r02, r08, r10, r15 = split_mess(rate_test_mess, 4)
+    r05 = sector_2vs2_early_rate05
+    return [std, r01, r02, r03, r04, r05, r08, r10, r15]
+
+def draw_converge_chart():
+    results = get_all_mess()
+    idxs = [get_index_count(raw,20,False) for raw in results]
+    return idxs
 
 # ============= 辅助函数 ================
 
@@ -2333,3 +2363,4 @@ rate_mess2 = [{
 #     'desc': 'Sector_Split 2vs2 rate=0.1 early_stop'
 # }
 ]
+
