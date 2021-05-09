@@ -7,11 +7,16 @@ MODEL_FILE = '/usr/src/taku/jawiki_20180420_300d.pkl'
 wiki2vec = Wikipedia2Vec.load(MODEL_FILE)
 
 def sentence_to_words(s, max_len = 512):
+  # print(s)
   words = []
   node = tagger.parseToNode(s)
   while node is not None:
     #if node.feature.startswith('名詞'):
-    words.append(node.surface)
+    try:
+      words.append(node.surface)
+    except:
+      #print("Caught it!")
+      pass
     node = node.next
   return [word for word in words if len(word) > 0][:max_len]
 
