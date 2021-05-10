@@ -983,6 +983,14 @@ def run_split_early_stop_3vs3_rate02():
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 6, auxiliary_loss_rate = 0.2)
     get_datas_early_stop(i, 3, f'Sector_Split 3vs3 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
 
+def run_split_early_stop_4vs4_rate02():
+  panther_url = 'https://hookb.in/2qJ68WOWa0H9BBKG1xBj'
+  init_G_Symmetry_Mainichi_With_Valid(half = 4, batch = 2, mini=False)
+  for i in range(20):
+    G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 8, auxiliary_loss_rate = 0.2)
+    get_datas_early_stop(i, 3, f'Sector_Split 4vs4 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
+
+
 def run_split_early_stop_rates_test():
   panther_url = 'https://hookb.in/6JzYX9a69jSLbb031pgZ'
   init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=False)
