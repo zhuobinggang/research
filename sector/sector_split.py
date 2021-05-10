@@ -470,6 +470,8 @@ class Sector_Split3(Sector_Split2):
       return cls
 
 
+# @Deprecated
+# 千万别用这个，这个是派生用的
 class Sector_Standard(Sector_Split):
   def get_pooled(self, ss, pos):
     cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
@@ -528,7 +530,7 @@ class Sector_Standard(Sector_Split):
       return fit_sigmoided_to_label(pos_outs), pos_labels
   
 
-class Sector_Standard_CLS(Sector_Standard):
+class Sector_Standard_Many_SEP_Pool_CLS(Sector_Standard):
   def get_pooled(self, ss, pos):
     cls, seps = B.compress_by_ss_get_special_tokens(self.bert, self.toker, ss)
     assert len(ls) == len(seps)
@@ -1014,3 +1016,13 @@ def run_split_early_stop_rates_test2():
     get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
     G['m'] = m = Sector_Split(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.4)
     get_datas_early_stop(i, 3, f'Sector_Split 2vs2 rate={m.auxiliary_loss_rate} early_stop', url = panther_url)
+
+def run_split_early_stop_rates_zero():
+  panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
+  init_G_Symmetry_Mainichi_With_Valid(half = 2, batch = 4, mini=False)
+  for i in range(20):
+    G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-6, ss_len_limit = 4)
+    get_datas_early_stop(i, 3, f'Sector_Standard_Many_SEP 2vs2 early_stop', url = panther_url)
+
+
+

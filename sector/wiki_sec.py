@@ -171,6 +171,6 @@ class Model_GRU(nn.Module):
 # =====================
 
 def test():
-    G['m'] = Model_GRU(ss_len_limit = 4)
-    init_G_Symmetry_Mainichi_With_Valid(2, 2, mini=False)
+    G['m'] = Model_GRU(ss_len_limit = 2)
+    init_G_Symmetry_Mainichi_With_Valid(1, 4, mini=False)
     get_datas_early_stop(0, 3, 'just test')
