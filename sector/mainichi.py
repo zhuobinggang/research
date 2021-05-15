@@ -44,6 +44,7 @@ def line_without_period_removed(articles):
 
 def remove_special_tokens(line):
   special_tokens = ['\u3000', '\n', '＼Ｔ２＼', '「', '」', '（','）', '○', '＜', '＞', '◆', '〓', '｝', '｛', '■']
+  special_tokens.append('$') # you can add what you want
   result = line
   for token in special_tokens:
     result = result.replace(token, '')
@@ -112,7 +113,7 @@ def avg_sentence_len(articles):
   lengths = [len(art) for art in articles]
   return int(sum(lengths) / len(lengths))
     
-def save_origin_train_ds(structed_articles):
+def customize_my_dataset_and_save(structed_articles):
   flated = [item for sublist in structed_articles for item in sublist]
   train = flated[:10000]
   test = flated[10000:15000]
