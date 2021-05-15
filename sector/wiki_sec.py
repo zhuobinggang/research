@@ -170,6 +170,7 @@ class Model_GRU(nn.Module):
 
 # =====================
 
+# 1vs1: [{'prec': 0.5449569976544175, 'rec': 0.43453865336658354, 'f1': 0.4835241068331599, 'bacc': 0.631555040969006, 'index': 2, 'valid_loss': 719.7742073088884}]
 def test():
     G['m'] = Model_GRU(ss_len_limit = 2)
     init_G_Symmetry_Mainichi_With_Valid(1, 4, mini=False)
