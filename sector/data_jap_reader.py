@@ -252,8 +252,11 @@ class Loader_Symmetry_SGD(Loader_SGD):
       self.masses.append((ss, labels, pos))
     if shuffle:
       random.shuffle(self.masses)
-      print('Loader_Symmetry_SGD: Shuffled')
+      # print('Loader_Symmetry_SGD: Shuffled')
     else:
-      print('Loader_Symmetry_SGD: No Shuffle')
+      # print('Loader_Symmetry_SGD: No Shuffle')
+      pass
   
 # end ======================= Loader Tested, No Touch =======================
+
+
