@@ -40,20 +40,33 @@ def get_datas(index, epoch, desc, dic_to_send = None, with_dev = True, url = Non
 def train_simple(m, loader, epoch):
   logger = logging.debug
   loss_per_epoch = []
-  loader.start = 0
+  if hasattr(loader, 'start'):
+    loader.start = 0
   start = time.time()
-  length = len(loader.ds.datas)
+  if hasattr(loader, 'ds'):
+    length = len(loader.ds.datas)
+  else:
+    length = len(loader)
   for e in range(epoch):
-    loader.shuffle()
+    if hasattr(loader, 'shuffle'):
+      loader.shuffle()
+    else:
+      random.shuffle(loader)
     logger(f'start epoch{e}')
     total_loss = 0
+    index = 0
     for mass in loader:
-      logger(f'{loader.start}/{length}')
+      index += 1
+      logger(f'{index}/{length}')
       total_loss += m.train(mass)
     avg_loss = total_loss / length
     loss_per_epoch.append(total_loss)
   end = time.time()
-  logger(f'Trained! Epochs: {epoch}, Batch size: {loader.batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
+  if hasattr(loader, 'batch_size'):
+    batch_size = loader.batch_size
+  else:
+    batch_size = 'unknown'
+  logger(f'Trained! Epochs: {epoch}, Batch size: {batch_size}, dataset length: {length}, Time cost: {end - start} seconds')
   return loss_per_epoch
 
 def get_datas_org(index, epoch, m, ld, testld, devld = None,  desc='Nothing', dic_to_send = None, url = None):
@@ -97,13 +110,19 @@ def get_datas_early_stop(index, epochs, desc, dic_to_send = None, url = None):
 
 def get_test_result(m, loader):
   logger = logging.debug
-  loader.start = 0
+  if hasattr(loader, 'start'):
+    loader.start = 0
   start = time.time()
-  length = len(loader.ds.datas)
+  if hasattr(loader, 'ds'):
+    length = len(loader.ds.datas)
+  else:
+    length = len(loader)
   outputs = []
   targets = []
+  index = 0
   for mass in loader:
-    logger(f'TESTING: {loader.start}/{length}')
+    index += 1
+    logger(f'TESTING: {index}/{length}')
     out, labels = m.dry_run(mass)
     outputs += out.tolist()
     targets += labels.tolist()
@@ -130,12 +149,13 @@ def get_test_result_dic(m, testld):
 
 def cal_valid_loss(m, loader):
   logger = logging.debug
-  loader.start = 0
+  if hasattr(loader,'start'):
+    loader.start = 0
   start = time.time()
-  length = len(loader.ds.datas)
+  # length = len(loader.ds.datas)
   loss = 0
   for mass in loader:
-    logger(f'VALID: {loader.start}/{length}')
+    # logger(f'VALID: {loader.start}/{length}')
     losses = m.get_loss(mass)
     if len(losses) < 1:
       loss += 0

@@ -26,3 +26,5 @@ The important thing is, the customized dataset saved should be `human-readable`.
 
 ![dataset explain](dataset_explain.png)
 
+Because `[SEP]` token would be added behind sentence, we should not train start row.
+
