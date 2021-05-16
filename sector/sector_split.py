@@ -130,16 +130,17 @@ def get_test_result(m, loader):
   logger(f'TESTED! length={length} Time cost: {end - start} seconds')
   return outputs, targets
 
-def get_test_result_dic(m, testld):
-  testld.start = 0
+def get_test_result_dic(m, loader):
+  if hasattr(loader, 'start'):
+    loader.start = 0
   dic = {}
-  if testld is None:
+  if loader is None:
     dic['prec'] = -1
     dic['rec'] = -1
     dic['f1'] = -1
     dic['bacc'] = -1
   else: 
-    outputs, targets = get_test_result(m, testld)
+    outputs, targets = get_test_result(m, loader)
     prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(outputs, targets)
     dic['prec'] = prec
     dic['rec'] = rec
@@ -152,7 +153,10 @@ def cal_valid_loss(m, loader):
   if hasattr(loader,'start'):
     loader.start = 0
   start = time.time()
-  # length = len(loader.ds.datas)
+  if hasattr(loader, 'ds'):
+    length = len(loader.ds.datas)
+  else:
+    length = len(loader)
   loss = 0
   for mass in loader:
     # logger(f'VALID: {loader.start}/{length}')
@@ -1043,6 +1047,4 @@ def run_split_early_stop_rates_zero():
   for i in range(20):
     G['m'] = m = Sector_Standard_Many_SEP(learning_rate = 5e-6, ss_len_limit = 4)
     get_datas_early_stop(i, 3, f'Sector_Standard_Many_SEP 2vs2 early_stop', url = panther_url)
-
-
 
