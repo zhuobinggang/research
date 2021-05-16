@@ -8,10 +8,10 @@ def customize_my_dataset_and_save(structed_articles):
         art = [line.replace('$', '') for line in art]
         line = '$'.join(art)
         one_art_per_line.append(line)
-    train = one_art_per_line[0:2000]
-    test = one_art_per_line[2000:3000]
-    dev = one_art_per_line[3000:4000]
-    valid = one_art_per_line[4000:5000]
+    train = one_art_per_line[0:1000]
+    test = one_art_per_line[1000:1500]
+    dev = one_art_per_line[1500:2000]
+    valid = one_art_per_line[2000:2500]
     with open('datasets/train.paragraph.txt', 'w') as the_file:
         the_file.write('\n'.join(train))
     with open('datasets/test.paragraph.txt', 'w') as the_file:
@@ -41,5 +41,4 @@ def load_customized_dataset(file_name = 'train', half = 2, shuffle = True):
     else:
         pass
     return masses
-
 

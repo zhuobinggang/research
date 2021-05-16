@@ -22,3 +22,7 @@ customize_my_dataset_and_save(structed_articles) # This function is all you need
 
 The important thing is, the customized dataset saved should be `human-readable`.
 
+## Dataset Explain
+
+![dataset explain](dataset_explain.png)
+
