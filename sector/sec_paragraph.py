@@ -122,9 +122,9 @@ class Sec_Para_Standard_One_Sep_Use_Cls(Sector_Split):
       label = ls[pos] # 第一个label不需要
       label = t.LongTensor([label]) # (ss_len), (0 or 1)
       if GPU_OK:
-        ls = ls.cuda()
+        label = label.cuda()
       o = self.classifier(cls.view(1, self.bert_size)) #(1, 1)
-      losses.append(self.cal_loss(o.view(1, 1), ls.view(1)))
+      losses.append(self.cal_loss(o.view(1, 1), label.view(1)))
     return losses
 
   @t.no_grad()
