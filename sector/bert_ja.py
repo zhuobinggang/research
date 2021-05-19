@@ -140,7 +140,7 @@ def get_left_right_ids_no_special_token(toker, ss, pos, max_len = None):
   return left, right
 
 # return: (784)
-def compress_by_ss_pos_get_cls(bert, toker, ss, pos):
+def compress_one_cls_one_sep_pool_cls(bert, toker, ss, pos):
   left, right = get_left_right_ids_no_special_token(toker, ss, pos)
   ids = add_special_token_for_ids_pair(toker, left, right)
   ids = t.LongTensor(ids).view(1, -1)

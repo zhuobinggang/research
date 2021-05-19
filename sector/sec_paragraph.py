@@ -104,6 +104,57 @@ class Sec_Para(Sector_Split):
       assert pos_outs.shape[0] == pos_labels.shape[0]
       return fit_sigmoided_to_label(pos_outs), pos_labels
 
+
+class Sec_Para_Standard_One_Sep_Use_Cls(Sector_Split):
+  def get_loss(self, mass): 
+    batch = len(mass)
+    sss, labels, poss = self.handle_mass(mass) 
+    losses = [] # 所有batch内的part loss都flatten到这里来
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
+      # ss: [s,s,s,s]
+      # ls: [0,1,0,0]
+      # pos: number start from 0
+      if pos == 0:
+        # print('Skip "Start Row". For detail to check https://github.com/zhuobinggang/research/tree/master/sector')
+        pass
+      cls = B.compress_one_cls_one_sep_pool_cls(self.bert, self.toker, ss, pos)
+      # Convert ls to Tensor
+      label = ls[pos] # 第一个label不需要
+      label = t.LongTensor([label]) # (ss_len), (0 or 1)
+      if GPU_OK:
+        ls = ls.cuda()
+      o = self.classifier(cls.view(1, self.bert_size)) #(1, 1)
+      losses.append(self.cal_loss(o.view(1, 1), ls.view(1)))
+    return losses
+
+  @t.no_grad()
+  def dry_run(self, mass):
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    sss, labels, poss = self.handle_mass(mass) 
+    pos_outs = []
+    pos_labels = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
+      # ss: [s,s,s,s]
+      # ls: [0,1,0,0]
+      # pos: number start from 0
+      cls = B.compress_one_cls_one_sep_pool_cls(self.bert, self.toker, ss, pos)
+      # Convert ls to Tensor
+      o = self.classifier(cls.view(1, self.bert_size)) #(1, 1)
+      pos_outs.append(o.view(1))
+      pos_labels.append(ls[pos])
+    if len(pos_outs) < 1:
+      return t.LongTensor([]), t.LongTensor([])
+    else:
+      pos_outs = t.stack(pos_outs)
+      pos_labels = t.LongTensor(pos_labels)
+      if GPU_OK:
+        pos_labels = pos_labels.cuda()
+      assert len(pos_outs.shape) == 2 
+      assert len(pos_labels.shape) == 1
+      assert pos_outs.shape[0] == pos_labels.shape[0]
+      return fit_sigmoided_to_label(pos_outs), pos_labels
+
 # ================================== Model ====================================
 
 def sec_para_panther():
@@ -125,11 +176,18 @@ def sec_para_pc():
     get_datas_early_stop_and_parameter_ajust(i, 3, f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}', url = panther_url)
 
 
-def sec_para_standard():
+def sec_para_zero_rate():
   panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
   init_G_Symmetry_Mainichi_With_Valid_Dev(half = 2, batch = 4, mini=False)
   for i in range(20):
     G['m'] = m = Sec_Para(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.0)
     get_datas_early_stop_and_parameter_ajust(i, 3, f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}', url = panther_url)
 
+
+def sec_para_standard():
+  panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
+  init_G_Symmetry_Mainichi_With_Valid_Dev(half = 2, batch = 4, mini=False)
+  for i in range(20):
+    G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = -1.0)
+    get_datas_early_stop_and_parameter_ajust(i, 3, f'Early Stop, Standard, Auxiliary Rate = {m.auxiliary_loss_rate}', url = panther_url)
 

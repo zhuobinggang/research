@@ -563,7 +563,7 @@ class Sector_Standard_Many_SEP_Pool_CLS(Sector_Standard):
 
 class Sector_Standard_One_SEP_One_CLS_Pool_CLS(Sector_Standard):
   def get_pooled(self, ss, pos):
-    cls = B.compress_by_ss_pos_get_cls(self.bert, self.toker, ss, pos)
+    cls = B.compress_one_cls_one_sep_pool_cls(self.bert, self.toker, ss, pos)
     return cls
 
 
@@ -643,7 +643,7 @@ class Split_GRU(Sector_Split):
         #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
-        clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
+        clss = t.stack([B.compress_one_cls_one_sep_pool_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
         # Put in context using bi-gru
         clss = clss.view(1, len(ss), self.bert_size)
         clss, _ = self.gru(clss) 
@@ -687,7 +687,7 @@ class Split_GRU(Sector_Split):
         #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
-        clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
+        clss = t.stack([B.compress_one_cls_one_sep_pool_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
         # Put in context using bi-gru
         clss = clss.view(1, len(ss), self.bert_size)
         clss, _ = self.gru(clss) 
@@ -726,7 +726,7 @@ class GRU_Standard(Split_GRU):
         #print(f'Warning: less than {self.ss_len_limit} sentences. {ss[0]}')
         pass
       else: 
-        clss = t.stack([B.compress_by_ss_pos_get_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
+        clss = t.stack([B.compress_one_cls_one_sep_pool_cls(self.bert, self.toker, [s], 0) for s in ss]) # (seq_len, 768)
         # Put in context using bi-gru
         clss = clss.view(1, len(ss), self.bert_size)
         clss, _ = self.gru(clss) 
