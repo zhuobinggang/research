@@ -1,6 +1,7 @@
+import numpy as np
+
 def get_values(datas, keyname):
     return [data[keyname] for data in datas]
-
 
 rate08 = [{
     'prec': 0.709556057185854,
