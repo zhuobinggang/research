@@ -150,8 +150,11 @@ class Sec_Para_Skip_Valuable_Length(Sector_Split):
       # ls: [0,1,0,0]
       # pos: number start from 0
       if len(ss) != self.ss_len_limit: # 直接跳过
-        print('Dryrun Skip length = {len(ss)}')
-        pos_outs.append(t.tensor([0.]))
+        # print(f'Dryrun Skip length = {len(ss)}')
+        if pos == 0:
+          pos_outs.append(t.tensor([1.]).cuda())
+        else:
+          pos_outs.append(t.tensor([0.]).cuda())
         pos_labels.append(ls[pos])
         pass
       else:
@@ -173,11 +176,8 @@ class Sec_Para_Skip_Valuable_Length(Sector_Split):
       # NOTE: 模型直接输出0，但是结果不能变
       pass
     else:
-      pos_outs = t.stack(pos_outs)
-      pos_labels = t.LongTensor(pos_labels)
-      if GPU_OK:
-        pos_outs = pos_outs.cuda()
-        pos_labels = pos_labels.cuda()
+      pos_outs = t.stack(pos_outs).cuda()
+      pos_labels = t.LongTensor(pos_labels).cuda()
       assert len(pos_outs.shape) == 2 
       assert len(pos_labels.shape) == 1
       assert pos_outs.shape[0] == pos_labels.shape[0]
@@ -281,6 +281,6 @@ def sec_para_standard_win6():
 def validate_loss_augment():
   panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
   init_G_Symmetry_Mainichi_With_Valid_Dev(half = 2, batch = 4, mini=False)
-  for i in range(2):
+  for i in range(1):
     G['m'] = m = Sec_Para_Skip_Valuable_Length(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0.2)
     get_datas_early_stop_and_parameter_ajust(i, 3, f'Sec_Para_Skip_Valuable_Length, Auxiliary Rate = {m.auxiliary_loss_rate}', url = panther_url)

@@ -210,6 +210,21 @@ def compress_by_ss_get_all_tokens(bert, toker, ss, max_len = None):
   if max_len is None:
     max_len = int(500 / len(ss)) # 4句时候125 tokens/句, 2句250 tokens/句
   idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
+  return wrap_idss_with_special_tokens(idss)
+
+# [cls] s1 [sep] s2 [sep] s3 [sep]
+# 返回[[cls],[sep],[sep],[sep]]
+def compress_by_ss_get_special_tokens(bert, toker, ss, max_len = None):
+  cls, seps, sentence_tokens = compress_by_ss_get_all_tokens(bert, toker, ss, max_len)
+  return cls, seps
+
+def compress_by_ss_get_cls_and_middle_sep(bert, toker, ss, max_len = None):
+  cls, seps = compress_by_ss_get_special_tokens(bert, toker, ss, max_len)
+  seps_middle_pos = int(len(ss) / 2) - 1
+  return cls, seps[seps_middle_pos]
+
+
+def wrap_idss_with_special_tokens(bert, toker, idss)
   origin_lengths = [len(ids) for ids in idss]
   cls_id = toker.cls_token_id
   sep_id = toker.sep_token_id
@@ -221,7 +236,7 @@ def compress_by_ss_get_all_tokens(bert, toker, ss, max_len = None):
     ids = ids.cuda()
   out = bert(input_ids = ids, return_dict = True)['last_hidden_state']
   batch, length, hidden_size = out.shape
-  assert length == sum(origin_lengths) + len(ss) + 1
+  assert length == sum(origin_lengths) + len(idss) + 1
   out = out.view(length, hidden_size)
   cls = out[0]
   out = out[1:] # 剪掉cls
@@ -238,15 +253,19 @@ def compress_by_ss_get_all_tokens(bert, toker, ss, max_len = None):
   assert len(seps.shape) == 2
   return cls, seps, sentence_tokens
 
-# [cls] s1 [sep] s2 [sep] s3 [sep]
-# 返回[[cls],[sep],[sep],[sep]]
-def compress_by_ss_get_special_tokens(bert, toker, ss, max_len = None):
-  cls, seps, sentence_tokens = compress_by_ss_get_all_tokens(bert, toker, ss, max_len)
-  return cls, seps
-
-def compress_by_ss_get_cls_and_middle_sep(bert, toker, ss, max_len = None):
-  cls, seps = compress_by_ss_get_special_tokens(bert, toker, ss, max_len)
-  seps_middle_pos = int(len(ss) / 2) - 1
-  return cls, seps[seps_middle_pos]
+def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
+  if max_len is None:
+    max_len = int(500 / len2pad) # 4句时候125 tokens/句, 2句250 tokens/句
+  idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
+  if pos < (len2pad / 2):
+    # pad [(len/2) - pos] sentence to left
+    for i in range((len2pad / 2) - pos):
+      idss = [[]] + idss
+  elif len2pad != len(ss):
+    # pad (len2pad - len) sentence to right
+    for i in range(len2pad - len(ss)):
+      idss = idss + [[]]
+  assert len(idss) == len2pad
+  cls, seps, sentence_tokens = wrap_idss_with_special_tokens(bert, toker, idss)
 
 
