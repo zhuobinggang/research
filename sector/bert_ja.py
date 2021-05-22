@@ -260,17 +260,19 @@ def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
   # pad idss with empty sentences
   pad_left_nums = None
   pad_right_nums = None
-  if pos < (len2pad / 2):
+  if pos < int(len2pad / 2):
     # pad [(len/2) - pos] sentence to left
-    pad_left_nums = int((len2pad / 2) - pos)
+    pad_left_nums = int(len2pad / 2) - pos
+    assert len(idss) + pad_left_nums == len2pad
     for i in range(pad_left_nums):
       idss = [[]] + idss
   elif len2pad != len(ss):
     pad_right_nums = len2pad - len(ss)
+    assert len(idss) + pad_right_nums == len2pad
     # pad (len2pad - len) sentence to right
     for i in range(len2pad - len(ss)):
       idss = idss + [[]]
-  assert len(idss) == len2pad
+  assert len(idss) == len2pad # TODO: BUG
   cls, seps, sentence_tokens = wrap_idss_with_special_tokens(bert, toker, idss)
   assert len(seps) == len2pad
   if pad_left_nums is not None:
