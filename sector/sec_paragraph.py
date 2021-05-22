@@ -54,7 +54,7 @@ class Sec_Para(Sector_Split):
         # Convert ls to Tensor
         ls = t.LongTensor(ls).cuda() # (ss_len), (0 or 1)
         assert ls.shape[0] == seps.shape[0]
-        assert ls.shape[0] == self.ss_len_limit - 1
+        assert ls.shape[0] == len(ss) - 1
         # 稍微做一点tricky的事情，将其他loss(除了中间那个) * 0.5
         o = self.classifier(seps) #(ss_len, 1)
         loss_part = [self.cal_loss(o_item.view(1, 1), l_item.view(1)) for (o_item, l_item) in zip(o, ls)]
