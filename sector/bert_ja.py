@@ -224,7 +224,7 @@ def compress_by_ss_get_cls_and_middle_sep(bert, toker, ss, max_len = None):
   return cls, seps[seps_middle_pos]
 
 
-def wrap_idss_with_special_tokens(bert, toker, idss)
+def wrap_idss_with_special_tokens(bert, toker, idss):
   origin_lengths = [len(ids) for ids in idss]
   cls_id = toker.cls_token_id
   sep_id = toker.sep_token_id
