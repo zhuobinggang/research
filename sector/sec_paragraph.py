@@ -45,7 +45,7 @@ class Sec_Para(Sector_Split):
         pass # Skip start row, no train no test
       else:
         cls, seps, _ = B.compress_by_ss_then_pad(self.bert, self.toker, ss, pos, self.ss_len_limit)
-        assert len(seps) == self.ss_len_limit
+        assert len(seps) == len(ss)
         # NOTE: 去头去尾，必要操作，因为对应是错位的
         # TODO: 根据pos对seps进行修整，对应到ls的数量
         seps = seps[:-1] # 最后一个SEP不需要
