@@ -47,6 +47,7 @@ class Sec_Para(Sector_Split):
         cls, seps, _ = B.compress_by_ss_then_pad(self.bert, self.toker, ss, pos, self.ss_len_limit)
         assert len(seps) == self.ss_len_limit
         # NOTE: 去头去尾，必要操作，因为对应是错位的
+        # TODO: 根据pos对seps进行修整，对应到ls的数量
         seps = seps[:-1] # 最后一个SEP不需要
         ls = ls[1:] # 第一个label不需要
         pos = pos - 1 # POS也要调整，因为现在掐头去尾了，pos要-1 (比如ss[s]s的时候，2要变为1)，需要注意的是，pos=0的时候，会变为-1，在处理auxiliary loss的时候，要考虑到这一点

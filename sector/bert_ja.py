@@ -258,16 +258,26 @@ def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
     max_len = int(500 / len2pad) # 4句时候125 tokens/句, 2句250 tokens/句
   idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
   # pad idss with empty sentences
+  pad_left_nums = None
+  pad_right_nums = None
   if pos < (len2pad / 2):
     # pad [(len/2) - pos] sentence to left
+    pad_left_nums = (len2pad / 2) - pos
     for i in range((len2pad / 2) - pos):
       idss = [[]] + idss
   elif len2pad != len(ss):
+    pad_right_nums = len2pad - len(ss)
     # pad (len2pad - len) sentence to right
     for i in range(len2pad - len(ss)):
       idss = idss + [[]]
   assert len(idss) == len2pad
   cls, seps, sentence_tokens = wrap_idss_with_special_tokens(bert, toker, idss)
+  assert len(seps) == len2pad
+  if pad_left_nums is not None:
+    seps = seps[pad_left_nums:]
+  if pad_right_nums is not None:
+    seps = seps[-pad_right_nums:]
+  assert len(seps) == len(ss)
   return cls, seps, sentence_tokens
 
 
