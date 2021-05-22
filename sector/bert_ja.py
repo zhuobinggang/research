@@ -248,7 +248,7 @@ def wrap_idss_with_special_tokens(bert, toker, idss):
     assert o.shape[0] == org_length + 1 # 因为带了SEP
   seps = [o[-1] for o in outs]
   sentence_tokens = [o[:-1] for o in outs]
-  assert len(seps) == len(ss)
+  assert len(seps) == len(idss)
   seps = t.stack(seps)
   assert len(seps.shape) == 2
   return cls, seps, sentence_tokens
