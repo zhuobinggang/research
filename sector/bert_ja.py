@@ -276,7 +276,7 @@ def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
   if pad_left_nums is not None:
     seps = seps[pad_left_nums:]
   if pad_right_nums is not None:
-    seps = seps[-pad_right_nums:]
+    seps = seps[0:-pad_right_nums]
   assert len(seps) == len(ss)
   return cls, seps, sentence_tokens
 
