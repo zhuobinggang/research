@@ -268,7 +268,7 @@ def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
   if len2pad != len(idss): # Pad right
     pad_right_nums = len2pad - len(idss)
     # pad (len2pad - len) sentence to right
-    for i in range(len2pad - len(ss)):
+    for i in range(len2pad - len(idss)):
       idss = idss + [[]]
   assert len(idss) == len2pad # TODO: BUG
   cls, seps, sentence_tokens = wrap_idss_with_special_tokens(bert, toker, idss)
