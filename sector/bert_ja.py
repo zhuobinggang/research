@@ -236,7 +236,7 @@ def wrap_idss_with_special_tokens(bert, toker, idss)
     ids = ids.cuda()
   out = bert(input_ids = ids, return_dict = True)['last_hidden_state']
   batch, length, hidden_size = out.shape
-  assert length == sum(origin_lengths) + len(idss) + 1
+  assert length == sum(origin_lengths) + len(idss) + 1 # The only assertaion
   out = out.view(length, hidden_size)
   cls = out[0]
   out = out[1:] # 剪掉cls
@@ -257,6 +257,7 @@ def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
   if max_len is None:
     max_len = int(500 / len2pad) # 4句时候125 tokens/句, 2句250 tokens/句
   idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
+  # pad idss with empty sentences
   if pos < (len2pad / 2):
     # pad [(len/2) - pos] sentence to left
     for i in range((len2pad / 2) - pos):
@@ -267,5 +268,6 @@ def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
       idss = idss + [[]]
   assert len(idss) == len2pad
   cls, seps, sentence_tokens = wrap_idss_with_special_tokens(bert, toker, idss)
+  return cls, seps, sentence_tokens
 
 
