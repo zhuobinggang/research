@@ -247,7 +247,7 @@ def sec_para_standard():
   init_G_Symmetry_Mainichi_With_Valid_Dev(half = 2, batch = 4, mini=False)
   for i in range(20):
     G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = -1.0)
-    get_datas_early_stop_and_parameter_ajust(i, 3, f'Early Stop, Standard, Auxiliary Rate = {m.auxiliary_loss_rate}', url = panther_url)
+    get_datas_early_stop_and_parameter_ajust(i, 3, f'Early Stop, Standard', url = panther_url)
 
 def sec_para_standard_win6():
   panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
