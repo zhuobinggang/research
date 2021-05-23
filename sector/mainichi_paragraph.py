@@ -40,17 +40,20 @@ def customize_my_dataset_and_save_mini(structed_articles):
     with open('datasets/valid.paragraph.mini.txt', 'w') as the_file:
         the_file.write('\n'.join(valid))
 
-# TODO: 读取存好的数据集然后读成loader
+def read_sentences_per_art(path):
+    with open(path, 'r') as the_file:
+        lines = the_file.readlines()
+    arts = [line.split('$') for line in lines]
+    return arts
+
+# 读取存好的数据集然后读成loader
 # 想想有什么简单的处理方式，没准要增加一个嵌套loader
 # 不不对，之前loader里存的数据不也是处理过的吗？在处理的时候做点手脚就完了
 def load_customized_loader_org(file_name = 'train', half = 2, shuffle = True, mini = False):
     if mini:
-        with open(f'datasets/{file_name}.paragraph.mini.txt', 'r') as the_file:
-            lines = the_file.readlines()
+        arts = read_sentences_per_art(f'datasets/{file_name}.paragraph.mini.txt')
     else:
-        with open(f'datasets/{file_name}.paragraph.txt', 'r') as the_file:
-            lines = the_file.readlines()
-    arts = [line.split('$') for line in lines]
+        arts = read_sentences_per_art(f'datasets/{file_name}.paragraph.txt')
     masses = []
     for art in arts:
         ds = data.Dataset(ss_len = half * 2, datas = art)
