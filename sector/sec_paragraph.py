@@ -199,4 +199,12 @@ def sec_para_rate(rate = 0.0):
     print(f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
     get_datas_early_stop_and_parameter_ajust(i, 3, f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}', url = panther_url)
 
+def rate_test_on_pc():
+  for rate in [0.1, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+  # for i in [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+    sec_para_rate(rate)
 
+def rate_test_on_panther():
+  for rate in [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+  # for i in [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+    sec_para_rate(rate)
