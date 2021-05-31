@@ -4,6 +4,8 @@ import numpy as np
 def get_values(datas, keyname):
     return [data[keyname] for data in datas]
 
+def dev_fs(datas, key1 = 'dev_result_dic', key2 = 'f1'):
+    return [data[key1][key2] for data in datas]
 
 standard_2v2 = [{
     'prec': 0.6880546075085324,
