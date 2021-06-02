@@ -7,6 +7,23 @@ def get_values(datas, keyname):
 def dev_fs(datas, key1 = 'dev_result_dic', key2 = 'f1'):
     return [data[key1][key2] for data in datas]
 
+# =============================
+
+def dev_avg_fs_0_to_15():
+    datas = [r0, r01, r02, r03,r04,r05,r06,r07,r08,r09,r10,r11,r12,r13, r14, r15]
+    return [round(np.average(dev_fs(data)), 4) for data in datas]
+
+def valid_converge_at_0_count():
+    datas = [r0, r01, r02, r03,r04,r05,r06,r07,r08,r09,r10,r11,r12,r13, r14, r15]
+    idss = [get_values(data, 'index') for data in datas]
+    counts = []
+    for ids in idss:
+        counts.append(sum([1 for index in ids if index == 0]))
+    return counts
+
+
+# =============================
+
 standard_2v2 = [{
     'prec': 0.6880546075085324,
     'rec': 0.5936395759717314,
@@ -571,7 +588,7 @@ standard_1vs1 = [{
     'desc': 'Early Stop, Standard 1vs1'
 }]
 
-sec_r02 = [{
+r02 = [{
     'prec': 0.6474321984997115,
     'rec': 0.6607773851590106,
     'f1': 0.6540367239871758,

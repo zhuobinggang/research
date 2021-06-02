@@ -94,3 +94,13 @@ def load_customized_loader(file_name = 'train', half = 2, batch = 1, shuffle = T
     else:
         print('Fuck you, no more batch!')
 
+
+# =============== Analysis Methods ==================
+
+def cal_para_count(arts):
+    counts = []
+    for sentences in arts:
+        counts.append(sum([1 for s in sentences if s.startswith('\u3000')]))
+    return counts
+
+
