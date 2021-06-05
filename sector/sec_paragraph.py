@@ -98,6 +98,25 @@ class Sec_Para(Sector_Split):
       assert pos_outs.shape[0] == pos_labels.shape[0]
       return fit_sigmoided_to_label(pos_outs), pos_labels
 
+  @t.no_grad()
+  def get_att(self, mass):
+    batch = len(mass)
+    if batch != 1:
+      print(f'ERROR: should not deal with batch {batch}')
+      return None
+    else:
+      sss, labels, poss = self.handle_mass(mass) 
+      ss = sss[0]
+      ls = labels[0]
+      pos = poss[0]
+      if pos == 0:
+        print(f'ERROR: should not deal with pos {pos}')
+        return None
+      else:
+        (cls, att_cls), (seps, att_seps), _, ids = B.compress_by_ss_then_pad(self.bert, self.toker, ss, pos, self.ss_len_limit, with_att = True)
+        att = att_seps[pos] # (token_count)
+        return att, ids
+ 
 class Sec_Para_Standard_One_Sep_Use_Cls(Sector_Split):
   def get_loss(self, mass): 
     batch = len(mass)

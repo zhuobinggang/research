@@ -210,7 +210,7 @@ def compress_by_ss_get_all_tokens(bert, toker, ss, max_len = None):
   if max_len is None:
     max_len = int(500 / len(ss)) # 4句时候125 tokens/句, 2句250 tokens/句
   idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
-  return wrap_idss_with_special_tokens(idss)
+  return wrap_idss_with_special_tokens_then_compress(idss)
 
 # [cls] s1 [sep] s2 [sep] s3 [sep]
 # 返回[[cls],[sep],[sep],[sep]]
@@ -223,9 +223,7 @@ def compress_by_ss_get_cls_and_middle_sep(bert, toker, ss, max_len = None):
   seps_middle_pos = int(len(ss) / 2) - 1
   return cls, seps[seps_middle_pos]
 
-
-def wrap_idss_with_special_tokens(bert, toker, idss):
-  origin_lengths = [len(ids) for ids in idss]
+def wrap_idss_with_special_tokens(toker, idss):
   cls_id = toker.cls_token_id
   sep_id = toker.sep_token_id
   idss = [ids + [sep_id] for ids in idss] # Add [SEP]
@@ -234,10 +232,17 @@ def wrap_idss_with_special_tokens(bert, toker, idss):
   ids = t.LongTensor(ids).view(1, -1)
   if GPU_OK:
     ids = ids.cuda()
-  out = bert(input_ids = ids, return_dict = True)['last_hidden_state']
+  return ids
+
+def wrap_idss_with_special_tokens_then_compress(bert, toker, idss, output_att = False, layer = 11):
+  origin_lengths = [len(ids) for ids in idss]
+  ids = wrap_idss_with_special_tokens(toker, idss)
+  dic = bert(input_ids = ids, return_dict = True, attentions = True)
+  out = dic['last_hidden_state']
   batch, length, hidden_size = out.shape
   assert length == sum(origin_lengths) + len(idss) + 1 # The only assertaion
   out = out.view(length, hidden_size)
+  # 剪枝
   cls = out[0]
   out = out[1:] # 剪掉cls
   outs = []
@@ -251,9 +256,27 @@ def wrap_idss_with_special_tokens(bert, toker, idss):
   assert len(seps) == len(idss)
   seps = t.stack(seps)
   assert len(seps.shape) == 2
-  return cls, seps, sentence_tokens
+  if not output_att:
+    return cls, seps, sentence_tokens
+  else:
+    # Attention
+    att = dic['attentions']
+    att = att[layer] # 取出需要的layer: (1, 12, token_count, token_count)
+    att = att[0] # (12, token_count, token_count)
+    att = att.mean(0) # (token_count, token_count)
+    att_cls = att[0] # (token_count)
+    att = att[1:]
+    att_tokens = []
+    for l in origin_lengths:
+      att_tokens.append(att[:l + 1])
+      att = att[l + 1:]
+    for a, org_length in zip(att_tokens, origin_lengths):
+      assert a.shape[0] == org_length + 1 # 因为带了SEP
+    att_seps = [a[-1] for a in att_tokens]
+    att_sentence = [a[:-1] for a in att_tokens]
+    return (cls, att_cls), (seps, att_seps), (sentence_tokens, att_sentence), ids
 
-def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
+def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None, with_att = False):
   if max_len is None:
     max_len = int(500 / len2pad) # 4句时候125 tokens/句, 2句250 tokens/句
   idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
@@ -270,14 +293,24 @@ def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None):
     # pad (len2pad - len) sentence to right
     for i in range(len2pad - len(idss)):
       idss = idss + [[]]
-  assert len(idss) == len2pad # TODO: BUG
-  cls, seps, sentence_tokens = wrap_idss_with_special_tokens(bert, toker, idss)
-  assert len(seps) == len2pad
-  if pad_left_nums is not None:
-    seps = seps[pad_left_nums:]
-  if pad_right_nums is not None:
-    seps = seps[0:-pad_right_nums]
-  assert len(seps) == len(ss)
-  return cls, seps, sentence_tokens
-
+  assert len(idss) == len2pad
+  if not with_att:
+    cls, seps, sentence_tokens = wrap_idss_with_special_tokens_then_compress(bert, toker, idss)
+    if pad_left_nums is not None:
+      seps = seps[pad_left_nums:]
+    if pad_right_nums is not None:
+      seps = seps[0:-pad_right_nums]
+    assert len(seps) == len(ss)
+    return cls, seps, sentence_tokens
+  else:
+    (cls, att_cls), (seps, att_seps), (sentence_tokens, att_tokens), ids = wrap_idss_with_special_tokens_then_compress(bert, toker, idss, output_att = True)
+    if pad_left_nums is not None:
+      seps = seps[pad_left_nums:]
+      att_seps = att_seps[pad_left_nums:]
+    if pad_right_nums is not None:
+      seps = seps[0:-pad_right_nums]
+      att_seps = att_seps[0:-pad_right_nums]
+    assert len(seps) == len(att_seps)
+    assert len(seps) == len(ss)
+    return (cls, att_cls), (seps, att_seps), (sentence_tokens, att_tokens), ids
 
