@@ -100,22 +100,20 @@ class Sec_Para(Sector_Split):
 
   @t.no_grad()
   def get_att(self, mass):
-    batch = len(mass)
-    if batch != 1:
-      print(f'ERROR: should not deal with batch {batch}')
-      return None
-    else:
-      sss, labels, poss = self.handle_mass(mass) 
-      ss = sss[0]
-      ls = labels[0]
-      pos = poss[0]
+    sss, labels, poss = self.handle_mass(mass) 
+    atts = []
+    idss = []
+    for ss, ls, pos in zip(sss, labels, poss): # Different Batch
       if pos == 0:
-        print(f'ERROR: should not deal with pos {pos}')
-        return None
+        atts.append([])
+        idss.append([])
       else:
         (cls, att_cls), (seps, att_seps), _, ids = B.compress_by_ss_then_pad(self.bert, self.toker, ss, pos, self.ss_len_limit, with_att = True)
         att = att_seps[pos] # (token_count)
-        return att, ids
+        atts.append(att.view(-1).tolist())
+        idss.append(ids.view(-1).tolist())
+    return atts, idss
+
  
 class Sec_Para_Standard_One_Sep_Use_Cls(Sector_Split):
   def get_loss(self, mass): 

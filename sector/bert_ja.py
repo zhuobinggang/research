@@ -237,7 +237,7 @@ def wrap_idss_with_special_tokens(toker, idss):
 def wrap_idss_with_special_tokens_then_compress(bert, toker, idss, output_att = False, layer = 11):
   origin_lengths = [len(ids) for ids in idss]
   ids = wrap_idss_with_special_tokens(toker, idss)
-  dic = bert(input_ids = ids, return_dict = True, attentions = True)
+  dic = bert.forward(input_ids = ids, return_dict = True, output_attentions = True)
   out = dic['last_hidden_state']
   batch, length, hidden_size = out.shape
   assert length == sum(origin_lengths) + len(idss) + 1 # The only assertaion
@@ -276,7 +276,7 @@ def wrap_idss_with_special_tokens_then_compress(bert, toker, idss, output_att = 
     att_sentence = [a[:-1] for a in att_tokens]
     return (cls, att_cls), (seps, att_seps), (sentence_tokens, att_sentence), ids
 
-def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None, with_att = False):
+def processed_idss(toker, ss, pos, len2pad, max_len = None):
   if max_len is None:
     max_len = int(500 / len2pad) # 4句时候125 tokens/句, 2句250 tokens/句
   idss = [encode_without_special_tokens(toker, s, max_len = max_len) for s in ss] # 左右两边不应过长
@@ -294,6 +294,10 @@ def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None, with_
     for i in range(len2pad - len(idss)):
       idss = idss + [[]]
   assert len(idss) == len2pad
+  return idss, pad_left_nums, pad_right_nums
+
+def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None, with_att = False):
+  idss, pad_left_nums, pad_right_nums = processed_idss(toker, ss, pos, len2pad, max_len)
   if not with_att:
     cls, seps, sentence_tokens = wrap_idss_with_special_tokens_then_compress(bert, toker, idss)
     if pad_left_nums is not None:
