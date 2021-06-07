@@ -31,6 +31,19 @@ def get_datas_early_stop_and_parameter_ajust(index, epochs, desc, dic_to_send = 
     pass
   R.request_my_logger(dic, desc, url)
 
+def analyse_attention(m):
+  ld = G['testld'][:200]
+  atts = []
+  idss = []
+  dic = {}
+  for mess in ld:
+    atts_batch, idss_batch = m.get_att(mess)
+    atts += atts_batch
+    idss += idss_batch
+  atts = B.flatten_num_lists(atts)
+  idss = B.flatten_num_lists(idss)
+  return atts, idss
+
 # ================================== Auxiliary Methods ====================================
 
 class Sec_Para(Sector_Split):
