@@ -87,6 +87,16 @@ def project_to_dict(atts, idss):
             dic[idx] += att
     return dic
 
+def project_to_dict_with_info(atts, idss):
+    dic = {}
+    for att, idx in zip(atts, idss):
+        if dic.get(idx) is None:
+            dic[idx] = {'att': att, 'count': 1}
+        else: 
+            dic[idx]['att'] += att
+            dic[idx]['count'] += 1
+    return dic
+
 def get_sorted_idx_att_pairs(dic):
     idx_att_pairs = dic.items()
     sorted_idx_att_pairs = list(reversed(sorted(idx_att_pairs, key = lambda x: x[1])))
@@ -118,9 +128,10 @@ def get_useful_most_attended_tokens(m):
             idss.append(idss_batch)
     atts = B.flatten_num_lists(atts_batchs)
     idss = B.flatten_num_lists(idss_batchs)
-    dic = project_to_dict(atts, idss)
-    sorted_idx_att_pairs = get_sorted_idx_att_pairs(dic)
-    return [m.toker.decode(idx) for idx, _ in sorted_idx_att_pairs[:100]]
+    dic = project_to_dict_with_info(atts, idss)
+    return dic
+    # sorted_idx_att_pairs = get_sorted_idx_att_pairs(dic)
+    # return [m.toker.decode(idx) for idx, _ in sorted_idx_att_pairs[:100]]
 
 
 # ================================== Auxiliary Methods ====================================
@@ -164,6 +175,34 @@ class Sec_Para(Sector_Split):
 
     @t.no_grad()
     def dry_run(self, mass):
+        # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+        sss, labels, poss = self.handle_mass(mass)
+        pos_outs = []
+        pos_labels = []
+        # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+        for ss, ls, pos in zip(sss, labels, poss):  # Different Batch
+            # pos: number start from 0
+            if pos == 0:
+                pass  # Don’t run the first sentence because it is 100% correct
+            else:
+                cls, seps, _ = B.compress_by_ss_then_pad(
+                    self.bert, self.toker, ss, pos, self.ss_len_limit)
+                assert len(seps) == len(ss)
+                ls = t.LongTensor(ls).cuda()  # (ss_len), (0 or 1)
+                pos_outs.append(self.classifier(seps[pos - 1]).view(1))
+                pos_labels.append(ls[pos])
+        if len(pos_outs) < 1:
+            return t.LongTensor([]), t.LongTensor([])
+        else:
+            pos_outs = t.stack(pos_outs).cuda()
+            pos_labels = t.LongTensor(pos_labels).cuda()
+            assert len(pos_outs.shape) == 2
+            assert len(pos_labels.shape) == 1
+            assert pos_outs.shape[0] == pos_labels.shape[0]
+            return fit_sigmoided_to_label(pos_outs), pos_labels
+
+    @t.no_grad()
+    def dry_run_old(self, mass):
         # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
         sss, labels, poss = self.handle_mass(mass)
         pos_outs = []
