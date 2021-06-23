@@ -11,10 +11,10 @@ def init_G_Symmetry_Mainichi_With_Valid_Dev(half=2, batch=1, mini=False):
                                                      half=half,
                                                      batch=batch,
                                                      mini=mini)
-    G['validld'] = custom_data.load_customized_loader(file_name='valid',
-                                                      half=half,
-                                                      batch=batch,
-                                                      mini=mini)
+    # G['validld'] = custom_data.load_customized_loader(file_name='valid',
+    #                                                   half=half,
+    #                                                   batch=batch,
+    #                                                   mini=mini)
     G['devld'] = custom_data.load_customized_loader(file_name='dev',
                                                     half=half,
                                                     batch=batch,
@@ -36,21 +36,22 @@ def get_datas_early_stop_and_parameter_ajust(index,
                                              desc,
                                              dic_to_send=None,
                                              url=None):
-    valid_losses = []  # For early stop
+    dev_losses = []  # For early stop
     train_losses = []
     tested = []
     for i in range(epochs):
         train_losses += train_simple(G['m'], G['ld'], 1)
-        valid_loss = cal_valid_loss(G['m'], G['validld'])
-        valid_losses.append(valid_loss)
+        dev_loss = cal_total_loss(G['m'], G['devld'])
+        dev_losses.append(dev_loss)
         dic_to_analyse = get_test_result_dic(G['m'], G['testld'])
         dic_to_analyse['index'] = i  # Save index info
-        dic_to_analyse['valid_loss'] = valid_loss  # Save index info
+        dic_to_analyse['dev_loss'] = dev_loss  # Save index info
         dev_result_dic = get_test_result_dic(G['m'], G['devld'])
         dic_to_analyse['dev_result_dic'] = dev_result_dic
         tested.append(dic_to_analyse)
-    test_result = tested[np.argmin(valid_losses)]
-    # test_result['valid_losses'] = valid_losses
+    test_result = tested[np.argmin(dev_losses)]
+    print(test_result)
+    # test_result['dev_losses'] = dev_losses
     G['mess_list'].append(test_result)  # 将valid loss最小对应的dic放进mess_list
     dic = test_result
     if dic_to_send is not None:

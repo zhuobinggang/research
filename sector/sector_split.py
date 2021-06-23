@@ -92,7 +92,7 @@ def get_datas_early_stop(index, epochs, desc, dic_to_send = None, url = None):
   tested = []
   for i in range(epochs):
     train_losses += train_simple(G['m'], G['ld'], 1)
-    valid_loss = cal_valid_loss(G['m'], G['validld'])
+    valid_loss = cal_total_loss(G['m'], G['validld'])
     valid_losses.append(valid_loss)
     dic_to_analyse = get_test_result_dic(G['m'], G['testld'])
     dic_to_analyse['index'] = i # Save index info
@@ -148,7 +148,7 @@ def get_test_result_dic(m, loader):
     dic['bacc'] = bacc
   return dic
 
-def cal_valid_loss(m, loader):
+def cal_total_loss(m, loader):
   logger = logging.debug
   if hasattr(loader,'start'):
     loader.start = 0
