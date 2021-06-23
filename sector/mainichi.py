@@ -43,14 +43,15 @@ def line_without_period_removed(articles):
   return new_articles
 
 def remove_special_tokens(line):
-  special_tokens = ['\u3000', '\n', '＼Ｔ２＼', '「', '」', '（','）', '○', '＜', '＞', '◆', '〓', '｝', '｛', '■']
+  # special_tokens = ['\u3000', '\n', '＼Ｔ２＼', '「', '」', '（','）', '○', '＜', '＞', '◆', '〓', '｝', '｛', '■']
+  special_tokens = ['\u3000', '\n', '＼Ｔ２＼', '（','）', '○', '＜', '＞', '◆', '〓', '｝', '｛', '■']
   special_tokens.append('$') # you can add what you want
   result = line
   for token in special_tokens:
     result = result.replace(token, '')
   return result
 
-def paragraph_less_then_num_removed(articles, num = 2): 
+def art_with_paragraph_less_then_num_removed(articles, num = 2): 
   return [art for art in articles if not len(art) < num]
 
 def build_structure(articles):
@@ -103,7 +104,7 @@ def standard_process():
   articles = line_without_period_removed(articles) # NO.2
   # articles = line_with_special_token_removed(articles) # NO.2
   articles = paragraph_only_one_sentence_removed(articles) # NO.2
-  articles = paragraph_less_then_num_removed(articles, num = 2) # NO.3
+  articles = art_with_paragraph_less_then_num_removed(articles, num = 2) # NO.3
   articles = paragraph_with_special_token_removed(articles) # NO.2
   articles = build_structure(articles)
   return articles

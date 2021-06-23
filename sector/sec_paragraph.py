@@ -87,16 +87,6 @@ def project_to_dict(atts, idss):
             dic[idx] += att
     return dic
 
-def project_to_dict_with_info(atts, idss):
-    dic = {}
-    for att, idx in zip(atts, idss):
-        if dic.get(idx) is None:
-            dic[idx] = {'att': att, 'count': 1}
-        else: 
-            dic[idx]['att'] += att
-            dic[idx]['count'] += 1
-    return dic
-
 def get_sorted_idx_att_pairs(dic):
     idx_att_pairs = dic.items()
     sorted_idx_att_pairs = list(reversed(sorted(idx_att_pairs, key = lambda x: x[1])))
@@ -113,13 +103,14 @@ def get_most_attended_tokens(m):
 def filter_empty_list(lol):
     return [l for l in lol if len(l) > 0]
 
-def get_useful_most_attended_tokens(m):
+def result_dict_with_important_info(m):
     ld = G['testld']
     atts_batchs, idss_batchs, results, targets = raw_atts_idss(m, ld, no_flat = True)
     results = fit_sigmoided_to_label_list(results)
     atts_batchs = filter_empty_list(atts_batchs)
     idss_batchs = filter_empty_list(idss_batchs)
     assert len(idss_batchs) == len(results)
+    # Filter true predicted guys
     atts = []
     idss = []
     for atts_batch, idss_batch, res, tar in zip(atts_batchs, idss_batchs, results, targets):
@@ -128,10 +119,26 @@ def get_useful_most_attended_tokens(m):
             idss.append(idss_batch)
     atts = B.flatten_num_lists(atts_batchs)
     idss = B.flatten_num_lists(idss_batchs)
-    dic = project_to_dict_with_info(atts, idss)
+    dic = {}
+    for att, idx in zip(atts, idss):
+        if dic.get(idx) is None:
+            dic[idx] = {'att': att, 'count': 1}
+        else: 
+            dic[idx]['att'] += att
+            dic[idx]['count'] += 1
+    # cal att/count
+    for key in dic.keys():
+        dic[key]['weighted_att'] = dic[key]['att'] / dic[key]['count']
     return dic
-    # sorted_idx_att_pairs = get_sorted_idx_att_pairs(dic)
-    # return [m.toker.decode(idx) for idx, _ in sorted_idx_att_pairs[:100]]
+
+def get_useful_most_attended_tokens(m):
+    dic = result_dict_with_important_info(m)
+    # sort by weighted att
+    twoples_id_weighted_att = []
+    for key in dic.keys():
+        twoples_id_weighted_att.append((key, dic[key]['weighted_att'], dic[key]['count']))
+    twoples_id_weighted_att = list(reversed(sorted(twoples_id_weighted_att, key = lambda x: x[1])))
+    return [m.toker.decode(idx) for idx, weighted_att, count in twoples_id_weighted_att[:100]]
 
 
 # ================================== Auxiliary Methods ====================================

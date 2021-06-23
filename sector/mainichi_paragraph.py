@@ -5,9 +5,9 @@ import data_jap_reader as data
 def get_one_art_per_line(structed_articles):
     one_art_per_line = []
     for art in structed_articles:
-        art = [line.replace('$', '') for line in art]
-        line = '$'.join(art)
-        one_art_per_line.append(line)
+        lines = [line.replace('$', '') for line in art]
+        art_line = '$'.join(lines)
+        one_art_per_line.append(art_line)
     return one_art_per_line
 
 def customize_my_dataset_and_save(structed_articles):
@@ -22,8 +22,8 @@ def customize_my_dataset_and_save(structed_articles):
         the_file.write('\n'.join(test))
     with open('datasets/dev.paragraph.txt', 'w') as the_file:
         the_file.write('\n'.join(dev))
-    with open('datasets/valid.paragraph.txt', 'w') as the_file:
-        the_file.write('\n'.join(valid))
+    # with open('datasets/valid.paragraph.txt', 'w') as the_file:
+    #     the_file.write('\n'.join(valid))
 
 def customize_my_dataset_and_save_mini(structed_articles):
     one_art_per_line = get_one_art_per_line(structed_articles)
