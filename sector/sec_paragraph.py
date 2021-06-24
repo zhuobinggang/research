@@ -433,6 +433,8 @@ def rate_test_on_pc():
 
 
 def rate_test_on_panther():
-    for rate in [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]:
+    sec_para_standard()
+    for rate in [0.0, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]:
         # for i in [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
         sec_para_rate(rate)
+
