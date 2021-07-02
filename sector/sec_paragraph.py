@@ -2,7 +2,18 @@ from sector_split import *
 import mainichi_paragraph as custom_data
 
 
-def init_G_Symmetry_Mainichi_With_Valid_Dev(half=2, batch=1, mini=False):
+def targets(ld):
+    targets = []
+    for batches in ld:
+        for ss, labels, pos in batches:
+            if pos != 0:
+                targets.append(labels[pos])
+    return targets
+
+
+# ==================== Auxiliary Methods =====================
+
+def init_G_Symmetry_Mainichi(half=2, batch=1, mini=False):
     G['ld'] = custom_data.load_customized_loader(file_name='train',
                                                  half=half,
                                                  batch=batch,
@@ -326,7 +337,7 @@ class Sec_Para_Standard_One_Sep_Use_Cls(Sector_Split):
 
 def sec_para_panther():
     panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi_With_Valid_Dev(half=2, batch=4, mini=False)
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(20):
         G['m'] = m = Sec_Para(learning_rate=5e-6,
                               ss_len_limit=4,
@@ -340,7 +351,7 @@ def sec_para_panther():
 
 def sec_para_pc():
     panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi_With_Valid_Dev(half=2, batch=4, mini=False)
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(20):
         G['m'] = m = Sec_Para(learning_rate=5e-6,
                               ss_len_limit=4,
@@ -362,7 +373,7 @@ def sec_para_pc():
 
 def sec_para_zero_rate():
     panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi_With_Valid_Dev(half=2, batch=4, mini=False)
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(20):
         G['m'] = m = Sec_Para(learning_rate=5e-6,
                               ss_len_limit=4,
@@ -376,7 +387,7 @@ def sec_para_zero_rate():
 
 def sec_para_standard():
     panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi_With_Valid_Dev(half=2, batch=4, mini=False)
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(20):
         G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
             learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
@@ -388,7 +399,7 @@ def sec_para_standard():
 
 def sec_para_standard_1vs1():
     panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi_With_Valid_Dev(half=1, batch=4, mini=False)
+    init_G_Symmetry_Mainichi(half=1, batch=4, mini=False)
     for i in range(20):
         G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
             learning_rate=5e-6, ss_len_limit=2, auxiliary_loss_rate=-1.0)
@@ -400,7 +411,7 @@ def sec_para_standard_1vs1():
 
 def sec_para_standard_win6():
     panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi_With_Valid_Dev(half=3, batch=4, mini=False)
+    init_G_Symmetry_Mainichi(half=3, batch=4, mini=False)
     for i in range(20):
         G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
             learning_rate=5e-6, ss_len_limit=6, auxiliary_loss_rate=-1.0)
@@ -412,7 +423,7 @@ def sec_para_standard_win6():
 
 def sec_para_rate(rate=0.0):
     panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi_With_Valid_Dev(half=2, batch=4, mini=False)
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(20):
         G['m'] = m = Sec_Para(learning_rate=5e-6,
                               ss_len_limit=4,
