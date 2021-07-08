@@ -241,6 +241,7 @@ class Sector_Split(nn.Module):
     assert len(out.shape) == 2
     assert labels.shape[0] == out.shape[0]
     rate = self.fl_rate if rate is None else rate
+    # print(rate)
     total = []
     for o, l in zip(out, labels):
       pt = o if (l == 1) else (1 - o)

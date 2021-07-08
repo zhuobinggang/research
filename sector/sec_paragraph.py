@@ -152,6 +152,20 @@ def get_useful_most_attended_tokens(m):
     twoples_id_weighted_att = list(reversed(sorted(twoples_id_weighted_att, key = lambda x: x[1])))
     return [m.toker.decode(idx) for idx, weighted_att, count in twoples_id_weighted_att[:100]]
 
+def cal_exceed_rate(toker, arts):
+    # toker = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+    sentence_all = 4
+    len_limit = int(500 / sentence_all)
+    count = 0
+    # arts = custom_data.read_sentences_per_art(f'datasets/train.paragraph.txt')
+    for art in arts:
+        for line in art:
+            ids = toker.encode(line, add_special_tokens = False)
+            if len(ids) > len_limit:
+                print(line)
+                count += 1
+    return count
+
 
 # ================================== Auxiliary Methods ====================================
 
@@ -221,42 +235,6 @@ class Sec_Para(Sector_Split):
             return fit_sigmoided_to_label(pos_outs), pos_labels
 
     @t.no_grad()
-    def dry_run_old(self, mass):
-        # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
-        sss, labels, poss = self.handle_mass(mass)
-        pos_outs = []
-        pos_labels = []
-        # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
-        for ss, ls, pos in zip(sss, labels, poss):  # Different Batch
-            # pos: number start from 0
-            if pos == 0:
-                pass  # Don’t run the first sentence because it is 100% correct
-            else:
-                cls, seps, _ = B.compress_by_ss_then_pad(
-                    self.bert, self.toker, ss, pos, self.ss_len_limit)
-                assert len(seps) == len(ss)
-                # NOTE: 去头去尾，必要操作，因为对应是错位的
-                # 根据pos对seps进行修整，对应到ls的数量
-                seps = seps[:-1]  # 最后一个SEP不需要
-                ls = ls[1:]  # 第一个label不需要
-                pos = pos - 1  # POS也要调整，因为现在掐头去尾了，pos要-1 (比如ss[s]s的时候，2要变为1)，需要注意的是，pos=0的时候，会变为-1，在处理auxiliary loss的时候，要考虑到这一点
-                # Convert ls to Tensor
-                ls = t.LongTensor(ls).cuda()  # (ss_len), (0 or 1)
-                assert ls.shape[0] == seps.shape[0]
-                assert ls.shape[0] == len(ss) - 1
-                pos_outs.append(self.classifier(seps[pos]).view(1))
-                pos_labels.append(ls[pos])
-        if len(pos_outs) < 1:
-            return t.LongTensor([]), t.LongTensor([])
-        else:
-            pos_outs = t.stack(pos_outs).cuda()
-            pos_labels = t.LongTensor(pos_labels).cuda()
-            assert len(pos_outs.shape) == 2
-            assert len(pos_labels.shape) == 1
-            assert pos_outs.shape[0] == pos_labels.shape[0]
-            return fit_sigmoided_to_label(pos_outs), pos_labels
-
-    @t.no_grad()
     def get_att(self, mass):
         sss, labels, poss = self.handle_mass(mass)
         atts = []
@@ -282,6 +260,7 @@ class Sec_Para(Sector_Split):
                 results.append(self.classifier(seps[pos - 1]).item())
                 targets.append(ls[pos])
         return atts, idss, results, targets
+
 
 
 class Sec_Para_Standard_One_Sep_Use_Cls(Sector_Split):
@@ -448,4 +427,22 @@ def rate_test_on_panther():
     for rate in [0.0, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]:
         # for i in [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
         sec_para_rate(rate)
+
+
+def run_FL():
+    panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    # HP tuning
+    # fl rate: 0, 0.5, 1, 2, 5
+    for fl_rate in [1, 2, 5, 0.5, 0]:
+        # TODO: 20 times
+        for i in range(20):
+            G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(fl_rate = fl_rate)
+            get_datas_early_stop_and_parameter_ajust(
+                i,
+                3,
+                f'Early Stop, Dev Ajust, HP: fl_rate = {fl_rate}',
+                url=panther_url)
+
+
 

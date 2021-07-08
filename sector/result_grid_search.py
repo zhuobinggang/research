@@ -9,12 +9,11 @@ def dev_fs(datas, key1='dev_result_dic', key2='f1'):
     return [data[key1][key2] for data in datas]
 
 
-def pickup(results):
+def pickup():
     rs = []
     standard = panther[:20]
     r00 = panther[20:40]
     r01 = results[:20]
-    r02 = r02
     r03 = results[20:40]
     r04 = results[40:60]
     r05 = results[60:80]
@@ -48,11 +47,46 @@ def pickup(results):
     return rs
 
 
-def run():
-    rs = pickup(results)
-    for item in rs:
-        np.average(get_values(item, 'f1'))
+def run(rs):
+    #  r = ''
+    #  for item in rs:
+    #      avg_f = np.average(dev_fs(item))
+    #      r += f'{round(avg_f, 4)} '
+    #  print(r)
+    # 计算结果表
+    print('dev dataset')
+    r02 = rs[3]
+    std = rs[0]
+    dev_f_02 = np.average(dev_fs(r02))
+    dev_prec_02 = np.average(dev_fs(r02, key2='prec'))
+    dev_rec_02 = np.average(dev_fs(r02, key2='rec'))
+    f_02 = np.average(get_values(r02, 'f1'))
+    prec_02 = np.average(get_values(r02, 'prec'))
+    rec_02 = np.average(get_values(r02, 'rec'))
 
+    dev_f_std = np.average(dev_fs(std))
+    dev_prec_std = np.average(dev_fs(std, key2='prec'))
+    dev_rec_std = np.average(dev_fs(std, key2='rec'))
+    f_std = np.average(get_values(std, 'f1'))
+    prec_std = np.average(get_values(std, 'prec'))
+    rec_std = np.average(get_values(std, 'rec'))
+
+    print(f"r02: f: {dev_f_02}, prec: {dev_prec_02}, rec: {dev_rec_02}")
+    print(f"standard: f: {dev_f_std}, prec: {dev_prec_std}, rec: {dev_rec_std}")
+    print('test dataset')
+    print(f"r02: f: {f_02}, prec: {prec_02}, rec: {rec_02}")
+    print(f"standard: f: {f_std}, prec: {prec_std}, rec: {rec_std}")
+
+
+def cal_most_index(rs):
+    result = []
+    for item in rs:
+        ids = get_values(item, 'index')
+        bincount = np.bincount(ids)
+        # argmax = np.argmax(bincount)
+        # result.append((argmax, bincount[argmax]))
+        result.append(bincount[0])
+    return result
 
 # ============= Auxiliary Methods ============
 

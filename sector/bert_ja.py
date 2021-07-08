@@ -6,6 +6,10 @@ GPU_OK = t.cuda.is_available()
 model = None
 tokenizer = None
 
+G = {
+        'exceed_max_length_count': 0,
+        }
+
 def try_init_bert():
   global model, tokenizer
   if model is None:
@@ -24,7 +28,10 @@ def batch_get_embs(ss):
 
 def encode_without_special_tokens(toker, s, max_len = 240):
   ids = toker.encode(s, add_special_tokens = False)
-  return ids[:max_len]
+  result = ids[:max_len]
+  # if len(result) != len(ids):
+  #     G['exceed_max_length_count'] += 1
+  return result
 
 def encode_with_special_tokens(toker, s):
   return toker.encode(s)
