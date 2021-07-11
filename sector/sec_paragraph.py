@@ -42,6 +42,21 @@ def fit_sigmoided_to_label_list(out):
             results.append(1) 
     return results
 
+
+def get_datas_early_stop_and_parameter_ajust_v2(epochs, desc):
+    dev_losses = []  # For early stop
+    train_losses = []
+    dics = []
+    for i in range(epochs):
+        train_losses += train_simple(G['m'], G['ld'], 1)
+        dev_losses.append(cal_total_loss(G['m'], G['devld']))
+        dic_i = get_test_result_dic(G['m'], G['devld'])
+        dic_i['dev_loss'] = dev_loss  # Save index info
+        dics.append(dic_i)
+    dics[0]['desc'] = desc
+    print(dics)
+    G['mess_list'].append(dics)  # 将valid loss最小对应的dic放进mess_list
+
 def get_datas_early_stop_and_parameter_ajust(index,
                                              epochs,
                                              desc,
@@ -363,19 +378,6 @@ def sec_para_zero_rate():
             f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}',
             url=panther_url)
 
-
-def sec_para_standard():
-    panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    for i in range(20):
-        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
-            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-        get_datas_early_stop_and_parameter_ajust(i,
-                                                 3,
-                                                 f'Early Stop, Standard',
-                                                 url=panther_url)
-
-
 def sec_para_standard_1vs1():
     panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
     init_G_Symmetry_Mainichi(half=1, batch=4, mini=False)
@@ -400,49 +402,45 @@ def sec_para_standard_win6():
                                                  url=panther_url)
 
 
-def sec_para_rate(rate=0.0):
-    panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
+
+
+def sec_para_standard():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    for i in range(20):
+    for i in range(10):
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
+            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
+        get_datas_early_stop_and_parameter_ajust_v2(3, f'Early Stop, Standard')
+
+def run_FL(fl_rate = 0):
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    for i in range(10):
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
+            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
+        get_datas_early_stop_and_parameter_ajust_v2(3, f'Early Stop, Dev Ajust, HP: fl_rate = {fl_rate}')
+
+def sec_para_rate(rate=0.0):
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    for i in range(10):
         G['m'] = m = Sec_Para(learning_rate=5e-6,
                               ss_len_limit=4,
                               auxiliary_loss_rate=rate)
-        print(
-            f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
-        get_datas_early_stop_and_parameter_ajust(
-            i,
-            3,
-            f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}',
-            url=panther_url)
+        print(f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
+        get_datas_early_stop_and_parameter_ajust_v2(3, f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
 
 
 def rate_test_on_pc():
-    for rate in [0.1, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]:
-        # for i in [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+    for rate in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
         sec_para_rate(rate)
 
 
 def rate_test_on_panther():
     sec_para_standard()
-    for rate in [0.0, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]:
-        # for i in [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+    for fl_rate in [1.0, 2.0, 5.0, 0.5, 0.0]:
+        run_FL(fl_rate)
+    for rate in [1.1, 1.2, 1.3, 1.4, 1.5]:
         sec_para_rate(rate)
 
 
-def run_FL():
-    panther_url = 'https://hookb.in/VGERm7dJyjtE22bwzZ7d'
-    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    # HP tuning
-    # fl rate: 0, 0.5, 1, 2, 5
-    for fl_rate in [1, 2, 5, 0.5, 0]:
-        # TODO: 20 times
-        for i in range(20):
-            G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(fl_rate = fl_rate)
-            get_datas_early_stop_and_parameter_ajust(
-                i,
-                3,
-                f'Early Stop, Dev Ajust, HP: fl_rate = {fl_rate}',
-                url=panther_url)
 
 
 
