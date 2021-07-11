@@ -49,7 +49,8 @@ def get_datas_early_stop_and_parameter_ajust_v2(epochs, desc):
     dics = []
     for i in range(epochs):
         train_losses += train_simple(G['m'], G['ld'], 1)
-        dev_losses.append(cal_total_loss(G['m'], G['devld']))
+        dev_loss = cal_total_loss(G['m'], G['devld'])
+        dev_losses.append(dev_loss)
         dic_i = get_test_result_dic(G['m'], G['devld'])
         dic_i['dev_loss'] = dev_loss  # Save index info
         dics.append(dic_i)
