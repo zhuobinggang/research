@@ -4438,5 +4438,57 @@ r08 = pc[80:90]
 r09 = pc[90:100]
 r10 = pc[100:110]
 
+# (1, 2, 0.6608467420521229)
+rates = [r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13, r14, r15]
+# (2, 1, 0.6488315523181969)
+fls = [f0, f05, f1, f2, f5]
+# (1, 0.6377209102758994)
+stand = stand
+
+key = 'f1'
+
+def grid_best(results):
+    grid = []
+    for r in results:
+        row = [[],[],[]]
+        for i in range(10):
+            e1, e2, e3 = r[i]
+            row[0].append(e1[key])
+            row[1].append(e2[key])
+            row[2].append(e3[key])
+        row[0] = np.average(row[0])
+        row[1] = np.average(row[1])
+        row[2] = np.average(row[2])
+        grid.append(row)
+    #return grid
+    row_i = 0
+    col_j = 0
+    MAX = 0
+    for i, row in enumerate(grid):
+        for j, col in enumerate(row):
+            if col > MAX:
+                row_i = i
+                col_j = j
+                MAX = col
+    return row_i, col_j, MAX, grid
+
+def col_best(results):
+    row = [[],[],[]]
+    for item in results:
+        e1, e2, e3 = item
+        row[0].append(e1[key])
+        row[1].append(e2[key])
+        row[2].append(e3[key])
+    row[0] = np.average(row[0])
+    row[1] = np.average(row[1])
+    row[2] = np.average(row[2])
+    col_j = 0
+    MAX = 0
+    for j, col in enumerate(row):
+        if col > MAX:
+            col_j = j
+            MAX = col
+    return col_j, MAX, row
+
 
 

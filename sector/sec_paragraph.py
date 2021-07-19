@@ -43,15 +43,15 @@ def fit_sigmoided_to_label_list(out):
     return results
 
 
-def get_datas_early_stop_and_parameter_ajust_v2(epochs, desc):
+def get_datas_early_stop_and_parameter_ajust_v2(epochs, dev_ld, desc = ''):
     dev_losses = []  # For early stop
     train_losses = []
     dics = []
     for i in range(epochs):
         train_losses += train_simple(G['m'], G['ld'], 1)
-        dev_loss = cal_total_loss(G['m'], G['devld'])
+        dev_loss = cal_total_loss(G['m'], dev_ld)
         dev_losses.append(dev_loss)
-        dic_i = get_test_result_dic(G['m'], G['devld'])
+        dic_i = get_test_result_dic(G['m'], dev_ld)
         dic_i['dev_loss'] = dev_loss  # Save index info
         dics.append(dic_i)
     dics[0]['desc'] = desc
@@ -405,28 +405,28 @@ def sec_para_standard_win6():
 
 
 
-def sec_para_standard():
+def sec_para_standard(max_train_epoch = 3, ld):
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(10):
         G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
             learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-        get_datas_early_stop_and_parameter_ajust_v2(3, f'Early Stop, Standard')
+        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Standard')
 
-def run_FL(fl_rate = 0):
+def run_FL(fl_rate = 0, max_train_epoch = 3, ld):
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(10):
         G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
             learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
-        get_datas_early_stop_and_parameter_ajust_v2(3, f'Early Stop, Dev Ajust, HP: fl_rate = {fl_rate}')
+        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Dev Ajust, HP: fl_rate = {fl_rate}')
 
-def sec_para_rate(rate=0.0):
+def sec_para_rate(rate=0.0,max_train_epoch = 3, ld):
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(10):
         G['m'] = m = Sec_Para(learning_rate=5e-6,
                               ss_len_limit=4,
                               auxiliary_loss_rate=rate)
         print(f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
-        get_datas_early_stop_and_parameter_ajust_v2(3, f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
+        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
 
 
 def rate_test_on_pc():
@@ -442,6 +442,12 @@ def rate_test_on_panther():
         sec_para_rate(rate)
 
 
-
+def the_last_run():
+    # 根据epoch数跑standard
+    sec_para_standard(2, G['testld'])
+    # 根据auxiliary rate和epoch数跑实验
+    sec_para_rate(0.1, 3, G['testld'])
+    # 根据auxiliary rate和epoch数跑实验
+    run_FL(1.0, 2, G['testld'])
 
 
