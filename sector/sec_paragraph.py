@@ -455,3 +455,28 @@ def the_last_run():
     run_FL(G['testld'], 1.0, 2)
 
 
+def train_and_save():
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    # My, epoch = 3
+    for i in range(5):
+        G['m'] = m = Sec_Para(learning_rate=5e-6,
+                              ss_len_limit=4,
+                              auxiliary_loss_rate=0.1)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/my_{i}.tch')
+    # Standard, epoch = 2
+    for i in range(5):
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
+            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/stand_{i}.tch')
+    # FL, epoch = 2
+    for i in range(5):
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
+            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = 1.0)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/fl_{i}.tch')
