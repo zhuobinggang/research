@@ -33,3 +33,9 @@ def cal_results():
         g_save['outputs_FL'].append(outputs)
 
 
+def save_g():
+    global g_save
+    f = open('bootstrap_results.txt', 'w')
+    f.write(str(g_save))
+
+
