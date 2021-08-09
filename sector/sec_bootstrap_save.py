@@ -11,31 +11,36 @@ g_save = {
         'outputs_FL':[] 
 }
 
-def cal_results():
+def cal_results(start_index = 0):
     global g_save
     # stand
     for i in range(5):
-        m = t.load(f'save/stand_{i}.tch')
+        idx = start_index + i
+        m = t.load(f'save/stand_{idx}.tch')
         outputs, targets = get_test_result(m, tld)
         g_save['targets'] = targets
         g_save['outputs_stand'].append(outputs)
     # my
     for i in range(5):
-        m = t.load(f'save/my_{i}.tch')
+        idx = start_index + i
+        m = t.load(f'save/my_{idx}.tch')
         outputs, targets = get_test_result(m, tld)
         g_save['targets'] = targets
         g_save['outputs_my'].append(outputs)
     # fl
     for i in range(5):
-        m = t.load(f'save/fl_{i}.tch')
+        idx = start_index + i
+        m = t.load(f'save/fl_{idx}.tch')
         outputs, targets = get_test_result(m, tld)
         g_save['targets'] = targets
         g_save['outputs_FL'].append(outputs)
+    # save
+    save_g(start_index)
 
-
-def save_g():
+def save_g(start_index):
     global g_save
-    f = open('bootstrap_results.txt', 'w')
+    f = open(f'bootstrap_results_start_from_{start_index}.txt', 'w')
     f.write(str(g_save))
+
 
 
