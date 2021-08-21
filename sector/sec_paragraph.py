@@ -183,6 +183,34 @@ def cal_exceed_rate(toker, arts):
     return count
 
 
+def get_att(m, mass):
+    sss, labels, poss = m.handle_mass(mass)
+    atts = []
+    idss = []
+    results = []
+    targets = []
+    for ss, ls, pos in zip(sss, labels, poss):  # Different Batch
+        if pos == 0:
+            atts.append([])
+            idss.append([])
+        else:
+            (cls, att_cls), (seps,
+                             att_seps), _, ids = B.compress_by_ss_then_pad(
+                                 m.bert,
+                                 m.toker,
+                                 ss,
+                                 pos,
+                                 m.ss_len_limit,
+                                 with_att=True)
+            att = att_seps[pos]  # (token_count)
+            atts.append(att.view(-1).tolist())
+            idss.append(ids.view(-1).tolist())
+            results.append(m.classifier(seps[pos - 1]).item())
+            targets.append(ls[pos])
+    return atts, idss, results, targets
+
+
+
 # ================================== Auxiliary Methods ====================================
 
 

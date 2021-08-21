@@ -1,12 +1,13 @@
 import random
 import utils as U
-import bootstrap_result
+import bootstrap_results_start_from_0_cnt_10
 import numpy as np
-result_dic = bootstrap_result.results
+result_dic = bootstrap_results_start_from_0_cnt_10.results
 targets = result_dic['targets']
 multi_stands = result_dic['outputs_stand']
 multi_mys = result_dic['outputs_my']
 multi_fls = result_dic['outputs_FL']
+multi_all_one = [[1] * 6635]
 
 def generate_sampled_multi_indexs(length, time = 1000):
     sampled_multi_indexs = []
@@ -40,11 +41,13 @@ def cal_huge_times(time = 1000):
     avg_fs_stand = []
     avg_fs_mys = []
     avg_fs_fls = []
+    avg_fs_all_one = []
     for sampled_indexs in sampled_multi_indexs:
         avg_fs_stand.append(cal_avg_f_score(targets, multi_stands, sampled_indexs))
         avg_fs_mys.append(cal_avg_f_score(targets, multi_mys, sampled_indexs))
         avg_fs_fls.append(cal_avg_f_score(targets, multi_fls, sampled_indexs))
-    return avg_fs_stand, avg_fs_mys, avg_fs_fls
+        avg_fs_all_one.append(cal_avg_f_score(targets, multi_all_one, sampled_indexs))
+    return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
 
 
 def cal_win_rate(fs1, fs2):
@@ -56,10 +59,10 @@ def cal_win_rate(fs1, fs2):
 
 # Example
 def run():
-    avg_fs_stand, avg_fs_mys, avg_fs_fls = cal_huge_times(10000)
+    avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one = cal_huge_times(10000)
     print(f'My vs Stand, win rate: {cal_win_rate(avg_fs_mys, avg_fs_stand)}')
     print(f'My vs Fls, win rate: {cal_win_rate(avg_fs_mys, avg_fs_fls)}')
-    return avg_fs_stand, avg_fs_mys, avg_fs_fls
+    return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
 
 
 

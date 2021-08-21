@@ -4919,14 +4919,17 @@ r08 = pc[80:90]
 r09 = pc[90:100]
 r10 = pc[100:110]
 
-# (1, 2, 0.6608467420521229)
+# best: (1, 2, 0.6608467420521229)
+# shape: (16, 10, 3)
 rates = [
     r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13, r14,
     r15
 ]
-# (2, 1, 0.6488315523181969)
+# best: (2, 1, 0.6488315523181969)
+# shape: (5, 10, 3)
 fls = [f0, f05, f1, f2, f5]
-# (1, 0.6377209102758994)
+# best: (1, 0.6377209102758994)
+# shape: (10, 3)
 stand = stand
 
 key = 'f1'
@@ -4984,4 +4987,30 @@ def col_best(results):
     return col_j, MAX, row
 
 
+# ===================== Draw ======================
+
+def draw_auxiliary_explore_graph():
+    avg_fs = []
+    for r in rates:
+      fs = []
+      for item in r:
+        fs.append(item[2]['f1'])
+      avg_fs.append(np.average(fs))
+    # return avg_fs
+    # stand best
+    avg_f_stand_baseline = np.average([std[1]['f1'] for std in stand])
+    # FL loss best
+    avg_f_fl_baseline = np.average([fl[1]['f1'] for fl in fls[2]])
+
+
+def draw_converge_graph(epoch = 0):
+    # (16, 10, 3)
+    times = []
+    for r in rates:
+        time = 0
+        for item in r:
+            fs = [epoch_item['f1'] for epoch_item in item]
+            time += 1 if np.argmax(fs) == epoch else 0
+        times.append(time)
+    return times
 
