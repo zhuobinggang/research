@@ -512,3 +512,43 @@ def train_and_save(start_index = 0):
         t.save(m, f'save/fl_{i + start_index}.tch')
 
 
+# EXP
+
+def exp():
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    m1 = t.load('save/my_0.tch')
+    m2 = t.load('save/fl_0.tch')
+    tld = G['testld']
+    dic1 = {'att': [], 'idss': [], 'results': [], 'targets': []}
+    dic2 = {'att': [], 'idss': [], 'results': [], 'targets': []}
+    for mass in tld:
+        atts, idss, results, targets = get_att(m1, mass)
+        dic1['att'] += atts
+        dic1['idss'] += idss
+        dic1['results'] += results
+        dic1['targets'] += targets
+        atts, idss, results, targets = get_att(m2, mass)
+        dic2['att'] += atts
+        dic2['idss'] += idss
+        dic2['results'] += results
+        dic2['targets'] += targets
+    # return dic1, dic2
+    # [(338, 0.6834180355072021), (402, 0.6612908393144608), (569, 0.6881934646517038), (1143, 0.6820797771215439), (2091, 0.6326558887958527), (4532, 0.5283468663692474), (4786, 0.6256483346223831), (4831, 0.4481697380542755), (4942, 0.6328078508377075), (5241, 0.627475842833519), (5627, 0.5501647889614105), (6352, 0.6872847527265549), (6538, 0.543059304356575), (6653, 0.46409937739372253)]
+    id_value_pairs = []
+    for i in range(len(dic1['results'])):
+        if np.abs(dic1['targets'][i] - dic1['results'][i]) < 0.3 and np.abs(dic2['targets'][i] - dic2['results'][i]) > 0.7:
+            id_value_pairs.append((i, np.abs(dic1['results'][i] - dic2['results'][i])))
+    # return id_value_pairs, dic1, dic2
+    # SHOW
+    idss = dic1['idss'][388]
+    att1 = dic1['att'][388]
+    att2 = dic2['att'][388]
+    for idx, a1, a2 in zip(idss, att1, att2):
+        print(f'{m1.toker.decode(idx)}: {round(a1, 3)}, {round(a2, 3)}')
+            
+
+
+
+
+
+
