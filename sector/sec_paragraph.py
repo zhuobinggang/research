@@ -193,6 +193,8 @@ def get_att(m, mass):
         if pos == 0:
             atts.append([])
             idss.append([])
+            results.append(-1)
+            targets.append(-1)
         else:
             (cls, att_cls), (seps,
                              att_seps), _, ids = B.compress_by_ss_then_pad(
