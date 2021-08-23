@@ -230,10 +230,9 @@ def get_att_baseline(m, mass):
                                  m.toker,
                                  ss,
                                  pos)
-            att = att_seps[pos]  # (token_count)
-            atts.append(att.view(-1).tolist())
+            atts.append(atts_from_cls.view(-1).tolist())
             idss.append(ids.view(-1).tolist())
-            results.append(m.classifier(seps[pos - 1]).item())
+            results.append(m.classifier(cls.view(1, self.bert_size)).item())
             targets.append(ls[pos])
     return atts, idss, results, targets
 
