@@ -232,9 +232,15 @@ def get_att_baseline(m, mass):
                                  pos)
             atts.append(atts_from_cls.view(-1).tolist())
             idss.append(ids.view(-1).tolist())
-            results.append(m.classifier(cls.view(1, self.bert_size)).item())
+            results.append(m.classifier(cls.view(1, m.bert_size)).item())
             targets.append(ls[pos])
     return atts, idss, results, targets
+
+
+def copy_to_chrome_console_then_render(toker, idss, atts):
+    print([round(item,3) for item in atts])
+    print([toker.decode(item) for item in idss])
+
 
 
 # ================================== Auxiliary Methods ====================================
@@ -546,18 +552,16 @@ def exp():
     dic1 = {'att': [], 'idss': [], 'results': [], 'targets': []}
     dic2 = {'att': [], 'idss': [], 'results': [], 'targets': []}
     for mass in tld:
-        atts, idss, results, targets = get_att(m1, mass)
+        atts, idss, results, targets = get_att_ours(m1, mass)
         dic1['att'] += atts
         dic1['idss'] += idss
         dic1['results'] += results
         dic1['targets'] += targets
-        atts, idss, results, targets = get_att(m2, mass)
+        atts, idss, results, targets = get_att_baseline(m2, mass)
         dic2['att'] += atts
         dic2['idss'] += idss
         dic2['results'] += results
         dic2['targets'] += targets
-    # return dic1, dic2
-    # [(338, 0.6834180355072021), (402, 0.6612908393144608), (569, 0.6881934646517038), (1143, 0.6820797771215439), (2091, 0.6326558887958527), (4532, 0.5283468663692474), (4786, 0.6256483346223831), (4831, 0.4481697380542755), (4942, 0.6328078508377075), (5241, 0.627475842833519), (5627, 0.5501647889614105), (6352, 0.6872847527265549), (6538, 0.543059304356575), (6653, 0.46409937739372253)]
     id_value_pairs = []
     for i in range(len(dic1['results'])):
         if np.abs(dic1['targets'][i] - dic1['results'][i]) < 0.3 and np.abs(dic2['targets'][i] - dic2['results'][i]) > 0.7:

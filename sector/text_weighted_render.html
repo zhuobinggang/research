@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Text Weighted Render</title>
+<style>
+.inline{
+    display: inline;
+    margin-right: 0px;
+}
+
+</style>
+</head>
+ 
+<body>
+        <div id="slot-1"></div>
+        <div id="slot-2" style='margin-top: 50px'></div>
+        <!--div class="inline d-0">群雄割拠</div> 
+        <div class="inline d-1">で</div> 
+        <div class="inline d-6"> 優勝</div> 
+        <div class="inline d-3"> 争い</div> 
+        <div class="inline d-2"> は</div--> 
+</body>
+
+
+<script>
+k = 0.3
+
+function generate(tokens, atts, idx = 'slot-1'){
+        console.assert(tokens.length == atts.length)
+        for (let i = 0; i < tokens.length; i++){
+                text = tokens[i]
+                att = atts[i]
+                degree = att * tokens.length
+                // opacity = degree * 0.17 + 0.34
+                 opacity = degree * k
+                // create div
+                let div = document.createElement('div');
+                div.innerHTML = text;
+                div.className = 'inline';
+                div.style.backgroundColor = `rgba(255, 87, 51, ${opacity})`
+                slot = document.getElementById(idx)
+                slot.appendChild(div)
+        }
+}
+
+function empty(){
+        slot = document.getElementById('slot-1')
+        slot.innerHTML = ''
+        slot = document.getElementById('slot-1')
+        slot.innerHTML = ''
+}
+
+</script>
+ 
+</html>
