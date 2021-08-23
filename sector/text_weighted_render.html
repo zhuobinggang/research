@@ -13,21 +13,17 @@
 </head>
  
 <body>
-        <div id="slot-1"></div>
-        <div id="slot-2" style='margin-top: 50px'></div>
-        <!--div class="inline d-0">群雄割拠</div> 
-        <div class="inline d-1">で</div> 
-        <div class="inline d-6"> 優勝</div> 
-        <div class="inline d-3"> 争い</div> 
-        <div class="inline d-2"> は</div--> 
+        <div id='slot'></div>
 </body>
 
 
 <script>
 k = 0.3
 
-function generate(tokens, atts, idx = 'slot-1'){
+function generate(tokens, atts){
         console.assert(tokens.length == atts.length)
+        let container = document.createElement('div')
+        container.style.marginTop = '50px'
         for (let i = 0; i < tokens.length; i++){
                 text = tokens[i]
                 att = atts[i]
@@ -39,9 +35,10 @@ function generate(tokens, atts, idx = 'slot-1'){
                 div.innerHTML = text;
                 div.className = 'inline';
                 div.style.backgroundColor = `rgba(255, 87, 51, ${opacity})`
-                slot = document.getElementById(idx)
-                slot.appendChild(div)
+                container.appendChild(div)
         }
+        slot = document.getElementById('slot')
+        slot.appendChild(container)
 }
 
 function empty(){
