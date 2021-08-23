@@ -147,7 +147,6 @@ def get_left_right_ids_no_special_token(toker, ss, pos, max_len = None):
   return left, right
 
 # return: (784)
-# TODO: OUTPUT ATTENTION
 def compress_one_cls_one_sep_pool_cls(bert, toker, ss, pos):
   left, right = get_left_right_ids_no_special_token(toker, ss, pos)
   ids = add_special_token_for_ids_pair(toker, left, right)
@@ -159,6 +158,29 @@ def compress_one_cls_one_sep_pool_cls(bert, toker, ss, pos):
   assert length == len(left) + len(right) + 2
   out = out.view(length, hidden_size)
   return out[0] # (784)
+
+# return: (784)
+# OUTPUT ATTENTION
+# return: out[0], atts_from_cls, ids
+def compress_one_cls_one_sep_pool_cls_output_att(bert, toker, ss, pos):
+  left, right = get_left_right_ids_no_special_token(toker, ss, pos)
+  ids = add_special_token_for_ids_pair(toker, left, right)
+  ids = t.LongTensor(ids).view(1, -1)
+  if GPU_OK:
+    ids = ids.cuda()
+  dic = bert(input_ids = ids, return_dict = True, output_attentions = True)
+  out = dic['last_hidden_state']
+  batch, length, hidden_size = out.shape
+  assert length == len(left) + len(right) + 2
+  out = out.view(length, hidden_size)
+  # Process Attention
+  atts = dic['attentions'] # (12, 1, 12, token_count, token_count)
+  atts = atts[11][0] # (12, token_count, token_count)
+  atts = atts.mean(0) # (token_count, token_count)
+  atts_from_cls = atts[0] # (token_count)
+  # Return
+  return out[0], atts_from_cls, ids
+
 
 def compress_by_ss_pos_get_sep(bert, toker, ss, pos):
   left, right = get_left_right_ids_no_special_token(toker, ss, pos)

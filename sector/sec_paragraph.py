@@ -183,7 +183,7 @@ def cal_exceed_rate(toker, arts):
     return count
 
 
-def get_att(m, mass):
+def get_att_ours(m, mass):
     sss, labels, poss = m.handle_mass(mass)
     atts = []
     idss = []
@@ -211,6 +211,31 @@ def get_att(m, mass):
             targets.append(ls[pos])
     return atts, idss, results, targets
 
+# ONE CLS ONE SEP
+def get_att_baseline(m, mass):
+    sss, labels, poss = m.handle_mass(mass)
+    atts = []
+    idss = []
+    results = []
+    targets = []
+    for ss, ls, pos in zip(sss, labels, poss):  # Different Batch
+        if pos == 0:
+            atts.append([])
+            idss.append([])
+            results.append(-1)
+            targets.append(-1)
+        else:
+            cls, atts_from_cls, ids = B.compress_one_cls_one_sep_pool_cls_output_att(
+                                 m.bert,
+                                 m.toker,
+                                 ss,
+                                 pos)
+            att = att_seps[pos]  # (token_count)
+            atts.append(att.view(-1).tolist())
+            idss.append(ids.view(-1).tolist())
+            results.append(m.classifier(seps[pos - 1]).item())
+            targets.append(ls[pos])
+    return atts, idss, results, targets
 
 
 # ================================== Auxiliary Methods ====================================
