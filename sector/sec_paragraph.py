@@ -206,7 +206,7 @@ def get_att_ours(m, mass):
                                  pos,
                                  m.ss_len_limit,
                                  with_att=True)
-            att = att_seps[pos]  # (token_count)
+            att = att_seps[pos - 1]  # (token_count)
             atts.append(att.view(-1).tolist())
             idss.append(ids.view(-1).tolist())
             labelss.append(ls)
