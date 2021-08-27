@@ -243,9 +243,12 @@ def get_att_baseline(m, mass):
     return atts, idss, results, targets, labelss
 
 
-def copy_to_chrome_console_then_render(toker, idss, atts):
-    print([toker.decode(item) for item in idss])
-    print([round(item,3) for item in atts])
+def copy_to_chrome_console_then_render(toker, idss, atts, labels = [-1,-1,-1,-1]):
+    arg1 = str([toker.decode(item) for item in idss])
+    arg2 = str([round(item,3) for item in atts])
+    arg3 = str(labels)
+    text = f'generate({arg1}, {arg2}, {arg3})'
+    print(text)
 
 
 
@@ -520,6 +523,18 @@ def the_last_run():
     # 根据auxiliary rate和epoch数跑实验
     run_FL(G['testld'], 1.0, 2)
 
+# For 3 vs 3
+def train_3v3_and_save(start_index = 0):
+    init_G_Symmetry_Mainichi(half=3, batch=2, mini=False)
+    # My, epoch = 3
+    for i in range(5):
+        G['m'] = m = Sec_Para(learning_rate=5e-6,
+                              ss_len_limit=4,
+                              auxiliary_loss_rate=0.1)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/my_3v3_{i + start_index}.tch')
 
 def train_and_save(start_index = 0):
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
@@ -582,7 +597,7 @@ def exp():
             
 
 def easy_copy_by_dic_and_index(toker, dic1, dic2, index):
-    copy_to_chrome_console_then_render(toker, dic1['idss'][index], dic1['att'][index])
+    copy_to_chrome_console_then_render(toker, dic1['idss'][index], dic1['att'][index], dic1['labels'][index])
     copy_to_chrome_console_then_render(toker, dic2['idss'][index], dic2['att'][index])
 
 
