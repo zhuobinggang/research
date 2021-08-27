@@ -529,7 +529,7 @@ def train_3v3_and_save(start_index = 0):
     # My, epoch = 3
     for i in range(5):
         G['m'] = m = Sec_Para(learning_rate=5e-6,
-                              ss_len_limit=4,
+                              ss_len_limit=6,
                               auxiliary_loss_rate=0.1)
         train_simple(G['m'], G['ld'], 1)
         train_simple(G['m'], G['ld'], 1)
