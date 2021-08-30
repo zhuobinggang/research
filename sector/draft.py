@@ -87,3 +87,9 @@ for i in range(5):
 avg_fs_stand = []
 for sampled_indexs in sampled_multi_indexs:
     avg_fs.append(cal_avg_f_score(targets, g_save['outputs'], sampled_indexs))
+
+
+
+avg_prec_stand, avg_prec_mys, avg_prec_fls, avg_prec_all_one = [item[1] for item in avg_all_stand], [item[1] for item in avg_all_mys], [item[1] for item in avg_all_fls], [item[1] for item in avg_all_one]
+
+avg_rec_stand, avg_rec_mys, avg_rec_fls, avg_rec_all_one = [item[2] for item in avg_all_stand], [item[2] for item in avg_all_mys], [item[2] for item in avg_all_fls], [item[2] for item in avg_all_one]
