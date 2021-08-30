@@ -5,7 +5,7 @@ init_G_Symmetry_Mainichi(half=2, batch=1, mini=False)
 tld = G['testld']
 
 g_save = {
-        'tld': None
+        'tld': tld, 
         'targets': None, 
         'outputs_stand': [], 
         'outputs_my': [], 
@@ -40,7 +40,7 @@ def cal_results(start_index = 0, cnt = 10):
 
 def save_g(start_index, cnt):
     global g_save
-    f = open(f'bootstrap_results_start_from_{start_index}_cnt_{cnt}.txt', 'w')
+    f = open(f'g_save.2v2.txt', 'w')
     f.write(str(g_save))
 
 
