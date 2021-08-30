@@ -5,6 +5,7 @@ init_G_Symmetry_Mainichi(half=2, batch=1, mini=False)
 tld = G['testld']
 
 g_save = {
+        'tld': None
         'targets': None, 
         'outputs_stand': [], 
         'outputs_my': [], 

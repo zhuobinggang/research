@@ -74,6 +74,16 @@ for i in range(len(dic1['results'])):
         pers2.append(per2)
 
 
+## 3v3
+
+for i in range(5):
+    idx = i
+    m = t.load(f'save/my_3v3_{idx}.tch')
+    outputs, targets = get_test_result(m, tld)
+    g_save['targets'] = targets
+    g_save['outputs'].append(outputs)
 
 
-
+avg_fs_stand = []
+for sampled_indexs in sampled_multi_indexs:
+    avg_fs.append(cal_avg_f_score(targets, g_save['outputs'], sampled_indexs))

@@ -18,22 +18,26 @@ def generate_sampled_multi_indexs(length, time = 1000):
         sampled_multi_indexs.append(temp_idxs)
     return sampled_multi_indexs
 
-def cal_avg_f_score(targets, multi_results, sampled_indexs):
+def cal_avg_score(targets, multi_results, sampled_indexs):
     sampled_targets = [targets[idx] for idx in sampled_indexs]
     sampled_multi_results = []
     for results in multi_results:
         sampled_multi_results.append([results[idx] for idx in sampled_indexs])
     f_scores = []
+    precs = []
+    recs = []
     for sampled_results in sampled_multi_results:
         prec, rec, f1, bacc = U.cal_prec_rec_f1_v2(sampled_results, sampled_targets)
         f_scores.append(f1)
-    return np.average(f_scores)
+        precs.append(prec)
+        recs.append(rec)
+    return np.average(f_scores), np.average(precs), np.average(recs)
 
 def cal_bootstrap_f_score(targets, multi_results):
     sampled_indexs = []
     for i in range(len(targets)):
         sampled_indexs.append(random.randint(0, len(targets) - 1))
-    return cal_avg_f_score(targets, multi_results, sampled_indexs)
+    return cal_avg_score(targets, multi_results, sampled_indexs)[0]
 
 
 def cal_huge_times(time = 1000):
@@ -43,10 +47,10 @@ def cal_huge_times(time = 1000):
     avg_fs_fls = []
     avg_fs_all_one = []
     for sampled_indexs in sampled_multi_indexs:
-        avg_fs_stand.append(cal_avg_f_score(targets, multi_stands, sampled_indexs))
-        avg_fs_mys.append(cal_avg_f_score(targets, multi_mys, sampled_indexs))
-        avg_fs_fls.append(cal_avg_f_score(targets, multi_fls, sampled_indexs))
-        avg_fs_all_one.append(cal_avg_f_score(targets, multi_all_one, sampled_indexs))
+        avg_fs_stand.append(cal_avg_score(targets, multi_stands, sampled_indexs)[0])
+        avg_fs_mys.append(cal_avg_score(targets, multi_mys, sampled_indexs)[0])
+        avg_fs_fls.append(cal_avg_score(targets, multi_fls, sampled_indexs)[0])
+        avg_fs_all_one.append(cal_avg_score(targets, multi_all_one, sampled_indexs)[0])
     return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
 
 
