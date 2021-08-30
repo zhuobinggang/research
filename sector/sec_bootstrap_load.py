@@ -1,8 +1,8 @@
 import random
 import utils as U
-import bootstrap_results_start_from_0_cnt_10
+import g_save_2v2
 import numpy as np
-result_dic = bootstrap_results_start_from_0_cnt_10.results
+result_dic = g_save_2v2.result
 targets = result_dic['targets']
 multi_stands = result_dic['outputs_stand']
 multi_mys = result_dic['outputs_my']
@@ -42,16 +42,16 @@ def cal_bootstrap_f_score(targets, multi_results):
 
 def cal_huge_times(time = 1000):
     sampled_multi_indexs = generate_sampled_multi_indexs(len(targets), time)
-    avg_fs_stand = []
-    avg_fs_mys = []
-    avg_fs_fls = []
-    avg_fs_all_one = []
+    avg_all_stand = []
+    avg_all_mys = []
+    avg_all_fls = []
+    avg_all_one = []
     for sampled_indexs in sampled_multi_indexs:
-        avg_fs_stand.append(cal_avg_score(targets, multi_stands, sampled_indexs)[0])
-        avg_fs_mys.append(cal_avg_score(targets, multi_mys, sampled_indexs)[0])
-        avg_fs_fls.append(cal_avg_score(targets, multi_fls, sampled_indexs)[0])
-        avg_fs_all_one.append(cal_avg_score(targets, multi_all_one, sampled_indexs)[0])
-    return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
+        avg_all_stand.append(cal_avg_score(targets, multi_stands, sampled_indexs))
+        avg_all_mys.append(cal_avg_score(targets, multi_mys, sampled_indexs))
+        avg_all_fls.append(cal_avg_score(targets, multi_fls, sampled_indexs))
+        avg_all_one.append(cal_avg_score(targets, multi_all_one, sampled_indexs))
+    return avg_all_stand, avg_all_mys, avg_all_fls, avg_all_one
 
 
 def cal_win_rate(fs1, fs2):
@@ -63,7 +63,8 @@ def cal_win_rate(fs1, fs2):
 
 # Example
 def run():
-    avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one = cal_huge_times(10000)
+    avg_all_stand, avg_all_mys, avg_all_fls, avg_all_one = cal_huge_times(10000)
+    avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one = [item[0] for item in avg_all_stand], [item[0] for item in avg_all_mys], [item[0] for item in avg_all_fls], [item[0] for item in avg_all_one]
     print(f'My vs Stand, win rate: {cal_win_rate(avg_fs_mys, avg_fs_stand)}')
     print(f'My vs Fls, win rate: {cal_win_rate(avg_fs_mys, avg_fs_fls)}')
     return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
