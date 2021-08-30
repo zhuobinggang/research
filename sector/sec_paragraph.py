@@ -536,6 +536,18 @@ def train_3v3_and_save(start_index = 0):
         train_simple(G['m'], G['ld'], 1)
         t.save(m, f'save/my_3v3_{i + start_index}.tch')
 
+# For rate 0.0
+def train_rate00_and_save(start_index = 0):
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    for i in range(5):
+        G['m'] = m = Sec_Para(learning_rate=5e-6,
+                              ss_len_limit=4,
+                              auxiliary_loss_rate=0.0)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/my_r00_{i + start_index}.tch')
+
 def train_and_save(start_index = 0):
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     # My, epoch = 3
