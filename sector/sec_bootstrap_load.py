@@ -1,8 +1,10 @@
 import random
 import utils as U
-import g_save_2v2
+# import g_save_2v2
+import g_save_2v2_dev
 import numpy as np
-result_dic = g_save_2v2.result
+# result_dic = g_save_2v2.result
+result_dic = g_save_2v2_dev.result
 targets = result_dic['targets']
 
 def generate_sampled_multi_indexs(length, time = 1000):

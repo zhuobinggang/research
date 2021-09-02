@@ -536,8 +536,8 @@ def train_3v3_and_save(start_index = 0):
         train_simple(G['m'], G['ld'], 1)
         t.save(m, f'save/my_3v3_{i + start_index}.tch')
 
-# For 3 vs 3
-def train_3v3_and_save(start_index = 0):
+# For 4 vs 4
+def train_4v4_and_save(start_index = 0):
     init_G_Symmetry_Mainichi(half=4, batch=2, mini=False)
     # My, epoch = 3
     for i in range(5):
@@ -547,7 +547,7 @@ def train_3v3_and_save(start_index = 0):
         train_simple(G['m'], G['ld'], 1)
         train_simple(G['m'], G['ld'], 1)
         train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/my_3v3_{i + start_index}.tch')
+        t.save(m, f'save/my_4v4_{i + start_index}.tch')
 
 # For rate 0.0
 def train_rate00_and_save(start_index = 0):
