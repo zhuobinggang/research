@@ -498,12 +498,16 @@ def sec_para_rate(ld, rate=0.0,max_train_epoch = 3):
                               ss_len_limit=4,
                               auxiliary_loss_rate=rate)
         print(f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
-        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
+        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Grid Search Auxiliary Rate = {m.auxiliary_loss_rate}')
 
 
-def rate_test_on_pc():
-    for rate in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
-        sec_para_rate(rate)
+def grid_search_on_pc():
+    for rate in [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]:
+        sec_para_rate(G['devld'], rate, 3)
+
+def grid_search_on_panther():
+    for rate in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]:
+        sec_para_rate(G['devld'], rate, 3)
 
 
 def rate_test_on_panther():

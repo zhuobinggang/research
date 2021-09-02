@@ -72,4 +72,16 @@ def run():
     return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
 
 
+def cal_average_no_boot(targets, multi_results):
+    precs = []
+    recs = []
+    fs = []
+    for res in multi_results:
+        prec, rec, f1, _ = U.cal_prec_rec_f1_v2(res, targets)
+        precs.append(prec)
+        recs.append(rec)
+        fs.append(f1)
+    return np.average(fs), np.average(precs), np.average(recs)
+
+
 
