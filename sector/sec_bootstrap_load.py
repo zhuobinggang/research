@@ -50,7 +50,7 @@ def cal_huge_times(time = 1000):
         avg_all_mys.append(cal_avg_score(targets, result_dic['outputs_my'], sampled_indexs))
         avg_all_fls.append(cal_avg_score(targets, result_dic['outputs_FL'], sampled_indexs))
         avg_all_one.append(cal_avg_score(targets, [[1] * 6635], sampled_indexs))
-        avg_all_myr0.append(cal_avg_score(targets, result_dic['outputs_my_r0'], sampled_indexs))
+        avg_all_myr0.append(cal_avg_score(targets, result_dic['outputs_myr0'], sampled_indexs))
     return avg_all_stand, avg_all_mys, avg_all_fls, avg_all_one, avg_all_myr0
 
 
