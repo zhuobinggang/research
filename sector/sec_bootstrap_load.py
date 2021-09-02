@@ -4,10 +4,6 @@ import g_save_2v2
 import numpy as np
 result_dic = g_save_2v2.result
 targets = result_dic['targets']
-multi_stands = result_dic['outputs_stand']
-multi_mys = result_dic['outputs_my']
-multi_fls = result_dic['outputs_FL']
-multi_all_one = [[1] * 6635]
 
 def generate_sampled_multi_indexs(length, time = 1000):
     sampled_multi_indexs = []
@@ -46,12 +42,14 @@ def cal_huge_times(time = 1000):
     avg_all_mys = []
     avg_all_fls = []
     avg_all_one = []
+    avg_all_myr0 = []
     for sampled_indexs in sampled_multi_indexs:
-        avg_all_stand.append(cal_avg_score(targets, multi_stands, sampled_indexs))
-        avg_all_mys.append(cal_avg_score(targets, multi_mys, sampled_indexs))
-        avg_all_fls.append(cal_avg_score(targets, multi_fls, sampled_indexs))
-        avg_all_one.append(cal_avg_score(targets, multi_all_one, sampled_indexs))
-    return avg_all_stand, avg_all_mys, avg_all_fls, avg_all_one
+        avg_all_stand.append(cal_avg_score(targets, result_dic['outputs_stand'], sampled_indexs))
+        avg_all_mys.append(cal_avg_score(targets, result_dic['outputs_my'], sampled_indexs))
+        avg_all_fls.append(cal_avg_score(targets, result_dic['outputs_FL'], sampled_indexs))
+        avg_all_one.append(cal_avg_score(targets, [[1] * 6635], sampled_indexs))
+        avg_all_myr0.append(cal_avg_score(targets, result_dic['outputs_my_r0'], sampled_indexs))
+    return avg_all_stand, avg_all_mys, avg_all_fls, avg_all_one, avg_all_myr0
 
 
 def cal_win_rate(fs1, fs2):
@@ -63,10 +61,12 @@ def cal_win_rate(fs1, fs2):
 
 # Example
 def run():
-    avg_all_stand, avg_all_mys, avg_all_fls, avg_all_one = cal_huge_times(10000)
-    avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one = [item[0] for item in avg_all_stand], [item[0] for item in avg_all_mys], [item[0] for item in avg_all_fls], [item[0] for item in avg_all_one]
+    avg_all_stand, avg_all_mys, avg_all_fls, avg_all_one, avg_all_myr0 = cal_huge_times(10000)
+    avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one, avg_fs_all_myr0 = [item[0] for item in avg_all_stand], [item[0] for item in avg_all_mys], [item[0] for item in avg_all_fls], [item[0] for item in avg_all_one], [item[0] for item in avg_all_myr0]
     print(f'My vs Stand, win rate: {cal_win_rate(avg_fs_mys, avg_fs_stand)}')
     print(f'My vs Fls, win rate: {cal_win_rate(avg_fs_mys, avg_fs_fls)}')
+    avg_prec_stand, avg_prec_mys, avg_prec_fls, avg_prec_all_one = [item[1] for item in avg_all_stand], [item[1] for item in avg_all_mys], [item[1] for item in avg_all_fls], [item[1] for item in avg_all_one]
+    avg_rec_stand, avg_rec_mys, avg_rec_fls, avg_rec_all_one = [item[2] for item in avg_all_stand], [item[2] for item in avg_all_mys], [item[2] for item in avg_all_fls], [item[2] for item in avg_all_one]
     return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
 
 
