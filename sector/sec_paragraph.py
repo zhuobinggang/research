@@ -502,11 +502,11 @@ def sec_para_rate(ld, rate=0.0,max_train_epoch = 3):
 
 
 def grid_search_on_pc():
-    for rate in [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]:
+    for rate in [0.0, 0.1, 0.2]:
         sec_para_rate(G['devld'], rate, 3)
 
 def grid_search_on_panther():
-    for rate in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]:
+    for rate in [0.0, 0.1, 0.2]:
         sec_para_rate(G['devld'], rate, 3)
 
 

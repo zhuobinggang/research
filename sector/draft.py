@@ -13,12 +13,12 @@ for sampled_indexs in sampled_multi_indexs:
 
 
 def print_out(r):
-e0 = []
-e1 = []
-e2 = []
-for item in r00:
-    e0.append(item[0]['f1'])
-    e1.append(item[1]['f1'])
-    e2.append(item[2]['f1'])
-    print(f'{round(np.average(e0), 3)}, {round(np.average(e1), 3)}, {round(np.average(e2), 3)}')
+    e0 = []
+    e1 = []
+    e2 = []
+    for item in r:
+        e0.append(item[0]['f1'])
+        e1.append(item[1]['f1'])
+        e2.append(item[2]['f1'])
+    print(f'{round(np.average(e0), 5)}, {round(np.average(e1), 5)}, {round(np.average(e2), 5)}')
 
