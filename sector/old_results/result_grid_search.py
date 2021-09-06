@@ -1,6 +1,24 @@
 import numpy as np
 
 
+def get_e2_average(r):
+    e0 = []
+    e1 = []
+    e2 = []
+    for item in r:
+        e0.append(item[0]['f1'])
+        e1.append(item[1]['f1'])
+        e2.append(item[2]['f1'])
+    return np.average(e2)
+
+def get_e2_avgs(length = 13):
+    step = 10
+    results = []
+    for i in range(length):
+        start = step * i
+        results.append(get_e2_average(result[start:start+10]))
+    return results
+
 def get_values(datas, keyname):
     return [data[keyname] for data in datas]
 

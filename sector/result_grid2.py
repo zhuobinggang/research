@@ -9,6 +9,23 @@ def dev_fs(datas, key1='dev_result_dic', key2='f1'):
     return [data[key1][key2] for data in datas]
 
 
+def get_e2_average(r):
+    e0 = []
+    e1 = []
+    e2 = []
+    for item in r:
+        e0.append(item[0]['f1'])
+        e1.append(item[1]['f1'])
+        e2.append(item[2]['f1'])
+    return np.average(e2)
+
+def get_e2_avgs(rates, length = 13):
+    results = []
+    for rate in rates:
+        results.append(get_e2_average(rate))
+    return results
+
+
 panther1 = [[{
     'prec': 0.6440677966101694,
     'rec': 0.6001263423878711,
