@@ -11,6 +11,14 @@ def targets(ld):
     return targets
 
 
+def count_para(ld):
+  count = 0
+  for mess in ld:
+    ss, ls, pos = mess[0]
+    if ls[pos] == 1:
+      count += 1
+  return count
+
 # ==================== Auxiliary Methods =====================
 
 def init_G_Symmetry_Mainichi(half=2, batch=1, mini=False):

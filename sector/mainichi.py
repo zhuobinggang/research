@@ -1,5 +1,6 @@
 # 每日新闻处理脚本
 from importlib import reload
+import re
 
 the_path = './datasets/mai2019.utf8.txt'
 
@@ -96,12 +97,22 @@ def paragraph_with_special_token_removed(articles):
     results.append(paras)
   return results
 
+# trim '【ニューヨーク國枝すみれ、ロサンゼルス長野宏美】トランプ米大統領に抗議す'
+def special_pattern_removed(arts):
+  results = []
+  for art in arts:
+    paras = [re.sub(r'【.*?】', '', para) for para in art]
+    results.append(paras)
+  return results
+
+
 def standard_process():
   articles = get_articles_raw()
   articles = special_type_articles_filtered(articles) # NO.1
   articles = except_t2_removed(articles)
   articles = line_without_period_removed(articles) # 必要操作： 没有句号的段落需要移除
   articles = special_tokens_removed(articles) # 必要操作： 移除特殊符号，否则模型可能会依赖这些符号
+  articles = special_pattern_removed(articles) # 必要操作： 移除特殊模式，否则模型可能会依赖这些符号
   # articles = line_with_special_token_removed(articles) # 非必要操作： 包含特殊token的段落移除。可能会破坏语境连贯性
   # articles = paragraph_only_one_sentence_removed(articles) # 非必要操作： 移除只有一句话的段落，没必要
   articles = art_with_paragraph_less_then_num_removed(articles, num = 2) # 必要操作：有些段落文章只有['この記事は本文を表示できません。']这样一句话
