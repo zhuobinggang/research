@@ -504,12 +504,13 @@ def sec_para_standard(ld, max_train_epoch = 3):
         get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Standard')
 
 def grid_search():
-    sec_para_standard()
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    sec_para_standard(G['devld'], 3)
     # for fl_rate in [1.0, 2.0, 5.0, 0.5, 0.0]:
     for fl_rate in [1.0, 2.0, 0.5]:
-        run_FL(fl_rate)
+        run_FL(G['devld'], fl_rate, 3)
     for rate in [0.0, 0.1, 0.2]:
-        sec_para_rate(rate)
+        sec_para_rate(G['devld'], rate, 3)
 
 
 def the_last_run():
