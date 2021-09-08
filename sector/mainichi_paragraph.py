@@ -12,10 +12,10 @@ def get_one_art_per_line(structed_articles):
 
 def customize_my_dataset_and_save(structed_articles):
     one_art_per_line = get_one_art_per_line(structed_articles)
-    train = one_art_per_line[0:1000]
-    test = one_art_per_line[1000:1500]
-    dev = one_art_per_line[1500:2000]
-    valid = one_art_per_line[2000:2500]
+    train = one_art_per_line[0:1500]
+    test = one_art_per_line[1500:2000]
+    dev = one_art_per_line[2000:2500]
+    # valid = one_art_per_line[2000:2500]
     with open('datasets/train.paragraph.txt', 'w') as the_file:
         the_file.write('\n'.join(train))
     with open('datasets/test.paragraph.txt', 'w') as the_file:

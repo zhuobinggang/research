@@ -44,7 +44,7 @@ def line_without_period_removed(articles):
 
 def remove_special_tokens(line):
   # special_tokens = ['\u3000', '\n', '＼Ｔ２＼', '「', '」', '（','）', '○', '＜', '＞', '◆', '〓', '｝', '｛', '■']
-  special_tokens = ['\u3000', '\n', '＼Ｔ２＼', '（','）', '○', '＜', '＞', '◆', '〓', '｝', '｛', '■']
+  special_tokens = ['\u3000', '\n', '＼Ｔ２＼', '（','）', '○', '＜', '＞', '◆', '〓', '｝', '｛', '■', '●', '◇', '▽']
   special_tokens.append('$') # you can add what you want
   result = line
   for token in special_tokens:
@@ -100,12 +100,12 @@ def standard_process():
   articles = get_articles_raw()
   articles = special_type_articles_filtered(articles) # NO.1
   articles = except_t2_removed(articles)
-  articles = special_tokens_removed(articles)
-  articles = line_without_period_removed(articles) # NO.2
-  # articles = line_with_special_token_removed(articles) # NO.2
-  articles = paragraph_only_one_sentence_removed(articles) # NO.2
-  articles = art_with_paragraph_less_then_num_removed(articles, num = 2) # NO.3
-  articles = paragraph_with_special_token_removed(articles) # NO.2
+  articles = line_without_period_removed(articles) # 必要操作： 没有句号的段落需要移除
+  articles = special_tokens_removed(articles) # 必要操作： 移除特殊符号，否则模型可能会依赖这些符号
+  # articles = line_with_special_token_removed(articles) # 非必要操作： 包含特殊token的段落移除。可能会破坏语境连贯性
+  # articles = paragraph_only_one_sentence_removed(articles) # 非必要操作： 移除只有一句话的段落，没必要
+  articles = art_with_paragraph_less_then_num_removed(articles, num = 2) # 必要操作：有些段落文章只有['この記事は本文を表示できません。']这样一句话
+  # articles = paragraph_with_special_token_removed(articles) # 非必要操作：移除包含特殊符号的段落，可能会破坏语境连贯性
   articles = build_structure(articles)
   return articles
 
