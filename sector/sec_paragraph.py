@@ -474,13 +474,7 @@ def sec_para_standard_win6():
 
 
 
-def sec_para_standard(ld, max_train_epoch = 3):
-    if G.get('ld') is None:
-        init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    for i in range(10):
-        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
-            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Standard')
+
 
 def run_FL(ld, fl_rate = 0, max_train_epoch = 3):
     if G.get('ld') is None:
@@ -501,20 +495,20 @@ def sec_para_rate(ld, rate=0.0,max_train_epoch = 3):
         get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Grid Search Auxiliary Rate = {m.auxiliary_loss_rate}')
 
 
-def grid_search_on_pc():
-    for rate in [0.0, 0.1, 0.2]:
-        sec_para_rate(G['devld'], rate, 3)
+def sec_para_standard(ld, max_train_epoch = 3):
+    if G.get('ld') is None:
+        init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    for i in range(10):
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
+            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
+        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Standard')
 
-def grid_search_on_panther():
-    for rate in [0.0, 0.1, 0.2]:
-        sec_para_rate(G['devld'], rate, 3)
-
-
-def rate_test_on_panther():
+def grid_search():
     sec_para_standard()
-    for fl_rate in [1.0, 2.0, 5.0, 0.5, 0.0]:
+    # for fl_rate in [1.0, 2.0, 5.0, 0.5, 0.0]:
+    for fl_rate in [1.0, 2.0, 0.5]:
         run_FL(fl_rate)
-    for rate in [1.1, 1.2, 1.3, 1.4, 1.5]:
+    for rate in [0.0, 0.1, 0.2]:
         sec_para_rate(rate)
 
 
