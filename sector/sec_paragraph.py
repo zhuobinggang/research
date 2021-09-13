@@ -519,6 +519,16 @@ def grid_search():
         run_FL(G['devld'], fl_rate, 3)
     for rate in [0.0, 0.1, 0.2]:
         sec_para_rate(G['devld'], rate, 3)
+    # save to file
+    save2file()
+
+def save2file():
+    mess = G['mess_list']
+    dic = {'stand': mess[:10], 'fl10': mess[10:20], 'fl20': mess[20:30], 'fl05': mess[30:40], 'rate00': mess[40:50], 'rate01': mess[50:60], 'rate02': mess[60:70]}
+    f = open('mess.txt', 'w')
+    f.write(str(dic))
+    f.close()
+    return dic
 
 
 def the_last_run():
