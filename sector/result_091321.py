@@ -12,7 +12,7 @@ def get_cols(r):
     return [np.average(e0), np.average(e1), np.average(e2)]
 
 
-def get_mat():
+def get_mat(dic):
     ys = ['stand', 'fl10', 'fl20', 'fl05', 'rate00', 'rate01', 'rate02']
     xs = ['epoch1', 'epoch2', 'epoch3']
     mat = []
