@@ -51,25 +51,44 @@ def fit_sigmoided_to_label_list(out):
     return results
 
 
-def get_datas_early_stop_and_parameter_ajust_v2(epochs, dev_ld, desc = '', test_ld = None):
+def train_then_record(epochs, dev_ld, desc = '', test_ld = None, record_at_last = False):
     dev_losses = []  # For early stop
     train_losses = []
-    dics = []
-    for i in range(epochs):
-        train_losses += train_simple(G['m'], G['ld'], 1)
-        dev_loss = cal_total_loss(G['m'], dev_ld)
-        dev_losses.append(dev_loss)
-        dic_i = get_test_result_dic(G['m'], dev_ld)
+    if not record_at_last:
+        dics = []
+        for i in range(epochs):
+            train_losses += train_simple(G['m'], G['ld'], 1)
+            dev_loss = cal_total_loss(G['m'], dev_ld)
+            dev_losses.append(dev_loss)
+            dic_i = get_test_result_dic(G['m'], dev_ld)
+            if test_ld is not None:
+                dic_i['test_result'] = get_test_result_dic(G['m'], test_ld)
+            else:
+                pass
+            dic_i['dev_loss'] = dev_loss  # Save index info
+            dics.append(dic_i)
+        dics[0]['desc'] = desc
+        print(dics)
+        G['mess_list'].append(dics)  # 将valid loss最小对应的dic放进mess_list
+        resave_mess_list()
+    else:
+        for i in range(epochs):
+            _ = train_simple(G['m'], G['ld'], 1)
+        dic = get_test_result_dic(G['m'], dev_ld)
         if test_ld is not None:
-            dic_i['test_result'] = get_test_result_dic(G['m'], test_ld)
+            dic['test_result'] = get_test_result_dic(G['m'], test_ld)
         else:
             pass
-        dic_i['dev_loss'] = dev_loss  # Save index info
-        dics.append(dic_i)
-    dics[0]['desc'] = desc
-    print(dics)
-    G['mess_list'].append(dics)  # 将valid loss最小对应的dic放进mess_list
-    # TODO: Resave mess_list
+        dic['desc'] = desc + f', at epoch {epochs}'
+        print(dic)
+        G['mess_list'].append(dic)  # 将valid loss最小对应的dic放进mess_list
+        resave_mess_list()
+
+
+def resave_mess_list():
+    f = open('mess.txt', 'w')
+    f.write(str(G['mess_list']))
+    f.close()
 
 def get_datas_early_stop_and_parameter_ajust(index,
                                              epochs,
@@ -489,15 +508,18 @@ def sec_para_standard_win6():
 
 
 
-def run_FL(ld, fl_rate = 0, max_train_epoch = 3):
+def run_FL(ld, fl_rate = 0, max_train_epoch = 3, ld2 = None):
     if G.get('ld') is None:
         init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(10):
         G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
             learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
-        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Dev Ajust, HP: fl_rate = {fl_rate}')
+        if ld2 is not None:
+            train_then_record(max_train_epoch, ld, f'FL, fl_rate = {fl_rate}', ld2)
+        else:
+            train_then_record(max_train_epoch, ld, f'FL, fl_rate = {fl_rate}')
 
-def sec_para_rate(ld, rate=0.0,max_train_epoch = 3):
+def sec_para_rate(ld, rate=0.0,max_train_epoch = 3, ld2 = None):
     if G.get('ld') is None:
         init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(10):
@@ -505,46 +527,49 @@ def sec_para_rate(ld, rate=0.0,max_train_epoch = 3):
                               ss_len_limit=4,
                               auxiliary_loss_rate=rate)
         print(f'Early Stop, Dev Ajust, Auxiliary Rate = {m.auxiliary_loss_rate}')
-        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Grid Search Auxiliary Rate = {m.auxiliary_loss_rate}')
+        if ld2 is not None:
+            train_then_record(max_train_epoch, ld, f'My, Auxiliary Rate = {m.auxiliary_loss_rate}', ld2)
+        else:
+            train_then_record(max_train_epoch, ld, f'My, Auxiliary Rate = {m.auxiliary_loss_rate}')
 
 
-def sec_para_standard(ld, max_train_epoch = 3):
+def sec_para_standard(ld, max_train_epoch = 3, ld2 = None):
     if G.get('ld') is None:
         init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     for i in range(10):
         G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
             learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-        get_datas_early_stop_and_parameter_ajust_v2(max_train_epoch, ld, f'Early Stop, Standard')
+        if ld2 is not None:
+            train_then_record(max_train_epoch, ld, f'Standard', ld2)
+        else:
+            train_then_record(max_train_epoch, ld, f'Standard')
 
 def grid_search():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    sec_para_standard(G['devld'], 3)
-    # for fl_rate in [1.0, 2.0, 5.0, 0.5, 0.0]:
-    for fl_rate in [1.0, 2.0, 0.5]:
-        run_FL(G['devld'], fl_rate, 3)
+    exp_times = 20
+    epochs = 2
+    # Ours + FL Loss
     for rate in [0.0, 0.1, 0.2]:
-        sec_para_rate(G['devld'], rate, 3)
-    # save to file
-    save2file()
-
-def save2file():
-    mess = G['mess_list']
-    dic = {'stand': mess[:10], 'fl10': mess[10:20], 'fl20': mess[20:30], 'fl05': mess[30:40], 'rate00': mess[40:50], 'rate01': mess[50:60], 'rate02': mess[60:70]}
-    f = open('mess.txt', 'w')
-    f.write(str(dic))
-    f.close()
-    return dic
-
-def grid_search_0913():
-    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    sec_para_standard(G['devld'], 3)
-    # for fl_rate in [1.0, 2.0, 5.0, 0.5, 0.0]:
+        for fl_rate in [1.0, 2.0, 0.5]:
+            for _ in range(exp_times):
+                G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
+                train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
+    # Stand
+    for _ in range(exp_times):
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
+        train_then_record(epochs, G['devld'], f'Standard', G['testld'], record_at_last = True)
+    # FL
     for fl_rate in [1.0, 2.0, 0.5]:
-        run_FL(G['devld'], fl_rate, 3)
+        for _ in range(exp_times):
+            G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
+            train_then_record(epochs, G['devld'], f'FL rate = {fl_rate}', G['testld'], record_at_last = True)
+    # Ours
     for rate in [0.0, 0.1, 0.2]:
-        sec_para_rate(G['devld'], rate, 3)
-    # save to file
-    save2file()
+        for _ in range(exp_times):
+            G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate)
+            train_then_record(epochs, G['devld'], f'Ours rate = {rate}', G['testld'], record_at_last = True)
+
+
 
 def the_last_run():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
