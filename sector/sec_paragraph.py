@@ -51,7 +51,7 @@ def fit_sigmoided_to_label_list(out):
     return results
 
 
-def get_datas_early_stop_and_parameter_ajust_v2(epochs, dev_ld, desc = ''):
+def get_datas_early_stop_and_parameter_ajust_v2(epochs, dev_ld, desc = '', test_ld = None):
     dev_losses = []  # For early stop
     train_losses = []
     dics = []
@@ -60,11 +60,16 @@ def get_datas_early_stop_and_parameter_ajust_v2(epochs, dev_ld, desc = ''):
         dev_loss = cal_total_loss(G['m'], dev_ld)
         dev_losses.append(dev_loss)
         dic_i = get_test_result_dic(G['m'], dev_ld)
+        if test_ld is not None:
+            dic_i['test_result'] = get_test_result_dic(G['m'], test_ld)
+        else:
+            pass
         dic_i['dev_loss'] = dev_loss  # Save index info
         dics.append(dic_i)
     dics[0]['desc'] = desc
     print(dics)
     G['mess_list'].append(dics)  # 将valid loss最小对应的dic放进mess_list
+    # TODO: Resave mess_list
 
 def get_datas_early_stop_and_parameter_ajust(index,
                                              epochs,
@@ -530,6 +535,16 @@ def save2file():
     f.close()
     return dic
 
+def grid_search_0913():
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    sec_para_standard(G['devld'], 3)
+    # for fl_rate in [1.0, 2.0, 5.0, 0.5, 0.0]:
+    for fl_rate in [1.0, 2.0, 0.5]:
+        run_FL(G['devld'], fl_rate, 3)
+    for rate in [0.0, 0.1, 0.2]:
+        sec_para_rate(G['devld'], rate, 3)
+    # save to file
+    save2file()
 
 def the_last_run():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)

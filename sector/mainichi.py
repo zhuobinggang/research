@@ -105,8 +105,7 @@ def special_pattern_removed(arts):
     results.append(paras)
   return results
 
-
-def standard_process():
+def stand_process_before_build():
   articles = get_articles_raw()
   articles = special_type_articles_filtered(articles) # NO.1
   articles = except_t2_removed(articles)
@@ -117,7 +116,10 @@ def standard_process():
   # articles = paragraph_only_one_sentence_removed(articles) # 非必要操作： 移除只有一句话的段落，没必要
   articles = art_with_paragraph_less_then_num_removed(articles, num = 2) # 必要操作：有些段落文章只有['この記事は本文を表示できません。']这样一句话
   # articles = paragraph_with_special_token_removed(articles) # 非必要操作：移除包含特殊符号的段落，可能会破坏语境连贯性
-  articles = build_structure(articles)
+  return articles
+
+def standard_process():
+  articles = build_structure(stand_process_before_build())
   return articles
 
 # output = 5
