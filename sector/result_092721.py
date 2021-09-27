@@ -2,9 +2,9 @@ import numpy as np
 
 from mess import *
 
-def get_mat(results):
+def get_mat(results, key = 'f1'):
     mat = []
     for item in results:
-        mat.append((item['f1'], item['test_result']['f1']))
+        mat.append((item[key], item['test_result'][key]))
     mat = np.array(mat)
     return mat
