@@ -574,27 +574,11 @@ def grid_search_continue():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     exp_times = 20
     epochs = 2
-    # Ours + FL Loss
-    for rate in [0.1, 0.2]: # rate00已经完成了
-        for fl_rate in [1.0, 2.0, 0.5]:
-            for _ in range(exp_times):
-                G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
-                train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
-    # Stand
+    rate = 0.0
+    fl_rate = 0.5
     for _ in range(exp_times):
-        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-        train_then_record(epochs, G['devld'], f'Standard', G['testld'], record_at_last = True)
-    # FL
-    for fl_rate in [1.0, 2.0, 0.5]:
-        for _ in range(exp_times):
-            G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
-            train_then_record(epochs, G['devld'], f'FL rate = {fl_rate}', G['testld'], record_at_last = True)
-    # Ours
-    for rate in [0.0, 0.1, 0.2]:
-        for _ in range(exp_times):
-            G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate)
-            train_then_record(epochs, G['devld'], f'Ours rate = {rate}', G['testld'], record_at_last = True)
-
+        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
+        train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
 
 
 def the_last_run():

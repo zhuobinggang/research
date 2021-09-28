@@ -16,11 +16,13 @@ def output_heatmap(mat, xs, ys, path = 'dd.png'):
     sns.heatmap(mat, xticklabels=xs, yticklabels=ys, cmap='Blues', annot=True, fmt='.4g')
     plt.savefig(path)
 
-def output_bar_chart(xs, yss, path = 'dd.png'):
+def output_line_chart(xs, yss, legends, path = 'dd.png'):
     plt.clf()
     # plt.bar(xs, ys, color ='maroon', width = 0.4)
-    for ys in yss:
-        plt.plot(xs, ys)
+    for ys,legend in zip(yss, legends):
+        plt.plot(xs, ys, label=legend)
+    plt.xticks(rotation=30)
+    plt.legend()
     plt.savefig(path)
 
 # 0913
@@ -30,6 +32,6 @@ def draw_heatmap():
 
 # 0927
 def draw_heatmap():
-    xs, yss = R4.get_heatmap()
-    output_bar_chart(xs, yss)
+    xs, yss, legends = R4.get_heatmap()
+    output_line_chart(xs, yss, legends)
 
