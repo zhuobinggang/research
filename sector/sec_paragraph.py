@@ -572,11 +572,15 @@ def grid_search():
 # 只是为了复原
 def grid_search_continue():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    exp_times = 20
     epochs = 2
     rate = 0.0
     fl_rate = 0.5
-    for _ in range(exp_times):
+    for _ in range(1):
+        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
+        train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
+    rate = 0.0
+    fl_rate = 2.0
+    for _ in range(1):
         G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
         train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
 
