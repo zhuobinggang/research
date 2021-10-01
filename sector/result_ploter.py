@@ -31,7 +31,7 @@ def draw_heatmap():
     output_heatmap(mat, xs, ys)
 
 # 0927
-def draw_heatmap():
+def draw_line_chart():
     xs, yss, legends = R4.get_heatmap()
     output_line_chart(xs, yss, legends)
 

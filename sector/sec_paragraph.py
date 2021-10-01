@@ -569,6 +569,37 @@ def grid_search():
             G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate)
             train_then_record(epochs, G['devld'], f'Ours rate = {rate}', G['testld'], record_at_last = True)
 
+def train_and_save(start_index = 0):
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    # aux loss + fl loss
+    for i in range(10):
+        rate = 0.1
+        fl_rate = 2.0
+        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/r01_fl20_{i + start_index}.tch')
+    # stand
+    for i in range(10):
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/stand_{i + start_index}.tch')
+    # FL
+    for i in range(10):
+        fl_rate = 2.0
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/fl20_{i + start_index}.tch')
+    # aux loss only
+    for i in range(10):
+        rate = 0.1
+        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/r01_{i + start_index}.tch')
+
 # 只是为了复原
 def grid_search_continue():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
@@ -619,45 +650,6 @@ def train_4v4_and_save(start_index = 0):
         train_simple(G['m'], G['ld'], 1)
         train_simple(G['m'], G['ld'], 1)
         t.save(m, f'save/my_4v4_{i + start_index}.tch')
-
-# For rate 0.0
-def train_rate00_and_save(start_index = 0):
-    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    for i in range(10):
-        G['m'] = m = Sec_Para(learning_rate=5e-6,
-                              ss_len_limit=4,
-                              auxiliary_loss_rate=0.0)
-        train_simple(G['m'], G['ld'], 1)
-        train_simple(G['m'], G['ld'], 1)
-        train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/my_r00_{i + start_index}.tch')
-
-def train_and_save(start_index = 0):
-    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    # My, epoch = 3
-    for i in range(5):
-        G['m'] = m = Sec_Para(learning_rate=5e-6,
-                              ss_len_limit=4,
-                              auxiliary_loss_rate=0.1)
-        train_simple(G['m'], G['ld'], 1)
-        train_simple(G['m'], G['ld'], 1)
-        train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/my_{i + start_index}.tch')
-    # Standard, epoch = 2
-    for i in range(5):
-        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
-            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-        train_simple(G['m'], G['ld'], 1)
-        train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/stand_{i + start_index}.tch')
-    # FL, epoch = 2
-    for i in range(5):
-        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(
-            learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = 1.0)
-        train_simple(G['m'], G['ld'], 1)
-        train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/fl_{i + start_index}.tch')
-
 
 # EXP
 
