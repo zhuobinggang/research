@@ -600,20 +600,23 @@ def train_and_save(start_index = 0):
         train_simple(G['m'], G['ld'], 1)
         t.save(m, f'save/r01_{i + start_index}.tch')
 
-# 只是为了复原
-def grid_search_continue():
+# 因为随着FL的增加性能一直在提高，所以需要探索极限
+def grid_search_plus():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    exp_times = 20
     epochs = 2
-    rate = 0.0
-    fl_rate = 0.5
-    for _ in range(1):
-        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
-        train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
-    rate = 0.0
-    fl_rate = 2.0
-    for _ in range(1):
-        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
-        train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
+    # FL
+    for fl_rate in [3.0, 4.0, 5.0]:
+        for _ in range(exp_times):
+            G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
+            train_then_record(epochs, G['devld'], f'FL rate = {fl_rate}', G['testld'], record_at_last = True)
+    # Ours + FL Loss
+    for rate in [0.0, 0.1, 0.2]:
+        for fl_rate in [3.0, 4.0, 5.0]:
+            for _ in range(exp_times):
+                G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
+                train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
+
 
 
 def the_last_run():
