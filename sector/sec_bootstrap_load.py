@@ -1,11 +1,20 @@
 import random
 import utils as U
 # import g_save_2v2
-import g_save_2v2_dev
+import boot_results_by_model_2v2
 import numpy as np
-# result_dic = g_save_2v2.result
-result_dic = g_save_2v2_dev.result
-targets = result_dic['targets']
+
+TLD = 'TLD'
+TARGETS = 'targets'
+OUTPUTS_AUX_FL = 'outputs_aux_fl'
+OUTPUTS_AUX = 'outputs_aux'
+OUTPUTS_FL = 'outputs_fl'
+OUTPUTS_STAND = 'outputs_stand'
+
+result_dic = boot_results_by_model_2v2.res
+targets = result_dic[TARGETS]
+
+
 
 def generate_sampled_multi_indexs(length, time = 1000):
     sampled_multi_indexs = []
@@ -41,17 +50,17 @@ def cal_bootstrap_f_score(targets, multi_results):
 def cal_huge_times(time = 1000):
     sampled_multi_indexs = generate_sampled_multi_indexs(len(targets), time)
     avg_all_stand = []
-    avg_all_mys = []
-    avg_all_fls = []
+    avg_all_aux_fl = []
+    avg_all_fl = []
+    avg_all_aux = []
     avg_all_one = []
-    avg_all_myr0 = []
     for sampled_indexs in sampled_multi_indexs:
-        avg_all_stand.append(cal_avg_score(targets, result_dic['outputs_stand'], sampled_indexs))
-        avg_all_mys.append(cal_avg_score(targets, result_dic['outputs_my'], sampled_indexs))
-        avg_all_fls.append(cal_avg_score(targets, result_dic['outputs_FL'], sampled_indexs))
+        avg_all_stand.append(cal_avg_score(targets, result_dic[OUTPUTS_STAND], sampled_indexs))
+        avg_all_aux_fl.append(cal_avg_score(targets, result_dic[OUTPUTS_AUX_FL], sampled_indexs))
+        avg_all_fl.append(cal_avg_score(targets, result_dic[OUTPUTS_FL], sampled_indexs))
         avg_all_one.append(cal_avg_score(targets, [[1] * 6635], sampled_indexs))
-        avg_all_myr0.append(cal_avg_score(targets, result_dic['outputs_myr0'], sampled_indexs))
-    return avg_all_stand, avg_all_mys, avg_all_fls, avg_all_one, avg_all_myr0
+        avg_all_aux.append(cal_avg_score(targets, result_dic[OUTPUTS_AUX], sampled_indexs))
+    return avg_all_stand, avg_all_aux_fl, avg_all_fl, avg_all_one, avg_all_aux
 
 
 def cal_win_rate(fs1, fs2):
@@ -72,7 +81,7 @@ def run():
     return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
 
 
-def cal_average_no_boot(targets, multi_results):
+def cal_average_no_boot(multi_results):
     precs = []
     recs = []
     fs = []
