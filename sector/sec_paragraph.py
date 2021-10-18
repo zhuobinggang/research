@@ -573,7 +573,7 @@ def grid_search():
 def train_and_save(start_index = 0):
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     # aux loss + fl loss
-    for i in range(10):
+    for i in range(40):
         rate = 0.1
         fl_rate = 5.0
         G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
