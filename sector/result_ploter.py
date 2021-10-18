@@ -1,9 +1,12 @@
 # import result_grid2 as R2
 # import result_090521 as R1
 # import result_091321 as R3
-import result_092721 as R4
+# import result_092721 as R4
+import result_merger_101821 as R5
 from plot import *
 import seaborn as sns # for heatmap
+from matplotlib import rcParams
+rcParams.update({'figure.autolayout': True})
 
 # 0905
 def draw():
@@ -21,7 +24,7 @@ def output_line_chart(xs, yss, legends, path = 'dd.png'):
     # plt.bar(xs, ys, color ='maroon', width = 0.4)
     for ys,legend in zip(yss, legends):
         plt.plot(xs, ys, label=legend)
-    plt.xticks(rotation=30)
+    plt.xticks(rotation=90)
     plt.legend()
     plt.savefig(path)
 
@@ -33,5 +36,10 @@ def draw_heatmap():
 # 0927
 def draw_line_chart():
     xs, yss, legends = R4.get_heatmap()
+    output_line_chart(xs, yss, legends)
+
+# 1018 
+def draw_line_chart():
+    xs, yss, legends = R5.get_results()
     output_line_chart(xs, yss, legends)
 
