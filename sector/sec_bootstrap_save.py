@@ -61,4 +61,5 @@ def save_g(start_index, cnt):
     global g_save
     f = open(f'boot_results_by_model.2v2.txt', 'w')
     f.write(str(g_save))
+    f.close()
 
