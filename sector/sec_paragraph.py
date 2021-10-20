@@ -573,33 +573,37 @@ def grid_search():
 def train_and_save(start_index = 0):
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     # aux loss + fl loss
-    for i in range(40):
-        rate = 0.1
-        fl_rate = 5.0
-        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
-        train_simple(G['m'], G['ld'], 1)
-        train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/r01_fl50_{i + start_index}.tch')
-    # # stand
-    # for i in range(10):
-    #     G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-    #     train_simple(G['m'], G['ld'], 1)
-    #     train_simple(G['m'], G['ld'], 1)
-    #     t.save(m, f'save/stand_{i + start_index}.tch')
-    # # FL
-    # for i in range(10):
-    #     fl_rate = 2.0
-    #     G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
-    #     train_simple(G['m'], G['ld'], 1)
-    #     train_simple(G['m'], G['ld'], 1)
-    #     t.save(m, f'save/fl20_{i + start_index}.tch')
-    # # aux loss only
-    # for i in range(10):
+    # for i in range(40):
     #     rate = 0.1
-    #     G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate)
+    #     fl_rate = 5.0
+    #     G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
     #     train_simple(G['m'], G['ld'], 1)
     #     train_simple(G['m'], G['ld'], 1)
-    #     t.save(m, f'save/r01_{i + start_index}.tch')
+    #     t.save(m, f'save/r01_fl50_{i + start_index}.tch')
+    # stand
+    start_index = 10
+    for i in range(30):
+        print(f'save/stand_{i + start_index}.tch')
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/stand_{i + start_index}.tch')
+    # FL
+    for i in range(30):
+        print(f'save/fl20_{i + start_index}.tch')
+        fl_rate = 2.0
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/fl20_{i + start_index}.tch')
+    # aux loss only
+    for i in range(30):
+        print(f'save/r01_{i + start_index}.tch')
+        rate = 0.1
+        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate)
+        train_simple(G['m'], G['ld'], 1)
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, f'save/r01_{i + start_index}.tch')
 
 # 因为随着FL的增加性能一直在提高，所以需要探索极限
 def grid_search_plus():
