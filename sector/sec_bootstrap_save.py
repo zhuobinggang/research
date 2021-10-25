@@ -20,44 +20,48 @@ g_save = {
         OUTPUTS_STAND: []
 }
 
-def cal_results(start_index = 0, cnt = 10):
+def cal_results(start_index = 0, cnt = 40):
     global g_save
     # aux + fl
-    print('aux + fl')
     for i in range(cnt):
+        print(f'aux + fl50, No.{i+start_index}')
         idx = start_index + i
-        m = t.load(f'save/r01_fl20_{i + start_index}.tch')
+        m = t.load(f'save/r01_fl50_{i + start_index}.tch')
         outputs, targets = get_test_result(m, tld)
         g_save[TARGETS] = targets
         g_save[OUTPUTS_AUX_FL].append(outputs)
+        resave_g()
     # stand
-    print('stand')
     for i in range(cnt):
+        print(f'stand, No.{i+start_index}')
         idx = start_index + i
         m = t.load(f'save/stand_{i + start_index}.tch')
         outputs, targets = get_test_result(m, tld)
         g_save[TARGETS] = targets
         g_save[OUTPUTS_STAND].append(outputs)
+        resave_g()
     # fl
-    print('fl')
     for i in range(cnt):
+        print(f'FL, No.{i+start_index}')
         idx = start_index + i
         m = t.load(f'save/fl20_{i + start_index}.tch')
         outputs, targets = get_test_result(m, tld)
         g_save[TARGETS] = targets
         g_save[OUTPUTS_FL].append(outputs)
+        resave_g()
     # aux
-    print('aux')
     for i in range(cnt):
+        print(f'AUX, No.{i+start_index}')
         idx = start_index + i
         m = t.load(f'save/r01_{i + start_index}.tch')
         outputs, targets = get_test_result(m, tld)
         g_save[TARGETS] = targets
         g_save[OUTPUTS_AUX].append(outputs)
+        resave_g()
     # save
-    save_g(start_index, cnt)
+    resave_g()
 
-def save_g(start_index, cnt):
+def resave_g():
     global g_save
     f = open(f'boot_results_by_model.2v2.txt', 'w')
     f.write(str(g_save))
