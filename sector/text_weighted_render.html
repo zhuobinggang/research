@@ -46,9 +46,9 @@ function generate(tokens, atts, labels = [-1, -1, -1, -1], replace_sep = true){
                         if (labels[sep_count] == -1){
                             // Do Nothing
                         }else if (labels[sep_count] == 1){
-                            div.innerHTML = '[分割]'
+                            div.innerHTML = '[SEP(分割)]'
                         }else{
-                            div.innerHTML = '[非分割]'
+                            div.innerHTML = '[SEP]'
                         }
                 }
                 container.appendChild(div)

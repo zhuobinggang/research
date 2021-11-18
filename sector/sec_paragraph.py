@@ -282,6 +282,14 @@ def copy_to_chrome_console_then_render(toker, idss, atts, labels = [-1,-1,-1,-1]
     text = f'generate({arg1}, {arg2}, {arg3})'
     print(text)
 
+def dic_index_to_chrome_console(toker, dic, idx, labels = [-1,-1,-1,-1]):
+    idss = dic['idss'][idx]
+    atts = dic['att'][idx]
+    arg1 = str([toker.decode(item) for item in idss])
+    arg2 = str([round(item,3) for item in atts])
+    arg3 = str(labels)
+    text = f'generate({arg1}, {arg2}, {arg3})'
+    print(text)
 
 
 # ================================== Auxiliary Methods ====================================
@@ -661,10 +669,10 @@ def train_4v4_and_save(start_index = 0):
 
 # EXP
 
-def exp():
+def get_atts_for_comparing():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    m1 = t.load('save/my_0.tch')
-    m2 = t.load('save/fl_0.tch')
+    m1 = t.load('save/r01_fl20_0.tch')
+    m2 = t.load('save/fl20_0.tch')
     tld = G['testld']
     dic1 = {'att': [], 'idss': [], 'results': [], 'targets': []}
     dic2 = {'att': [], 'idss': [], 'results': [], 'targets': []}
@@ -679,23 +687,65 @@ def exp():
         dic2['idss'] += idss
         dic2['results'] += results
         dic2['targets'] += targets
+    return dic1, dic2
+
+# 尝试渲染
+def exp(dic1, dic2, gap = 0.5):
     id_value_pairs = []
     for i in range(len(dic1['results'])):
-        if dic1['targets'][i] == 0 and np.abs(dic1['targets'][i] - dic1['results'][i]) < 0.3 and np.abs(dic2['targets'][i] - dic2['results'][i]) > 0.7:
+        if dic1['targets'][i] == 0 and dic1['results'][i] < 0.5:
+            # and np.abs(dic2['results'][i] - dic2['results'][i]) > gap:
             id_value_pairs.append((i, np.abs(dic1['results'][i] - dic2['results'][i])))
-        # return id_value_pairs, dic1, dic2
-        # SHOW
-    idss = dic1['idss'][388]
-    att1 = dic1['att'][388]
-    att2 = dic2['att'][388]
-    for idx, a1, a2 in zip(idss, att1, att2):
-        print(f'{m1.toker.decode(idx)}: {round(a1, 3)}, {round(a2, 3)}')
+    return id_value_pairs
+    # SHOW
+    # idss = dic1['idss'][388]
+    # att1 = dic1['att'][388]
+    # att2 = dic2['att'][388]
+    # for idx, a1, a2 in zip(idss, att1, att2):
+    #     print(f'{m1.toker.decode(idx)}: {round(a1, 3)}, {round(a2, 3)}')
+
+def sort_id_value_pairs(id_value_pairs):
+    return list(reversed(sorted(id_value_pairs, key = lambda x: x[1])))
             
 
 def easy_copy_by_dic_and_index(toker, dic1, dic2, index):
     copy_to_chrome_console_then_render(toker, dic1['idss'][index], dic1['att'][index], dic1['labels'][index])
     copy_to_chrome_console_then_render(toker, dic2['idss'][index], dic2['att'][index])
 
+def significant_token_average_percent(dic):
+    percents = []
+    for i in range(len(dic['results'])):
+        atts = dic['att'][i]
+        if len(atts) < 1:
+            pass
+        else:
+            avg_att = sum(atts) / len(atts)
+            over_size_count = sum([1 for att in atts if att > avg_att])
+            percent = (over_size_count / len(atts)) * 100
+            percents.append(percent)
+    return np.average(percents)
 
+def cal_avg_significant_percent_by_m(m, tld):
+    dic = {'att': [], 'idss': [], 'results': [], 'targets': []}
+    for mass in tld:
+        atts, idss, results, targets, labelss = get_att_ours(m, mass)
+        dic['att'] += atts
+        dic['idss'] += idss
+        dic['results'] += results
+        dic['targets'] += targets
+    percent = significant_token_average_percent(dics)
+    return percent
+
+# 取得每种手法的平均注意力宽度
+def exp2(max_id = 40):
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    tld = G['testld']
+    percents = [[],[],[],[]]
+    for i in range(max_id):
+        percents[0].append(cal_avg_significant_percent_by_m(t.load(f'save/r01_fl50_{i}.tch'), tld))
+        percents[1].append(cal_avg_significant_percent_by_m(t.load(f'save/fl20_{i}.tch'), tld))
+        percents[2].append(cal_avg_significant_percent_by_m(t.load(f'save/r01_{i}.tch'), tld))
+        percents[3].append(cal_avg_significant_percent_by_m(t.load(f'save/stand_{i}.tch'), tld))
+    return percents
 
 

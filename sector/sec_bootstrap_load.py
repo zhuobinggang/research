@@ -46,9 +46,8 @@ def cal_bootstrap_f_score(targets, multi_results):
         sampled_indexs.append(random.randint(0, len(targets) - 1))
     return cal_avg_score(targets, multi_results, sampled_indexs)[0]
 
-
-def cal_huge_times(time = 1000):
-    sampled_multi_indexs = generate_sampled_multi_indexs(len(targets), time)
+def cal_huge_times( sampled_multi_indexs, time = 1000):
+    # sampled_multi_indexs = generate_sampled_multi_indexs(len(targets), time)
     avg_all_stand = []
     avg_all_aux_fl = []
     avg_all_fl = []
@@ -72,12 +71,16 @@ def cal_win_rate(fs1, fs2):
 
 # Example
 def run():
-    avg_all_stand, avg_all_aux_fl, avg_all_fl, avg_all_one, avg_all_aux = cal_huge_times(10000)
+    time = 10000
+    sampled_multi_indexs = generate_sampled_multi_indexs(len(targets), time)
+    avg_all_stand, avg_all_aux_fl, avg_all_fl, avg_all_one, avg_all_aux = cal_huge_times(sampled_multi_indexs, time)
     avg_fs_stand, avg_fs_aux_fl, avg_fs_fl, avg_fs_all_one, avg_fs_all_aux = [item[0] for item in avg_all_stand], [item[0] for item in avg_all_aux_fl], [item[0] for item in avg_all_fl], [item[0] for item in avg_all_one], [item[0] for item in avg_all_aux]
     print(f'My vs Stand, win rate: {cal_win_rate(avg_fs_mys, avg_fs_stand)}')
     print(f'My vs Fls, win rate: {cal_win_rate(avg_fs_mys, avg_fs_fls)}')
-    avg_prec_stand, avg_prec_mys, avg_prec_fls, avg_prec_all_one = [item[1] for item in avg_all_stand], [item[1] for item in avg_all_mys], [item[1] for item in avg_all_fls], [item[1] for item in avg_all_one]
-    avg_rec_stand, avg_rec_mys, avg_rec_fls, avg_rec_all_one = [item[2] for item in avg_all_stand], [item[2] for item in avg_all_mys], [item[2] for item in avg_all_fls], [item[2] for item in avg_all_one]
+    avg_prec_stand, avg_prec_aux_fl, avg_prec_fl, avg_prec_all_one, avg_prec_all_aux = [item[1] for item in avg_all_stand], [item[1] for item in avg_all_aux_fl], [item[1] for item in avg_all_fl], [item[1] for item in avg_all_one], [item[1] for item in avg_all_aux]
+    avg_rec_stand, avg_rec_aux_fl, avg_rec_fl, avg_rec_all_one, avg_rec_all_aux = [item[2] for item in avg_all_stand], [item[2] for item in avg_all_aux_fl], [item[2] for item in avg_all_fl], [item[2] for item in avg_all_one], [item[2] for item in avg_all_aux]
+
+
     return avg_fs_stand, avg_fs_mys, avg_fs_fls, avg_fs_all_one
 
 
@@ -93,4 +96,7 @@ def cal_average_no_boot(multi_results):
     return np.average(fs), np.average(precs), np.average(recs)
 
 
+def cal_average_no_boot_all_ones():
+    all_ones = [[1] * len(targets)]
+    return cal_average_no_boot(all_ones)
 
