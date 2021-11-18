@@ -733,7 +733,7 @@ def cal_avg_significant_percent_by_m(m, tld):
         dic['idss'] += idss
         dic['results'] += results
         dic['targets'] += targets
-    percent = significant_token_average_percent(dics)
+    percent = significant_token_average_percent(dic)
     return percent
 
 # 取得每种手法的平均注意力宽度
