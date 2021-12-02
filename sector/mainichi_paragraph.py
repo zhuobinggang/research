@@ -15,6 +15,7 @@ def customize_my_dataset_and_save(structed_articles):
     train = one_art_per_line[2000:4000]
     test = one_art_per_line[4000:4500]
     dev = one_art_per_line[4500:5000]
+    manual_exp = one_art_per_line[5000:5500]
     # valid = one_art_per_line[2000:2500]
     with open('datasets/train.paragraph.txt', 'w') as the_file:
         the_file.write('\n'.join(train))
@@ -22,8 +23,8 @@ def customize_my_dataset_and_save(structed_articles):
         the_file.write('\n'.join(test))
     with open('datasets/dev.paragraph.txt', 'w') as the_file:
         the_file.write('\n'.join(dev))
-    # with open('datasets/valid.paragraph.txt', 'w') as the_file:
-    #     the_file.write('\n'.join(valid))
+    with open('datasets/manual_exp.paragraph.txt', 'w') as the_file:
+        the_file.write('\n'.join(manual_exp))
 
 def customize_my_dataset_and_save_mini(structed_articles):
     one_art_per_line = get_one_art_per_line(structed_articles)

@@ -19,3 +19,10 @@ wikisection
 # **\.paragraph.txt
 g_save*
 mess.txt
+
+# latex
+*\.aux
+*\.dvi
+*\.log
+*\.out
+
