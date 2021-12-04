@@ -9,3 +9,6 @@ def run():
 def ld_without_opening(ld):
     ld = [case for case in ld if case[0][2] != 0]
     return ld
+
+
+# 让机器来跑特定
