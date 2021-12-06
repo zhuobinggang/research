@@ -71,7 +71,7 @@
 
 % 参考文献
 %\bibliographystyle{junsrt}
-%\bibliography{j_yourrefs} % ファイル名は適宜自分のbibファイルに置き換える
+%\bibliography{j\_yourrefs} % ファイル名は適宜自分のbibファイルに置き換える
 
 %%%%  ここまでが本文+参考文献　5ページ以内
 
@@ -105,6 +105,232 @@ BERT + BCE Lossは、BERTで文書分類の一般的なやり方で、簡単に�
   \caption{手順(BERT + BCE Loss)}
   \label{fig:steps1}
   \end{figure}
+
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=1\textwidth]{steps2.png}
+  \caption{手順(BERT + BCE Loss)}
+  \label{fig:steps2}
+  \end{figure*}
+
+\subsubsection{MLP}
+
+多層パーセプトロン（英: Multilayer perceptron、略称: MLP）は、順伝播型ニューラルネットワークの一分類である。
+
+MLPは最も単純な形のニューラルネットワークである。ニューラルネットワークの一部としても使える。
+
+\subsubsection{BERT}
+
+BERTは、 Googleによって開発された、自然言語処理の事前学習用ための Transformer ベースの機械学習手法である。
+
+本研究では、BERTは、埋め込みを取得するためのエンコーダーとして使われている。
+
+\subsubsection{BERTの特殊トークン}
+
+[CLS]と[SEP]はBERTの特殊トークンである。
+
+BERTを予備訓練する時、[CLS]は入力シーケンスの始まりをマークするために使用され、[SEP]は2つのシーケンスの継続ポイントをマークするために使用される。本手法では、[SEP]トークンを使って、段落分割を判断したい位置をマークする。
+
+\subsubsection{損失関数BCE Loss}
+
+ステップ3の損失函数BCE Lossの計算式は式\ref{eqn:bceloss}のとおりである。
+
+\begin{equation}
+  \label{eqn:bceloss}
+  \begin{split}
+    binary\_cross\_entropy\_loss(p, y) = \\
+    \ - [ y * log(p)+(1-y)*log(1-p)]  
+  \end{split}
+\end{equation}
+
+binary\_cross\_entropy\_lossの入力pは分割の確率を意味し、yはラベルである。yの値は0または1である。0は分割しない、1は分割するという意味で規定する。
+
+pとyの差が大きいほど損失が大きくなり、pがyに等しい場合、損失は0になる。結果として、損失は0から無限大の間の値を取る。lossを減らすようにモデルを訓練する。
+
+\subsection{BCE + Focal Loss}
+
+
+これは飯倉らの研究手法である。BERT + BCE Lossとの違いは、損失関数をBCE LossからFocal Lossに変更するだけである。
+
+Focal Loss（FL）はCross-Entropy Loss（CE）の改良版であり、難しい例の重みを増やし、簡単な例の重みを減らすことで、データの不均衡の問題を緩和できる。
+
+具体的には、モデルの推測結果が正解に近い場合、この問題は簡単に解決できることを意味し、このとき、Focal Lossによる損失はCross-Entropy Lossよりも少なくなる。 モデルの推測結果が正解からかけ離れている場合、Focal Lossによって得られる損失はCross-Entropy Lossよりも大きくなる。
+
+\subsubsection{手順}
+
+手順は4.1.1とほとんど変わらないが、ステップ3の損失関数をBCE LossからFocal Lossに置き換えた。
+
+\subsubsection{損失函数Focal Loss}
+\label{section:focusloss}
+
+
+本研究で使われる損失函数Focal Lossの計算式は式\ref{eqn:focusloss}のとおりである。
+
+\begin{equation}
+  \label{eqn:focusloss}
+  FL(p_t) = ( - 1 ) * ( 1 - p_t )^\gamma  * log ( p_t )  
+\end{equation}
+
+$p_t$の定義は式\ref{eqn:pt}のとおりである。
+
+\begin{equation}
+  \label{eqn:pt}
+  p_t = \left\{\begin{matrix}
+    p & if & y = 1 \\ 
+    1-p & if & y = 0
+    \end{matrix}\right.
+\end{equation}
+
+前に述べたように、pの値は0から1の間であり、分割確率を意味する。yはラベルである。
+
+γはFocal Lossの最も重要なパラメータであり、本研究では4つの値、[0.5、1.0、2.0、5.0]を調べた。
+
+
+\subsection{BERT+Focal Loss+Auxiliary Loss}
+
+本研究の提案手法である。飯倉らの研究に基づいて、本研究はさらに補助損失を導入し、パフォーマンスの向上に成功した。
+
+入力には複数の文の接続点が存在するが、先行研究では、真ん中の文の接続点しか考慮しない。本研究では、補助損失を追加することにより、モデルがすべての文の接続点を考慮することを明示的に要求する。パフォーマンスが向上した原因は、近くに段落分割点があるかどうかを知ることは、現在の判断に役立つことである。
+
+\subsubsection{手順}
+
+
+\begin{enumerate}
+  \item 入力のすべての文の接続点をBERTで埋め込みに変換する。入力にn個の文の接続点があると仮定すると、n個の埋め込みを得られる。
+  \item MLPにn個の埋め込みを入力し、n個のpを得られる。pは段落分割の確率で、値の範囲は0から1までである。
+  \item n個のpとラベルを使って、n個のlossを計算できる。
+  \item n個のlossを組み合わせ、1つの最終lossを得られる。
+  \item 最終lossを減らすようにモデルをトレーニングする。
+\end{enumerate}
+
+その流れを図\ref{fig:steps2}に示す。この例では、ｎ＝３としている。windows sizeを4に固定するため、ｎ＝３が本研究の一般的なケースである。
+
+\subsubsection{文の接続点の埋め込みを得る}
+
+最初のステップですべての文の接続点を埋め込みに変換するために、BERTの入力を少し変更する必要がある。次の4つの連続した文を例とする。
+
+\begin{quote}
+  \small{国内では１８８８年に米国から輸入された豚が原因で最初に発生し、１９９２年の熊本県内での発生を最後に確認されていなかった。
+  感染した豚などの唾液や鼻水、ふんなどに接触することで感染する。 
+  感染力は強く、ウイルスに触れたヒトや器具を介してうつることもある。
+  海外では、感染に気づかずに出荷された豚肉や肉製品の食べ残しなどが豚の餌として使われ、感染が拡大することも多い。}
+\end{quote}
+
+先行研究の入力には[SEP]トークンが1つだけあり、段落分割を判断する必要がある位置をマークするために使用される。 本研究手法では、複数の[SEP]トークンを使用し、すべての文の接続点をマークする。 特殊トークンを追加すると、入力は次のようになる。
+
+\begin{quote}
+  \small{[CLS]国内では１８８８年に米国から輸入された豚が原因で最初に発生し、１９９２年の熊本県内での発生を最後に確認されていなかった。[SEP]感染した豚などの唾液や鼻水、ふんなどに接触することで感染する。[SEP] 感染力は強く、ウイルスに触れたヒトや器具を介してうつることもある。[SEP]海外では、感染に気づかずに出荷された豚肉や肉製品の食べ残しなどが豚の餌として使われ、感染が拡大することも多い。}
+\end{quote}
+
+上記のテキストをBERTに入力すると、[SEP]に対応するすべての埋め込みを簡単に得られる。
+
+\subsubsection{損失函数}
+
+Focal Lossを使う、計算式は節\ref{section:focusloss}と同じである。
+
+\subsubsection{lossの集計方法}
+
+手順4の計算式は式\ref{eqn:sumup}のとおりである。
+
+\begin{equation}
+  \label{eqn:sumup}
+  loss = sum(auxiliary\_losses) * auxiliary\_loss\_rate + main\_loss
+\end{equation}
+
+本手法は、手順３で得られた複数のlossをmain\_lossとauxiliary\_lossesに分ける。 セクション4.3.1の図を例にとると、main\_lossは真ん中のlossであり、残りのlossは全部auxiliary\_lossesとする。main\_lossとauxiliary\_lossesを分ける理由は、真ん中の[SEP]が、段落分割を判断したい位置を示しているため、他の[SEP]より重要である。
+
+auxiliary\_loss\_rateは重みで、ハイパーパラメータである。本研究では、３つの値、[0.0、0.1、0.2]を実験した。
+
+\section{実験設定}
+
+\subsection{性能比較}
+
+本研究は５つの手法を比較した。それぞれは、BERT+BCE Loss、BERT+Focal Loss、BERT+BCE Loss+Auxiliary Loss、BERT+Focal Loss+Auxiliary Loss、そしてすべての結果が１であるall one baseline。
+
+本研究では、devデータセット上のグリッドサーチで、各手法の最適なパラメーターを調査した。最適なパラメーターを使って、各手法をtestデータセットで比較した。
+
+結果によると、BERT+Focal Loss+Auxiliary Lossは最も良い結果を出した。
+
+\subsubsection{BERT+BCE Loss}
+
+BERT + BCE Lossは、BERTで文書分類の一般的なやり方で、簡単に段落分割に適用できる。
+
+本研究では、各手法で使用されるBERTのパラメーターに違いはなく、ニューラルネットワークの学習率も一貫している。詳しい情報を後続の実験環境とパラメータのセクションに記述する。
+
+\subsubsection{BERT+Focal Loss}
+
+最適パラメータ探索の結果を次の表に示す。
+
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{パラメータ(BERT+Focal Loss)}
+  \begin{tabular}{lcccc}
+  \hline
+  \     & 記事の数 & 文の数   & 記事の平均段落数 & 段落の平均文数 \\
+  \hline
+  Train & 2000 & 29436 & 5.30        & 2.78       \\
+  Test  & 500  & 7369  & 5.47        & 2.70       \\
+  Dev   & 500  & 7139  & 5.15        & 2.77       \\
+  \hline
+  \label{tab:parameter1}
+  \end{tabular}
+  \end{table*}
+
+\subsubsection{BERT+BCE Loss+Auxiliary Loss}
+
+最適パラメータ探索の結果を次の表に示す。
+
+TODO:
+
+\subsubsection{BERT+Focal Loss+Auxiliary Loss}
+
+最適パラメータ探索の結果を次の表に示す。最初の行の数値はγ(Focal loss)であり、最初の列の数値は補助損失率である。
+
+\subsection{有意差分析}
+
+本研究はブートストラップ法で有意差分析を行う。
+
+\subsubsection{手順}
+
+有意差分析の手順は次のとおりである。
+
+\begin{enumerate}
+  \item ニューラルネットワークのランダム性の影響を減らすために、手法ごとに40個のモデルを訓練する。
+  \item モデルごとにテスト結果を計算する。40個のテスト結果を得られる。
+  \item 復元抽出法で10,000個のテストデータセットを作る。インデックスを記録する限り、モデルに対応する40 * 10000個のテスト結果を簡単に取得できる。
+  \item 他の手法の10000個の平均f-scoreとペアで比較し、10000個の勝ち負けを得られる。
+  \item 10000個の勝ち負けで勝率を計算する。いずれかの方法の勝率が0.95を超える場合、手法の間有意差があるとする。
+\end{enumerate}
+
+\subsubsection{ブートストラップ法}
+
+ブートストラップ法とは、ある標本集団から母集団の性質を推定するための方法である。 復元抽出法(重複あり)により標本集団から標本集団と同じ数だけランダムに値を再抽出し、新しいデータセットを取得する。
+
+\subsection{実験環境とパラメータ設定}
+
+本研究はpytorchとhuggingfaceというディープラーニングフレームワークを使っている。事前学習済みのBERTは東北大のbert-base-japanese-whole-word-maskingである。BERTのパラメータは、12層、隠れ層 768、12ヘッドである。オプティマイザーはAdamWで、学習率は2e-5である。
+
+本研究では、全ての手法の訓練エポック数は2である。windows sizeは4である。もっと大きいwindows sizeの実験は今後の課題にする。
+
+devデータセットでグリッドサーチし、各手法の最尤パラメータは次の表とおりである。
+
+\section{結果}
+
+\subsection{パフォーマンス}
+
+次の表は各手法のパフォーマンスである。結果は40個モデルの平均値を取る。
+
+\subsection{有意差分析}
+
+有意差分析の結果は次の表のとおりである。前に説明したように、10000個の勝ち負けで勝率を計算する。いずれかの方法の勝率が0.95を超える場合、手法の間有意差があるとする。
+
+表によると、補助ロースだけの場合、モデルのパフォーマンスはフォーカスロースだけの場合より悪い。しかし、同時に補助ロースとフォーカスロースを使うと、モデルのパフォーマンスは一番よく、他すべての手法と比べて有意差がある。
+
+\section{考察}
+
+\subsection{人手実験}
 
 
 \end{document}
