@@ -1,6 +1,6 @@
 # 为了“考察”部分做实验
 import mainichi_paragraph as custom_data
-from manual_exp.mld import mld
+# from manual_exp.mld import mld
 from sec_paragraph import *
 
 def run():
@@ -15,7 +15,7 @@ def ld_without_opening(ld):
 
 
 # 让机器来跑特定，取40个平均值
-def get_average():
+def get_average(mld):
     res_fl_aux = []
     res_fl = []
     res_bce_aux = []
