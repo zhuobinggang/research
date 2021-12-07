@@ -1,6 +1,7 @@
 # 为了“考察”部分做实验
 import mainichi_paragraph as custom_data
 from manual_exp.mld import mld
+from sec_paragraph import *
 
 def run():
     manual_exp_ld = custom_data.load_customized_loader(file_name='manual_exp', half=2, batch=1, mini=False, shuffle = True)
