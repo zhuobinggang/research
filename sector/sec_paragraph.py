@@ -749,7 +749,23 @@ def exp2(max_id = 40):
     return percents
 
 
-def get_res_from_multi_test_datasets_rapid():
-    pass
+def get_10_test_dic_by_m(m):
+    dics = []
+    for i in range(10):
+        # load testset
+        tld = load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = True)
+        dic = get_test_result_dic(m, tld)
+        dics.append(dic)
+    return dics
 
+def get_res_from_multi_test_datasets_rapid():
+    G['model_n_tld_m_dic'] = []
+    model_n_tld_m_dic = [None,None,None,None]
+    for i in range(40):
+        model_n_tld_m_dic[0] = get_10_test_dic_by_m(t.load(f'save/r01_fl50_{i}.tch'))
+        model_n_tld_m_dic[1] = get_10_test_dic_by_m(t.load(f'save/fl20_{i}.tch'))
+        model_n_tld_m_dic[2] = get_10_test_dic_by_m(t.load(f'save/stand_{i}.tch'))
+        model_n_tld_m_dic[3] = get_10_test_dic_by_m(t.load(f'save/r01_{i}.tch'))
+        G['model_n_tld_m_dic'] = model_n_tld_m_dic
+    return model_n_tld_m_dic
 

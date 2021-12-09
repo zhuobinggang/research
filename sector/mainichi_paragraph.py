@@ -26,7 +26,7 @@ def customize_my_dataset_and_save(structed_articles):
     with open('datasets/manual_exp.paragraph.txt', 'w') as the_file:
         the_file.write('\n'.join(manual_exp))
 
-def additional_test_datasets(structed_articles):
+def write_additional_test_datasets(structed_articles):
     one_art_per_line = get_one_art_per_line(structed_articles)
     tests = []
     tests.append(one_art_per_line[5500:6000])
