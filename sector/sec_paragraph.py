@@ -753,7 +753,7 @@ def get_10_test_dic_by_m(m):
     dics = []
     for i in range(10):
         # load testset
-        tld = load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = True)
+        tld = custom_data.load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = True)
         dic = get_test_result_dic(m, tld)
         dics.append(dic)
     return dics
