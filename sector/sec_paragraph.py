@@ -1,6 +1,6 @@
 from sector_split import *
 import mainichi_paragraph as custom_data
-
+from datetime import datetime
 
 def targets(ld):
     targets = []
@@ -766,6 +766,8 @@ def get_res_from_multi_test_datasets_rapid():
         model_n_tld_m_dic[1] = get_10_test_dic_by_m(t.load(f'save/fl20_{i}.tch'))
         model_n_tld_m_dic[2] = get_10_test_dic_by_m(t.load(f'save/stand_{i}.tch'))
         model_n_tld_m_dic[3] = get_10_test_dic_by_m(t.load(f'save/r01_{i}.tch'))
+        print(i)
+        print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         G['model_n_tld_m_dic'] = model_n_tld_m_dic
     return model_n_tld_m_dic
 
