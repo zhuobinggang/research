@@ -3,7 +3,7 @@ import mainichi_paragraph as custom_data
 # from manual_exp.mld import mld
 from sec_paragraph import *
 
-def run():
+def get_mld():
     manual_exp_ld = custom_data.load_customized_loader(file_name='manual_exp', half=2, batch=1, mini=False, shuffle = True)
     mld = manual_exp_ld
     mld = ld_without_opening(mld)
@@ -34,6 +34,7 @@ def split_mlds(mld, n_hundreds = 5):
         mlds.append(mld[ i*100 : i*100 + 100 ])
         # mlds.append((i*100, i*100 + 100))
     return mlds
+
 
 def get_n_average(mld, n_hundreds = 5, test = False):
     # mld = run()
@@ -81,5 +82,11 @@ def resss_to_avg_dic(resss):
 #  >>> resss_to_avg_dic(res_bce_auxs)
 #  {'f1': 0.7046932948502371, 'prec': 0.7509483445729673, 'rec': 0.672867269984917}
 
+G = {ress: None}
 
+def step1()
+    mld = get_mld()
+    res_fl_auxs, res_fls, res_bce_auxs, res_bces = get_n_average(mld, 10)
+    G['ress'] = (res_fl_auxs, res_fls, res_bce_auxs, res_bces)
+    print('First step over, start step2')
 

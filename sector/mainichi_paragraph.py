@@ -26,6 +26,24 @@ def customize_my_dataset_and_save(structed_articles):
     with open('datasets/manual_exp.paragraph.txt', 'w') as the_file:
         the_file.write('\n'.join(manual_exp))
 
+def additional_test_datasets(structed_articles):
+    one_art_per_line = get_one_art_per_line(structed_articles)
+    tests = []
+    tests.append(one_art_per_line[5500:6000])
+    tests.append(one_art_per_line[6000:6500])
+    tests.append(one_art_per_line[6500:7000])
+    tests.append(one_art_per_line[7000:7500])
+    tests.append(one_art_per_line[7500:8000])
+    tests.append(one_art_per_line[8500:9000])
+    tests.append(one_art_per_line[9000:9500])
+    tests.append(one_art_per_line[9500:10000])
+    tests.append(one_art_per_line[10000:10500])
+    tests.append(one_art_per_line[10500:11000])
+    for i, test_ds in enumerate(tests):
+        with open(f'datasets/test{i}.paragraph.txt', 'w') as the_file:
+            the_file.write('\n'.join(test_ds))
+
+
 def customize_my_dataset_and_save_mini(structed_articles):
     one_art_per_line = get_one_art_per_line(structed_articles)
     train = one_art_per_line[0:300]

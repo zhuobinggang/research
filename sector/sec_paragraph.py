@@ -749,3 +749,7 @@ def exp2(max_id = 40):
     return percents
 
 
+def get_res_from_multi_test_datasets_rapid():
+    pass
+
+
