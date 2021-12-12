@@ -760,7 +760,7 @@ def get_10_test_outputs_by_m(m):
 
 def save_model_n_tld_m_output():
     f = open('mess.txt', 'w')
-    f.write(G['model_n_tld_m_output'])
+    f.write(str(G['model_n_tld_m_output']))
     f.close()
 
 def get_res_from_multi_test_datasets_rapid():
