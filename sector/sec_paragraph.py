@@ -749,25 +749,30 @@ def exp2(max_id = 40):
     return percents
 
 
-def get_10_test_dic_by_m(m):
-    dics = []
+def get_10_test_outputs_by_m(m):
+    outputs = []
     for i in range(10):
         # load testset
         tld = custom_data.load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = True)
-        dic = get_test_result_dic(m, tld)
-        dics.append(dic)
-    return dics
+        outs, tars = get_test_result(m, tld)
+        outputs.append(outs)
+    return outputs
+
+def save_model_n_tld_m_output():
+    f = open('mess.txt', 'w')
+    f.write(G['model_n_tld_m_output'])
+    f.close()
 
 def get_res_from_multi_test_datasets_rapid():
-    G['model_n_tld_m_dic'] = []
-    model_n_tld_m_dic = [None,None,None,None]
+    # G['model_n_tld_m_f1'] = [[],[],[],[]]
+    G['model_n_tld_m_output'] = [[],[],[],[]]
     for i in range(40):
-        model_n_tld_m_dic[0] = get_10_test_dic_by_m(t.load(f'save/r01_fl50_{i}.tch'))
-        model_n_tld_m_dic[1] = get_10_test_dic_by_m(t.load(f'save/fl20_{i}.tch'))
-        model_n_tld_m_dic[2] = get_10_test_dic_by_m(t.load(f'save/stand_{i}.tch'))
-        model_n_tld_m_dic[3] = get_10_test_dic_by_m(t.load(f'save/r01_{i}.tch'))
+        G['model_n_tld_m_output'][0].append(get_10_test_outputs_by_m(t.load(f'save/r01_fl50_{i}.tch')))
+        G['model_n_tld_m_output'][1].append(get_10_test_outputs_by_m(t.load(f'save/fl20_{i}.tch')))
+        G['model_n_tld_m_output'][2].append(get_10_test_outputs_by_m(t.load(f'save/stand_{i}.tch')))
+        G['model_n_tld_m_output'][3].append(get_10_test_outputs_by_m(t.load(f'save/r01_{i}.tch')))
         print(i)
         print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        G['model_n_tld_m_dic'] = model_n_tld_m_dic
-    return model_n_tld_m_dic
+        save_model_n_tld_m_output()
+    return None
 
