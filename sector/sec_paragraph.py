@@ -748,12 +748,18 @@ def exp2(max_id = 40):
         percents[3].append(cal_avg_significant_percent_by_m(t.load(f'save/stand_{i}.tch'), tld))
     return percents
 
+# 
+# 
+# 10个测试数据集
+# 
+# 
+
 
 def get_10_test_outputs_by_m(m):
     outputs = []
     for i in range(10):
         # load testset
-        tld = custom_data.load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = True)
+        tld = custom_data.load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = False)
         outs, tars = get_test_result(m, tld)
         outputs.append(outs)
     return outputs

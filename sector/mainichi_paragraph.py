@@ -43,6 +43,17 @@ def write_additional_test_datasets(structed_articles):
         with open(f'datasets/test{i}.paragraph.txt', 'w') as the_file:
             the_file.write('\n'.join(test_ds))
 
+def ld_without_opening(ld):
+    ld = [case for case in ld if case[0][2] != 0]
+    return ld
+
+def read_additional_test_dataset_targets():
+    ress = []
+    for i in range(10):
+        tld = load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = False)
+        tld = ld_without_opening(tld)
+        ress.append([case[0][1][case[0][2]] for case in tld])
+    return ress
 
 def customize_my_dataset_and_save_mini(structed_articles):
     one_art_per_line = get_one_art_per_line(structed_articles)
