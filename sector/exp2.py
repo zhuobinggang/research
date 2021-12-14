@@ -38,6 +38,7 @@ def get_targets():
     return read_additional_test_dataset_targets()
 
 def cal():
+    targets = get_targets()
     methodn = []
     for method in res: # (40, 10, ?)
         testm_avg_f1 = []
