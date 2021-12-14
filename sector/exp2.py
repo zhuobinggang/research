@@ -1,6 +1,6 @@
 # 根据4*10个模型*10个数据集的结果获取4*10个数据集的平均f值
-
 from messup import res
+from mainichi_paragraph import *
 
 # shape: (4, 40, 10, ?) 
 # out: (4, 10)
@@ -33,6 +33,9 @@ def cal_prec_rec_f1_v2(results, targets):
 def cal_f1(outs, tars):
     prec, rec, f1, balanced_acc = cal_prec_rec_f1_v2(outs, tars)
     return f1
+
+def get_targets():
+    return read_additional_test_dataset_targets()
 
 def cal():
     methodn = []
