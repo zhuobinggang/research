@@ -782,3 +782,5 @@ def get_res_from_multi_test_datasets_rapid():
         save_model_n_tld_m_output()
     return None
 
+def cal_method_m_test_n_avg_f1():
+    pass
