@@ -90,6 +90,12 @@ def resave_mess_list():
     f.write(str(G['mess_list']))
     f.close()
 
+def save_g(key, filename = 'mess.txt')
+    f = open(filename, 'w')
+    f.write(str(G[key]))
+    f.close()
+
+
 def get_datas_early_stop_and_parameter_ajust(index,
                                              epochs,
                                              desc,
@@ -552,30 +558,90 @@ def sec_para_standard(ld, max_train_epoch = 3, ld2 = None):
         else:
             train_then_record(max_train_epoch, ld, f'Standard')
 
-def grid_search():
+def cal_f1(m, ld):
+    outs, tars = get_test_result(m, ld)
+    prec, rec, f1, balanced_acc = U.cal_prec_rec_f1_v2(outs, tars)
+    return f1
+
+def train_and_cal_f_every_epoch(m, max_epochs, des):
+    res = []
+    for e in range(max_epochs):
+        loss = train_simple(m, G['ld'], 1)
+        res.append({
+            'f_dev':cal_f1(m, G['devld']), 
+            'f_test':cal_f1(m, G['testld']), 
+            'des': des + f'_e{e}'
+        })
+    return res
+
+def grid_search_aux_fl(auxs, fls, exp_times):
+    results = []
+    for aux in auxs:
+        res_aux = []
+        for fl in fls:
+            res_fl = []
+            for number in range(exp_times):
+                # new model
+                m = Sec_Para(auxiliary_loss_rate=aux, fl_rate=fl)
+                res_fl.append(train_and_cal_f_every_epoch(m, 3, f'aux_fl:aux{aux}_fl{fl}_number{number}'))
+            res_aux.append(res_fl)
+        results.append(res_aux)
+    return results
+
+def grid_search_bce(exp_times):
+    results = []
+    for number in range(exp_times):
+        m = Sec_Para_Standard_One_Sep_Use_Cls()
+        results.append(train_and_cal_f_every_epoch(m, 3, f'bce:number{number}'))
+    return results
+
+def grid_search_fl(fls, exp_times)
+    results = []
+    for fl in fls:
+        res_fl = []
+        for number in range(exp_times):
+            m = Sec_Para_Standard_One_Sep_Use_Cls(fl_rate = fl)
+            res_fl.append(train_and_cal_f_every_epoch(m, 3, f'fl:fl{fl}_number{number}'))
+        results.append(res_fl)
+    return results
+
+def grid_search_aux(auxs, exp_times):
+    results = []
+    for aux in auxs:
+        res_aux = []
+        for number in range(exp_times):
+            m = Sec_Para(auxiliary_loss_rate=aux)
+            res_aux.append(train_and_cal_f_every_epoch(m, 3, f'aux:aux{aux}_number{number}'))
+        results.append(res_aux)
+    return results
+
+def grid_search_pc():
+    G['grid_search_results'] = []
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    exp_times = 20
-    epochs = 2
-    # Ours + FL Loss
-    for rate in [0.0, 0.1, 0.2]:
-        for fl_rate in [1.0, 2.0, 0.5]:
-            for _ in range(exp_times):
-                G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate, fl_rate=fl_rate)
-                train_then_record(epochs, G['devld'], f'Mix rate = {rate} fl_rate = {fl_rate}', G['testld'], record_at_last = True)
-    # Stand
-    for _ in range(exp_times):
-        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-        train_then_record(epochs, G['devld'], f'Standard', G['testld'], record_at_last = True)
-    # FL
-    for fl_rate in [1.0, 2.0, 0.5]:
-        for _ in range(exp_times):
-            G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
-            train_then_record(epochs, G['devld'], f'FL rate = {fl_rate}', G['testld'], record_at_last = True)
-    # Ours
-    for rate in [0.0, 0.1, 0.2]:
-        for _ in range(exp_times):
-            G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate)
-            train_then_record(epochs, G['devld'], f'Ours rate = {rate}', G['testld'], record_at_last = True)
+    # BCE (3)
+    G['grid_search_results'].append(grid_search_bce(
+        exp_times = 10,
+    ))
+    save_g('grid_search_results')
+    # AUX (9)
+    G['grid_search_results'].append(grid_search_aux(auxs = [0.1, 0.2, 0.3], exp_times = 10))
+    save_g('grid_search_results')
+    # FL (12)
+    G['grid_search_results'].append(grid_search_fl(fls = [0.5, 1.0, 2.0, 5.0], exp_times = 10))
+    save_g('grid_search_results')
+
+def grid_search_pt():
+    G['grid_search_results'] = []
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    # FL + AUX (36)
+    G['grid_search_results'].append(grid_search_aux_fl(
+        auxs = [0.0, 0.1, 0.2], 
+        fls = [0.5, 1.0, 2.0, 5.0], 
+        exp_times = 10, 
+    ))
+    save_g('grid_search_results')
+
+
 
 # NOTE: 根据实验结果现在只需要重新执行r01+fl50
 def train_and_save(start_index = 0):

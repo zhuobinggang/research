@@ -194,7 +194,7 @@ def fit_sigmoided_to_label_list(out):
 
 # 分裂sector, 2vs2的时候，同时判断三个分割点
 class Sector_Split(nn.Module):
-  def __init__(self, fl_rate = 0, learning_rate = 2e-5, ss_len_limit = 4, auxiliary_loss_rate = 0.5):
+  def __init__(self, fl_rate = 0, learning_rate = 5e-6, ss_len_limit = 4, auxiliary_loss_rate = 0):
     super().__init__()
     self.ss_len_limit = ss_len_limit
     self.fl_rate = fl_rate
