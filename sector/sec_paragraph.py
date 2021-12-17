@@ -595,7 +595,7 @@ def grid_search_bce(exp_times):
         results.append(train_and_cal_f_every_epoch(m, 3, f'bce:number{number}'))
     return results
 
-def grid_search_fl(fls, exp_times)
+def grid_search_fl(fls, exp_times):
     results = []
     for fl in fls:
         res_fl = []
