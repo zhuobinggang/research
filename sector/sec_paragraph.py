@@ -90,7 +90,7 @@ def resave_mess_list():
     f.write(str(G['mess_list']))
     f.close()
 
-def save_g(key, filename = 'mess.txt')
+def save_g(key, filename = 'mess.txt'):
     f = open(filename, 'w')
     f.write(str(G[key]))
     f.close()
