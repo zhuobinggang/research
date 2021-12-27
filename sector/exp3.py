@@ -1,4 +1,5 @@
 from mess_pc import res_pc
+from mess_pt import res_pt
 import numpy as np
 
 def dic_to_tuple(dic):
@@ -66,4 +67,16 @@ def transform_fl():
                 m[i] = (epoch['f_dev'], epoch['f_test'])
     return np.array(fl)
                 
+
+# auxs = [0.0, 0.1, 0.2], 
+# fls = [0.5, 1.0, 2.0, 5.0], 
+# return (3, 4, 10, 3, 2)
+def transform_fl_aux():
+    res = res_pt[0].copy() 
+    for aux in res:
+        for fl in aux:
+            for m in fl:
+                for i, e in enumerate(m):
+                    m[i] = dic_to_tuple(e)
+    return np.array(res)
 
