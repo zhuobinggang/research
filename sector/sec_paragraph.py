@@ -645,7 +645,7 @@ def grid_search_pt():
     ))
     save_g('grid_search_results')
 
-# 忘记了还有一个
+# 忘记了还有一个0.3
 def grid_search_pt_plus():
     G['grid_search_results'] = []
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
@@ -660,6 +660,7 @@ def grid_search_pt_plus():
 # NOTE: 根据实验结果现在只需要重新执行r01+fl50
 def train_and_save(start_index = 0):
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    start_index = 0
     # aux loss + fl loss
     # for i in range(40):
     #     rate = 0.1
@@ -669,29 +670,29 @@ def train_and_save(start_index = 0):
     #     train_simple(G['m'], G['ld'], 1)
     #     t.save(m, f'save/r01_fl50_{i + start_index}.tch')
     # stand
-    start_index = 10
-    for i in range(30):
-        print(f'save/stand_{i + start_index}.tch')
-        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
-        train_simple(G['m'], G['ld'], 1)
-        train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/stand_{i + start_index}.tch')
+    # for i in range(30):
+    #     print(f'save/stand_{i + start_index}.tch')
+    #     G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0)
+    #     train_simple(G['m'], G['ld'], 1)
+    #     train_simple(G['m'], G['ld'], 1)
+    #     t.save(m, f'save/stand_{i + start_index}.tch')
     # FL
-    for i in range(30):
-        print(f'save/fl20_{i + start_index}.tch')
-        fl_rate = 2.0
-        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=-1.0, fl_rate = fl_rate)
+    for i in range(10):
+        model_path = f'save/fl20_{i + start_index}_e3.tch'
+        print(model_path)
+        G['m'] = m = Sec_Para_Standard_One_Sep_Use_Cls(fl_rate = 2.0)
         train_simple(G['m'], G['ld'], 1)
         train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/fl20_{i + start_index}.tch')
+        train_simple(G['m'], G['ld'], 1)
+        t.save(m, model_path)
     # aux loss only
-    for i in range(30):
-        print(f'save/r01_{i + start_index}.tch')
-        rate = 0.1
-        G['m'] = m = Sec_Para(learning_rate=5e-6, ss_len_limit=4, auxiliary_loss_rate=rate)
+    for i in range(10):
+        model_path = f'save/r02_{i + start_index}.tch'
+        print(model_path)
+        G['m'] = m = Sec_Para(auxiliary_loss_rate=0.2)
         train_simple(G['m'], G['ld'], 1)
         train_simple(G['m'], G['ld'], 1)
-        t.save(m, f'save/r01_{i + start_index}.tch')
+        t.save(m, model_path)
 
 # 因为随着FL的增加性能一直在提高，所以需要探索极限
 def grid_search_plus():
