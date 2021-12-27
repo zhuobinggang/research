@@ -619,16 +619,20 @@ def grid_search_pc():
     G['grid_search_results'] = []
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     # BCE (3)
+    print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     G['grid_search_results'].append(grid_search_bce(
         exp_times = 10,
     ))
     save_g('grid_search_results')
+    print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     # AUX (9)
     G['grid_search_results'].append(grid_search_aux(auxs = [0.1, 0.2, 0.3], exp_times = 10))
     save_g('grid_search_results')
+    print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     # FL (12)
     G['grid_search_results'].append(grid_search_fl(fls = [0.5, 1.0, 2.0, 5.0], exp_times = 10))
     save_g('grid_search_results')
+    print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 def grid_search_pt():
     G['grid_search_results'] = []
