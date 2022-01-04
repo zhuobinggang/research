@@ -645,16 +645,18 @@ def grid_search_pt():
     ))
     save_g('grid_search_results')
 
-# 忘记了还有一个0.3
-def grid_search_pt_plus():
+# 忘记了还有一个0.0
+def grid_search_pc_plus():
     G['grid_search_results'] = []
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    # FL + AUX (36)
-    G['grid_search_results'].append(grid_search_aux_fl(
-        auxs = [0.3], 
-        fls = [0.5, 1.0, 2.0, 5.0], 
-        exp_times = 10, 
-    ))
+    # # FL + AUX (36)
+    # G['grid_search_results'].append(grid_search_aux_fl(
+    #     auxs = [0.3], 
+    #     fls = [0.5, 1.0, 2.0, 5.0], 
+    #     exp_times = 10, 
+    # ))
+    # save_g('grid_search_results')
+    G['grid_search_results'].append(grid_search_aux(auxs = [0.0], exp_times = 10))
     save_g('grid_search_results')
 
 # NOTE: 根据实验结果现在只需要重新执行r01+fl50
@@ -824,7 +826,7 @@ def exp2(max_id = 40):
     percents = [[],[],[],[]]
     for i in range(max_id):
         percents[0].append(cal_avg_significant_percent_by_m(t.load(f'save/r01_fl50_{i}.tch'), tld))
-        percents[1].append(cal_avg_significant_percent_by_m(t.load(f'save/fl20_{i}.tch'), tld))
+        percents[1].append(cal_avg_significant_percent_by_m(t.load(f'save/fl20_{i}_e3.tch'), tld))
         percents[2].append(cal_avg_significant_percent_by_m(t.load(f'save/r01_{i}.tch'), tld))
         percents[3].append(cal_avg_significant_percent_by_m(t.load(f'save/stand_{i}.tch'), tld))
     return percents
@@ -853,11 +855,11 @@ def save_model_n_tld_m_output():
 def get_res_from_multi_test_datasets_rapid():
     # G['model_n_tld_m_f1'] = [[],[],[],[]]
     G['model_n_tld_m_output'] = [[],[],[],[]]
-    for i in range(40):
-        G['model_n_tld_m_output'][0].append(get_10_test_outputs_by_m(t.load(f'save/r01_fl50_{i}.tch')))
-        G['model_n_tld_m_output'][1].append(get_10_test_outputs_by_m(t.load(f'save/fl20_{i}.tch')))
+    for i in range(10):
+        G['model_n_tld_m_output'][0].append(get_10_test_outputs_by_m(t.load(f'save/r02_fl50_{i}.tch')))
+        G['model_n_tld_m_output'][1].append(get_10_test_outputs_by_m(t.load(f'save/fl20_{i}_e3.tch')))
         G['model_n_tld_m_output'][2].append(get_10_test_outputs_by_m(t.load(f'save/stand_{i}.tch')))
-        G['model_n_tld_m_output'][3].append(get_10_test_outputs_by_m(t.load(f'save/r01_{i}.tch')))
+        G['model_n_tld_m_output'][3].append(get_10_test_outputs_by_m(t.load(f'save/r02_{i}.tch')))
         print(i)
         print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         save_model_n_tld_m_output()
