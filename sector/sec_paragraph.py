@@ -856,7 +856,7 @@ def get_res_from_multi_test_datasets_rapid():
     # G['model_n_tld_m_f1'] = [[],[],[],[]]
     G['model_n_tld_m_output'] = [[],[],[],[]]
     for i in range(10):
-        G['model_n_tld_m_output'][0].append(get_10_test_outputs_by_m(t.load(f'save/r02_fl50_{i}.tch')))
+        G['model_n_tld_m_output'][0].append(get_10_test_outputs_by_m(t.load(f'save/r01_fl50_{i}.tch')))
         G['model_n_tld_m_output'][1].append(get_10_test_outputs_by_m(t.load(f'save/fl20_{i}_e3.tch')))
         G['model_n_tld_m_output'][2].append(get_10_test_outputs_by_m(t.load(f'save/stand_{i}.tch')))
         G['model_n_tld_m_output'][3].append(get_10_test_outputs_by_m(t.load(f'save/r02_{i}.tch')))
