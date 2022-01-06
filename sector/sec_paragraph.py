@@ -615,7 +615,7 @@ def grid_search_aux(auxs, exp_times):
         results.append(res_aux)
     return results
 
-def grid_search_pc():
+def grid_search_pt():
     G['grid_search_results'] = []
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     # BCE (3)
@@ -625,7 +625,7 @@ def grid_search_pc():
     ))
     save_g('grid_search_results')
     print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    # AUX (9)
+    # AUX (12)
     G['grid_search_results'].append(grid_search_aux(auxs = [0.0, 0.1, 0.2, 0.3], exp_times = 10))
     save_g('grid_search_results')
     print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -634,10 +634,10 @@ def grid_search_pc():
     save_g('grid_search_results')
     print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-def grid_search_pt():
+def grid_search_pc():
     G['grid_search_results'] = []
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    # FL + AUX (36)
+    # FL + AUX (48)
     G['grid_search_results'].append(grid_search_aux_fl(
         auxs = [0.0, 0.1, 0.2, 0.3], 
         fls = [0.5, 1.0, 2.0, 5.0], 
