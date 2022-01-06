@@ -854,6 +854,7 @@ def get_res_from_multi_test_datasets_rapid():
     return None
 
 # 把之前的结果也整一下，(fl2.0 + e2), (bce + aux0.1 + e2)
+# NOTE: OUTPUT: res_4method_10_m_10_testset_plus.py
 def get_res_from_multi_test_datasets_rapid_plus():
     # G['model_n_tld_m_f1'] = [[],[],[],[]]
     G['model_n_tld_m_output'] = [[],[]]
