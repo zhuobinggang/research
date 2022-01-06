@@ -626,7 +626,7 @@ def grid_search_pc():
     save_g('grid_search_results')
     print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     # AUX (9)
-    G['grid_search_results'].append(grid_search_aux(auxs = [0.1, 0.2, 0.3], exp_times = 10))
+    G['grid_search_results'].append(grid_search_aux(auxs = [0.0, 0.1, 0.2, 0.3], exp_times = 10))
     save_g('grid_search_results')
     print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     # FL (12)
@@ -639,25 +639,12 @@ def grid_search_pt():
     init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     # FL + AUX (36)
     G['grid_search_results'].append(grid_search_aux_fl(
-        auxs = [0.0, 0.1, 0.2], 
+        auxs = [0.0, 0.1, 0.2, 0.3], 
         fls = [0.5, 1.0, 2.0, 5.0], 
         exp_times = 10, 
     ))
     save_g('grid_search_results')
 
-# 忘记了还有一个0.0
-def grid_search_pc_plus():
-    G['grid_search_results'] = []
-    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
-    # # FL + AUX (36)
-    # G['grid_search_results'].append(grid_search_aux_fl(
-    #     auxs = [0.3], 
-    #     fls = [0.5, 1.0, 2.0, 5.0], 
-    #     exp_times = 10, 
-    # ))
-    # save_g('grid_search_results')
-    G['grid_search_results'].append(grid_search_aux(auxs = [0.0], exp_times = 10))
-    save_g('grid_search_results')
 
 # NOTE: 根据实验结果现在只需要重新执行r01+fl50
 def train_and_save(start_index = 0):

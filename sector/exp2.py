@@ -53,6 +53,6 @@ def cal(res):
             avg_f1 = np.average(f1s)
             testm_avg_f1.append(avg_f1)
         methodn.append(testm_avg_f1)
-    return methodn
+    return np.array(methodn).transpose()
 
 
