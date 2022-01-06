@@ -1,5 +1,6 @@
 # 根据4*10个模型*10个数据集的结果获取4*10个数据集的平均f值
-from messup import res
+# from messup import res
+from mess import res
 from mainichi_paragraph import *
 import numpy as np
 
