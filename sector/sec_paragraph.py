@@ -852,6 +852,7 @@ def save_model_n_tld_m_output():
     f.write(str(G['model_n_tld_m_output']))
     f.close()
 
+# NOTE: OUTPUT: res_4method_10_m_10_testset.py
 def get_res_from_multi_test_datasets_rapid():
     # G['model_n_tld_m_f1'] = [[],[],[],[]]
     G['model_n_tld_m_output'] = [[],[],[],[]]
@@ -860,6 +861,18 @@ def get_res_from_multi_test_datasets_rapid():
         G['model_n_tld_m_output'][1].append(get_10_test_outputs_by_m(t.load(f'save/fl20_{i}_e3.tch')))
         G['model_n_tld_m_output'][2].append(get_10_test_outputs_by_m(t.load(f'save/stand_{i}.tch')))
         G['model_n_tld_m_output'][3].append(get_10_test_outputs_by_m(t.load(f'save/r02_{i}.tch')))
+        print(i)
+        print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        save_model_n_tld_m_output()
+    return None
+
+# 把之前的结果也整一下，(fl2.0 + e2), (bce + aux0.1 + e2)
+def get_res_from_multi_test_datasets_rapid_plus():
+    # G['model_n_tld_m_f1'] = [[],[],[],[]]
+    G['model_n_tld_m_output'] = [[],[]]
+    for i in range(10):
+        G['model_n_tld_m_output'][0].append(get_10_test_outputs_by_m(t.load(f'save/fl20_{i}.tch')))
+        G['model_n_tld_m_output'][1].append(get_10_test_outputs_by_m(t.load(f'save/r01_{i}.tch')))
         print(i)
         print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         save_model_n_tld_m_output()
