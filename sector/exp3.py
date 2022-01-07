@@ -13,9 +13,10 @@ def dic_to_tuple(dic):
 #        [0.67268398, 0.6818272 ]])
 # 分析：最好的是(epoch: 2)，dev和test没有区别
 # 不需要重新训练stand
-# array([0.66480214, *0.68100694, 0.67725559])
-def transform_bce():
-    bce = res_pc[0].copy()
+# exp0: array([0.66480214, *0.68100694, 0.67725559]) #NOTE: trained
+# exp1: array([0.66093464, 0.67162706, *0.68659469])
+def transform_bce(res = res_pc):
+    bce = res[0].copy()
     for m in bce:
         for i, e in enumerate(m):
             m[i] = dic_to_tuple(e)
@@ -28,8 +29,8 @@ def transform_bce():
 #        [0.67801763, 0.68657151, 0.68233489]])
 # 分析：最好的是(aux: 0.2, epoch: 2), 需要重新训练model
 # return: (4, 10, 3, 2)
-def transform_aux():
-    aux = res_pc[1].copy() # shape: (3, 10, 3)
+def transform_aux(res = res_pc):
+    aux = res[1].copy() # shape: (3, 10, 3)
     for aux_rate in aux:
         for i, number in enumerate(aux_rate):
             aux_rate[i] = [(epoch['f_dev'], epoch['f_test']) for epoch in number]
@@ -62,8 +63,8 @@ def transform_aux():
 #        [0.65921823, 0.67949128, 0.67835334],
 #        [0.6755803 , 0.68195704, *0.68604797],
 #        [0.65090946, 0.68035582, 0.682186  ]])
-def transform_fl():
-    fl = res_pc[2].copy() # shape: (4, 10, 3)
+def transform_fl(res = res_pc):
+    fl = res[2].copy() # shape: (4, 10, 3)
     for method in fl:
         for m in method:
             for i, epoch in enumerate(m):
@@ -95,8 +96,8 @@ def transform_fl():
 #        [0.67364332, 0.69268254, 0.68508181],
 #        [0.69024683, 0.68994638, 0.68335526]])
 # 而总体来说最好是a01 + 5.0 + 2，意外的不需要重新训练
-def transform_fl_aux():
-    res = res_pt[0].copy() 
+def transform_fl_aux(res = res_pt):
+    res = res[0].copy() 
     for aux in res:
         for fl in aux:
             for m in fl:
