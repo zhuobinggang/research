@@ -621,8 +621,8 @@ def grid_search_aux(auxs, exp_times):
     return results
 
 def grid_search_pt():
-    # G['grid_search_results'] = []
-    # init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
+    G['grid_search_results'] = []
+    init_G_Symmetry_Mainichi(half=2, batch=4, mini=False)
     # # BCE (3)
     # print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     # G['grid_search_results'].append(grid_search_bce(
