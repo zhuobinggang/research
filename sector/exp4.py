@@ -1,6 +1,7 @@
 # 人手实验
 from sec_paragraph import *
 from manual_exp.mld2 import datas as mld
+import numpy as np
 
 def get_res_from_mld_rapid():
     res = [[], [], [], []]
@@ -13,6 +14,5 @@ def get_res_from_mld_rapid():
     f = open('get_res_from_mld_rapid.txt', 'w')
     f.write(str(res))
     f.close()
-    return res
-
+    return np.array(res)
 
