@@ -563,6 +563,11 @@ def cal_f1(m, ld):
     prec, rec, f1, balanced_acc = U.cal_prec_rec_f1_v2(outs, tars)
     return f1
 
+def cal_f1_and_others(m, ld):
+    outs, tars = get_test_result(m, ld)
+    prec, rec, f1, balanced_acc = U.cal_prec_rec_f1_v2(outs, tars)
+    return prec, rec, f1
+
 def train_and_cal_f_every_epoch(m, max_epochs, des):
     res = []
     for e in range(max_epochs):
@@ -868,3 +873,6 @@ def get_res_from_multi_test_datasets_rapid_plus():
 
 def cal_method_m_test_n_avg_f1():
     pass
+
+
+

@@ -38,3 +38,16 @@ f = open('datas2.txt', 'w')
 f.write(str(ds))
 f.close()
 ```
+
+用机器跑实验
+
+```py
+from manual_exp.mld2 import datas
+import torch as t
+m = t.load('save/r01_fl50_0.tch')
+from sec_paragraph import *
+cal_f1(m, datas)
+>>> 0.7142857142857143
+```
+
+
