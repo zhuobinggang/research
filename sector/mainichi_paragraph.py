@@ -47,6 +47,14 @@ def ld_without_opening(ld):
     ld = [case for case in ld if case[0][2] != 0]
     return ld
 
+def read_additional_test_ds():
+    tlds = []
+    for i in range(10):
+        tld = load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = False)
+        tld = ld_without_opening(tld)
+        tlds.append(tld)
+    return tlds
+
 def read_additional_test_dataset_targets():
     ress = []
     for i in range(10):
