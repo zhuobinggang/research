@@ -1,5 +1,6 @@
 # cross validation: fl2.0 + e2 vs aux0.1 + fl5.0 + e2
 from sec_paragraph import *
+from mainichi_paragraph import read_additional_test_ds
 
 cal_f1 = cal_f1
 
