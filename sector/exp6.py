@@ -27,7 +27,7 @@ def yes():
         end = i * 10 + 10
         fss = [] # 10 * 10
         for model_index in range(start, end):
-            fss.append(cal_f1s_one_model_vs_tlds(t.load(f'save/fl20_{model_index}.tch')))
+            fss.append(cal_f1s_one_model_vs_tlds(t.load(f'save/fl20_{model_index}.tch'), tlds))
         fsss_fl.append(fss)
         write_to('fsss_fl.txt', fsss_fl)
     # aux0.1 + fl5.0 + e2
@@ -38,7 +38,7 @@ def yes():
         end = i * 10 + 10
         fss = [] # 10 * 10
         for model_index in range(start, end):
-            fss.append(cal_f1s_one_model_vs_tlds(t.load(f'save/r01_fl50_{model_index}.tch')))
+            fss.append(cal_f1s_one_model_vs_tlds(t.load(f'save/r01_fl50_{model_index}.tch'), tlds))
         fsss_my.append(fss)
         write_to('fsss_my.txt', fsss_my)
 
