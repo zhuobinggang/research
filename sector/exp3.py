@@ -70,6 +70,14 @@ def transform_fl(res = res_pc):
             for i, epoch in enumerate(m):
                 m[i] = (epoch['f_dev'], epoch['f_test'])
     return np.array(fl)
+
+def transform_fl_free(fl):
+    fl = fl.copy()
+    for method in fl:
+        for m in method:
+            for i, epoch in enumerate(m):
+                m[i] = (epoch['f_dev'], epoch['f_test'])
+    return np.array(fl)
                 
 
 # auxs = [0.0, 0.1, 0.2], 
