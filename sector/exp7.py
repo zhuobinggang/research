@@ -6,6 +6,27 @@ import torch as t
 
 def beuty_output(m, idx):
     out, tar = dry_run_output_posibility(m, mld[idx])
-    return round(out.item(), 4), round(tar.item(), 4)
+    return round(out.item(), 4)
 
+def get_all_target_one_idxs():
+    res = []
+    for idx, case in enumerate(mld):
+        ss, ls, pos = case[0]
+        if ls[pos] == 1:
+            res.append(idx)
+    return res
+
+LENGTH = 5
+aux_fl_paths = [f'save/r01_fl50_{i}.tch' for i in range(LENGTH)]
+fl_paths = [f'save/fl20_{i}_e3.tch' for i in range(LENGTH)]
+aux_paths = [f'save/r02_{i}.tch' for i in range(LENGTH)]
+stand_paths = [f'save/stand_{i}.tch' for i in range(LENGTH)]
+
+def multi_res(paths, idxs):
+    res = []
+    for i in range(length):
+        m = t.load()
+        m_cases = [beuty_output(m, idx) for idx in idxs]
+        res.append(m_cases)
+    return res
 
