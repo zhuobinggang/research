@@ -24,8 +24,8 @@ stand_paths = [f'save/stand_{i}.tch' for i in range(LENGTH)]
 
 def multi_res(paths, idxs):
     res = []
-    for i in range(length):
-        m = t.load()
+    for path in paths:
+        m = t.load(path)
         m_cases = [beuty_output(m, idx) for idx in idxs]
         res.append(m_cases)
     return res
