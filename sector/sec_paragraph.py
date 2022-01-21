@@ -95,37 +95,6 @@ def save_g(key, filename = 'mess.txt'):
     f.write(str(G[key]))
     f.close()
 
-
-def get_datas_early_stop_and_parameter_ajust(index,
-                                             epochs,
-                                             desc,
-                                             dic_to_send=None,
-                                             url=None):
-    dev_losses = []  # For early stop
-    train_losses = []
-    tested = []
-    for i in range(epochs):
-        train_losses += train_simple(G['m'], G['ld'], 1)
-        dev_loss = cal_total_loss(G['m'], G['devld'])
-        dev_losses.append(dev_loss)
-        dic_to_analyse = get_test_result_dic(G['m'], G['testld'])
-        dic_to_analyse['index'] = i  # Save index info
-        dic_to_analyse['dev_loss'] = dev_loss  # Save index info
-        dev_result_dic = get_test_result_dic(G['m'], G['devld'])
-        dic_to_analyse['dev_result_dic'] = dev_result_dic
-        tested.append(dic_to_analyse)
-    test_result = tested[np.argmin(dev_losses)]
-    print(test_result)
-    # test_result['dev_losses'] = dev_losses
-    G['mess_list'].append(test_result)  # 将valid loss最小对应的dic放进mess_list
-    dic = test_result
-    if dic_to_send is not None:
-        dic = {**dic, **dic_to_send}
-    else:
-        pass
-    R.request_my_logger(dic, desc, url)
-
-
 def raw_atts_idss(m, ld, no_flat = False):
     atts = []
     idss = []
@@ -297,6 +266,54 @@ def dic_index_to_chrome_console(toker, dic, idx, labels = [-1,-1,-1,-1]):
     text = f'generate({arg1}, {arg2}, {arg3})'
     print(text)
 
+def cal_f1(m, ld):
+    outs, tars = get_test_result(m, ld)
+    prec, rec, f1, balanced_acc = U.cal_prec_rec_f1_v2(outs, tars)
+    return f1
+
+def cal_f1_and_others(m, ld):
+    outs, tars = get_test_result(m, ld)
+    prec, rec, f1, balanced_acc = U.cal_prec_rec_f1_v2(outs, tars)
+    return prec, rec, f1
+
+def train_and_cal_f_every_epoch(m, max_epochs, des):
+    res = []
+    for e in range(max_epochs):
+        loss = train_simple(m, G['ld'], 1)
+        res.append({
+            'f_dev':cal_f1(m, G['devld']), 
+            'f_test':cal_f1(m, G['testld']), 
+            'des': des + f'_e{e}'
+        })
+    return res
+
+# 跟dry_run不同的地方在于返回的不是int而是概率
+def dry_run_output_posibility(self, mass):
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    sss, labels, poss = self.handle_mass(mass)
+    pos_outs = []
+    pos_labels = []
+    # labels = B.flatten_num_lists(labels) # 这里要保留所有所有[sep]的label
+    for ss, ls, pos in zip(sss, labels, poss):  # Different Batch
+        # pos: number start from 0
+        if pos == 0:
+            pass  # Don’t run the first sentence because it is 100% correct
+        else:
+            cls, seps, _ = B.compress_by_ss_then_pad(
+                self.bert, self.toker, ss, pos, self.ss_len_limit)
+            assert len(seps) == len(ss)
+            ls = t.LongTensor(ls).cuda()  # (ss_len), (0 or 1)
+            pos_outs.append(self.classifier(seps[pos - 1]).view(1))
+            pos_labels.append(ls[pos])
+    if len(pos_outs) < 1:
+        return t.LongTensor([]), t.LongTensor([])
+    else:
+        pos_outs = t.stack(pos_outs).cuda()
+        pos_labels = t.LongTensor(pos_labels).cuda()
+        assert len(pos_outs.shape) == 2
+        assert len(pos_labels.shape) == 1
+        assert pos_outs.shape[0] == pos_labels.shape[0]
+        return pos_outs, pos_labels
 
 # ================================== Auxiliary Methods ====================================
 
@@ -444,27 +461,6 @@ class Sec_Para_Standard_One_Sep_Use_Cls(Sector_Split):
 
 # ================================== Model ====================================
 
-
-def cal_f1(m, ld):
-    outs, tars = get_test_result(m, ld)
-    prec, rec, f1, balanced_acc = U.cal_prec_rec_f1_v2(outs, tars)
-    return f1
-
-def cal_f1_and_others(m, ld):
-    outs, tars = get_test_result(m, ld)
-    prec, rec, f1, balanced_acc = U.cal_prec_rec_f1_v2(outs, tars)
-    return prec, rec, f1
-
-def train_and_cal_f_every_epoch(m, max_epochs, des):
-    res = []
-    for e in range(max_epochs):
-        loss = train_simple(m, G['ld'], 1)
-        res.append({
-            'f_dev':cal_f1(m, G['devld']), 
-            'f_test':cal_f1(m, G['testld']), 
-            'des': des + f'_e{e}'
-        })
-    return res
 
 def grid_search_aux_fl(auxs, fls, exp_times):
     results = []
