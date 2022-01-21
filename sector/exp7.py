@@ -30,3 +30,9 @@ def multi_res(paths, idxs):
         res.append(m_cases)
     return res
 
+def run():
+    aux = multi_res(aux_paths, idxs)
+    fl = multi_res(fl_paths, idxs)
+    aux_fl = multi_res(aux_fl_paths, idxs)
+    stand = multi_res(stand_paths, idxs)
+    return aux_fl, aux, fl, stand
