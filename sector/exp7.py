@@ -16,11 +16,11 @@ LOADER_PATH = 'manual_exp'
 def load_mld():
     return load_customized_loader_org(file_name = LOADER_PATH, half = 2, shuffle = False, mini = False)
 
-def beuty_output(m, idx, ld = mld):
+def beuty_output(m, idx, ld):
     out, tar = dry_run_output_posibility(m, ld[idx])
     return round(out.item(), 4)
 
-def get_all_target_one_idxs(ld = mld):
+def get_all_target_one_idxs(ld):
     res = []
     for idx, case in enumerate(ld):
         ss, ls, pos = case[0]
@@ -29,7 +29,7 @@ def get_all_target_one_idxs(ld = mld):
     return res
 
 
-def multi_res(paths, idxs, ld = mld):
+def multi_res(paths, idxs, ld):
     res = []
     for path in paths:
         m = t.load(path)
@@ -37,7 +37,7 @@ def multi_res(paths, idxs, ld = mld):
         res.append(m_cases)
     return res
 
-def run(idxs, ld = mld):
+def run(idxs, ld):
     aux = multi_res(aux_paths, idxs, ld)
     fl = multi_res(fl_paths, idxs, ld)
     aux_fl = multi_res(aux_fl_paths, idxs, ld)
