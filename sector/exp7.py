@@ -3,7 +3,7 @@
 # from manual_exp.mld import mld
 # NOTE: 不知道为什么保存下来的mld py文件会缺字，下次直接从manual exp文件里读，不要shuffle，不然找不到对应了
 from sec_paragraph import dry_run_output_posibility
-from mainichi_paragraph import load_customized_loader_org
+from mainichi_paragraph import load_customized_loader
 import torch as t
 
 LENGTH = 5
@@ -14,7 +14,7 @@ stand_paths = [f'save/stand_{i}.tch' for i in range(LENGTH)]
 LOADER_PATH = 'manual_exp' 
 
 def load_mld():
-    return load_customized_loader_org(file_name = LOADER_PATH, half = 2, shuffle = False, mini = False)
+    return load_customized_loader(file_name = LOADER_PATH, half = 2, batch = 1, shuffle = False, mini = False)
 
 def beuty_output(m, idx, ld):
     out, tar = dry_run_output_posibility(m, ld[idx])
@@ -23,7 +23,7 @@ def beuty_output(m, idx, ld):
 def get_all_target_one_idxs(ld):
     res = []
     for idx, case in enumerate(ld):
-        ss, ls, pos = case
+        ss, ls, pos = case[0]
         if ls[pos] == 1:
             res.append(idx)
     return res
