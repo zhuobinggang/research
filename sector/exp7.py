@@ -23,7 +23,7 @@ def beuty_output(m, idx, ld):
 def get_all_target_one_idxs(ld):
     res = []
     for idx, case in enumerate(ld):
-        ss, ls, pos = case[0]
+        ss, ls, pos = case
         if ls[pos] == 1:
             res.append(idx)
     return res
