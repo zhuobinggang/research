@@ -1,8 +1,20 @@
 # 考察：为了证明举例没有意义，对于一个case，验证同一个手法的不同模型得出的结果各异。
-from manual_exp.mld2 import datas as mld2 
-from manual_exp.mld import mld
+# from manual_exp.mld2 import datas as mld2 
+# from manual_exp.mld import mld
+# NOTE: 不知道为什么保存下来的mld py文件会缺字，下次直接从manual exp文件里读，不要shuffle，不然找不到对应了
 from sec_paragraph import dry_run_output_posibility
+from mainichi_paragraph import load_customized_loader_org
 import torch as t
+
+LENGTH = 5
+aux_fl_paths = [f'save/r01_fl50_{i}.tch' for i in range(LENGTH)]
+fl_paths = [f'save/fl20_{i}_e3.tch' for i in range(LENGTH)]
+aux_paths = [f'save/r02_{i}.tch' for i in range(LENGTH)]
+stand_paths = [f'save/stand_{i}.tch' for i in range(LENGTH)]
+LOADER_PATH = 'manual_exp' 
+
+def load_mld():
+    return load_customized_loader_org(file_name = LOADER_PATH, half = 2, shuffle = False, mini = False)
 
 def beuty_output(m, idx, ld = mld):
     out, tar = dry_run_output_posibility(m, ld[idx])
@@ -16,11 +28,6 @@ def get_all_target_one_idxs(ld = mld):
             res.append(idx)
     return res
 
-LENGTH = 5
-aux_fl_paths = [f'save/r01_fl50_{i}.tch' for i in range(LENGTH)]
-fl_paths = [f'save/fl20_{i}_e3.tch' for i in range(LENGTH)]
-aux_paths = [f'save/r02_{i}.tch' for i in range(LENGTH)]
-stand_paths = [f'save/stand_{i}.tch' for i in range(LENGTH)]
 
 def multi_res(paths, idxs, ld = mld):
     res = []
