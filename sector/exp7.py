@@ -24,7 +24,7 @@ def get_all_target_one_idxs(ld):
     res = []
     for idx, case in enumerate(ld):
         ss, ls, pos = case[0]
-        if ls[pos] == 1:
+        if (pos != 0 and ls[pos] == 1):
             res.append(idx)
     return res
 
