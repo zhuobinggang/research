@@ -47,10 +47,10 @@ def cal_mean_res(idxs, ld):
 
 def best_idx(ress, max_idx):
     assert len(ress) == 4 
-    assert ress[0].shape == (5, 100)
+    # assert ress[0].shape == (5, 100)
     ress = [res.mean(0) for res in ress]
     ress = np.array(ress)
-    assert ress.shape == (4, 100)
+    # assert ress.shape == (4, 100)
     ress = ress.transpose()
     results = []
     for idx, col in enumerate(ress):
@@ -59,17 +59,25 @@ def best_idx(ress, max_idx):
     return results
 
 def best_idx_map_to_org_idx(ress, max_idx, ld, org_idxs):
-    best_idx_out_in_range = best_idx(ress, max_idx, ld)
+    best_idx_out_in_range = best_idx(ress, max_idx)
     return [(org_idxs[idx], ld[org_idxs[idx]], out) for idx, out in best_idx_out_in_range]
 
 def run():
     ld = load_mld()
-    org_idxs = get_all_target_one_idxs(ld)[:100]
+    # org_idxs = get_all_target_one_idxs(ld)[:100]
+    org_idxs = get_all_target_one_idxs(ld)
     aux_fl, aux, fl, stand = cal_mean_res(org_idxs, ld)
-    r0 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 0, ld, idxs)
-    r1 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 1, ld, idxs)
-    r2 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 2, ld, idxs)
-    r3 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 3, ld, idxs)
+    r0 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 0, ld, org_idxs)
+    r1 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 1, ld, org_idxs)
+    r2 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 2, ld, org_idxs)
+    r3 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 3, ld, org_idxs)
     return [r0, r1, r2, r3], [aux_fl, aux, fl, stand]
     
 
+def filter(r, idx):
+    res = []
+    for item in r:
+        _, _, out = item
+        if out[idx] > 0.5:
+            res.append(item)
+    return res
