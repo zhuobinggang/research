@@ -55,13 +55,20 @@ def read_additional_test_ds():
         tlds.append(tld)
     return tlds
 
+def only_label_without_opening(name):
+    tld = load_customized_loader(file_name = name, half = 2, batch = 1, shuffle = False)
+    tld = ld_without_opening(tld)
+    return [case[0][1][case[0][2]] for case in tld]
+
 def read_additional_test_dataset_targets():
     ress = []
     for i in range(10):
-        tld = load_customized_loader(file_name = f'test{i}', half = 2, batch = 1, shuffle = False)
-        tld = ld_without_opening(tld)
-        ress.append([case[0][1][case[0][2]] for case in tld])
+        ress.append(only_label_without_opening(f'test{i}'))
     return ress
+
+def read_train_dev_targets():
+    return only_label_without_opening('train'), only_label_without_opening('dev')
+
 
 def customize_my_dataset_and_save_mini(structed_articles):
     one_art_per_line = get_one_art_per_line(structed_articles)

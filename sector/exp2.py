@@ -55,4 +55,27 @@ def cal(res):
         methodn.append(testm_avg_f1)
     return np.array(methodn).transpose()
 
+def cal_all_one_result():
+    targets_10 = get_targets()
+    result_f1s = []
+    for targets in targets_10:
+        result_f1s.append(cal_f1([1] * len(targets) , targets))
+    return result_f1s
+
+def cal_all_one_result():
+    targets_10 = get_targets()
+    result_f1s = []
+    for targets in targets_10:
+        result_f1s.append(cal_f1([0] * len(targets) , targets))
+    return result_f1s
+
+
+def cal_one_zero_divide(targets):
+    length = len(targets)
+    one = sum(targets)
+    zero = length - one
+    return one, zero, round(zero/one, 4)
+
+
+
 

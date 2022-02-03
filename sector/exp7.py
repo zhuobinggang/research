@@ -1,4 +1,4 @@
-# 考察：为了证明举例没有意义，对于一个case，验证同一个手法的不同模型得出的结果各异。
+# 事例考察
 # from manual_exp.mld2 import datas as mld2 
 # from manual_exp.mld import mld
 # NOTE: 不知道为什么保存下来的mld py文件会缺字，下次直接从manual exp文件里读，不要shuffle，不然找不到对应了
@@ -29,7 +29,16 @@ def get_all_target_one_idxs(ld):
             res.append(idx)
     return res
 
+def get_all_target_zero_idxs(ld):
+    res = []
+    for idx, case in enumerate(ld):
+        ss, ls, pos = case[0]
+        if (pos != 0 and ls[pos] == 0):
+            res.append(idx)
+    return res
 
+
+# return: (LENGTH, n)
 def multi_res(paths, idxs, ld):
     res = []
     for path in paths:
@@ -38,39 +47,49 @@ def multi_res(paths, idxs, ld):
         res.append(m_cases)
     return np.array(res)
 
-def cal_mean_res(idxs, ld):
+# return: (4, LENGTH, n)
+def method4_model5_res(idxs, ld):
     aux_fl = multi_res(aux_fl_paths, idxs, ld)
     aux = multi_res(aux_paths, idxs, ld)
     fl = multi_res(fl_paths, idxs, ld)
     stand = multi_res(stand_paths, idxs, ld)
     return aux_fl, aux, fl, stand
 
-def best_idx(ress, max_idx):
-    assert len(ress) == 4 
-    # assert ress[0].shape == (5, 100)
-    ress = [res.mean(0) for res in ress]
-    ress = np.array(ress)
-    # assert ress.shape == (4, 100)
-    ress = ress.transpose()
+def best_idx(model_mean_outputs, focus_idx, MAX = True):
+    assert len(model_mean_outputs) == 4 
+    assert model_mean_outputs[0].shape[0] == LENGTH # (4, 5, n)
+    model_mean_outputs = [res.mean(0) for res in model_mean_outputs] # (4, n)
+    model_mean_outputs = np.array(model_mean_outputs) # (4, n)
+    # assert model_mean_outputs.shape == (4, 100)
+    model_mean_outputs = model_mean_outputs.transpose() # (n, 4)
     results = []
-    for idx, col in enumerate(ress):
-        if col.argmax() == max_idx:
-            results.append((idx,col))
+    for local_idx, row in enumerate(model_mean_outputs):
+        if MAX:
+            if row.argmax() == focus_idx:
+                results.append((local_idx,row))
+        else:
+            if row.argmin() == focus_idx:
+                results.append((local_idx,row))
+        # if MAX and row.argmax() == focus_idx:
+        #     results.append((local_idx,row))
+        # elif not MAX and :
+        #     results.append((local_idx,row))
     return results
 
-def best_idx_map_to_org_idx(ress, max_idx, ld, org_idxs):
-    best_idx_out_in_range = best_idx(ress, max_idx)
-    return [(org_idxs[idx], ld[org_idxs[idx]], out) for idx, out in best_idx_out_in_range]
+# return: (global_idxs, case, methods_mean_posibility)
+def best_focus(model_mean_outputs, max_idx, ld, org_idxs, MAX = True):
+    local_idx_and_row = best_idx(model_mean_outputs, max_idx, MAX)
+    return [(org_idxs[local_idx], ld[org_idxs[local_idx]], row) for local_idx, row in local_idx_and_row]
 
 def run():
     ld = load_mld()
     # org_idxs = get_all_target_one_idxs(ld)[:100]
     org_idxs = get_all_target_one_idxs(ld)
-    aux_fl, aux, fl, stand = cal_mean_res(org_idxs, ld)
-    r0 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 0, ld, org_idxs)
-    r1 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 1, ld, org_idxs)
-    r2 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 2, ld, org_idxs)
-    r3 = best_idx_map_to_org_idx([aux_fl, aux, fl, stand], 3, ld, org_idxs)
+    aux_fl, aux, fl, stand = method4_model5_res(org_idxs, ld)
+    r0 = best_focus([aux_fl, aux, fl, stand], 0, ld, org_idxs)
+    r1 = best_focus([aux_fl, aux, fl, stand], 1, ld, org_idxs)
+    r2 = best_focus([aux_fl, aux, fl, stand], 2, ld, org_idxs)
+    r3 = best_focus([aux_fl, aux, fl, stand], 3, ld, org_idxs)
     return [r0, r1, r2, r3], [aux_fl, aux, fl, stand]
     
 
