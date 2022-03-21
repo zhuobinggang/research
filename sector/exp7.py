@@ -53,7 +53,7 @@ def method4_model5_res(idxs, ld):
     aux = multi_res(aux_paths, idxs, ld)
     fl = multi_res(fl_paths, idxs, ld)
     stand = multi_res(stand_paths, idxs, ld)
-    return aux_fl, aux, fl, stand
+    return np.array([aux_fl, aux, fl, stand])
 
 def best_idx(model_mean_outputs, focus_idx, MAX = True):
     assert len(model_mean_outputs) == 4 
@@ -83,14 +83,14 @@ def best_focus(model_mean_outputs, max_idx, ld, org_idxs, MAX = True):
 
 def run():
     ld = load_mld()
-    # org_idxs = get_all_target_one_idxs(ld)[:100]
-    org_idxs = get_all_target_one_idxs(ld)
-    aux_fl, aux, fl, stand = method4_model5_res(org_idxs, ld)
-    r0 = best_focus([aux_fl, aux, fl, stand], 0, ld, org_idxs)
-    r1 = best_focus([aux_fl, aux, fl, stand], 1, ld, org_idxs)
-    r2 = best_focus([aux_fl, aux, fl, stand], 2, ld, org_idxs)
-    r3 = best_focus([aux_fl, aux, fl, stand], 3, ld, org_idxs)
-    return [r0, r1, r2, r3], [aux_fl, aux, fl, stand]
+    # org_idxs = get_all_target_one_idxs(ld)
+    org_idxs = get_all_target_zero_idxs(ld)
+    dd = method4_model5_res(org_idxs, ld) # (4, LENGTH, n)
+    r0 = best_focus(dd, 0, ld, org_idxs, MAX = False)
+    r1 = best_focus(dd, 1, ld, org_idxs, MAX = False)
+    r2 = best_focus(dd, 2, ld, org_idxs, MAX = False)
+    r3 = best_focus(dd, 3, ld, org_idxs, MAX = False)
+    return [r0, r1, r2, r3], dd
     
 
 def filter(r, idx):
@@ -100,3 +100,31 @@ def filter(r, idx):
         if out[idx] > 0.5:
             res.append(item)
     return res
+
+def filter_aux_loss_win(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[0] < 0.5 and row[1] < 0.5 and row[2] > 0.5 and row[3] > 0.5]
+        
+
+def filter_focal_loss_win(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[0] < 0.5 and row[2] < 0.5 and row[1] > 0.5 and row[3] > 0.5]
+
+def filter_vanilla_win(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[3] < 0.5 and row[1] > 0.5 and row[2] > 0.5 and row[0] > 0.5]
+
+
+def filter_aux_loss_loss(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[0] > 0.5 and row[1] > 0.5 and row[2] < 0.5 and row[3] < 0.5]
+
+def filter_fl_loss_loss(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[0] > 0.5 and row[2] > 0.5 and row[1] < 0.5 and row[3] < 0.5]
+
+def filter_vanilla_loss(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[3] > 0.5 and row[0] < 0.5 and row[1] < 0.5 and row[2] < 0.5]
+
+
