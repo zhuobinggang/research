@@ -2,6 +2,9 @@
 from sec_paragraph import get_att_ours
 from exp7 import load_mld
 import torch as t
+import numpy as np
+font = '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf'
+from wordcloud import WordCloud
 
 def load_m():
     return t.load('save/r01_fl50_0.tch')
@@ -13,7 +16,6 @@ def get_info_ranking_by_posibility():
     pcases = cases_positive(load_mld())
     need = cases_ranking_from_max(m, pcases)
     return need, m.toker
-    
 
 def cases_positive(ld):
     results = []
@@ -31,3 +33,31 @@ def cases_ranking_from_max(m, cases):
     need = list(reversed(sorted(need, key = lambda x : x[0])))
     return need
 
+# 从所有case里面每个取出10个token，然后将这些token用空格连接，生成txt文件，最后用wordcloud生成
+# need, toker = get_info_ranking_by_posibility()
+# need500 = need[:500]
+# TODO: 去除-1的项
+def get_tokens_rank_10_each_case(need, toker):
+    tokens = []
+    for result, case, atts, idss in need:
+        atts = np.array(atts)
+        ranked_ids = (-atts).argsort()
+        if len(ranked_ids) < 5: 
+            pass
+        else:
+            for idx in ranked_ids[:10]:
+                tokens.append(idss[idx])
+    return tokens
+
+def get_tokens(need, toker):
+    tokens = get_tokens_rank_10_each_case(need, toker)
+    tokens = [toker.decode(token_id).replace(' ', '') for token_id in tokens]
+    return tokens
+
+def run(need, toker):
+    tokens = get_tokens(need, toker)
+    text = ' '.join(tokens)
+    wc = WordCloud(width=480, height=320, background_color="white", font_path=font)
+    wc.generate(text)
+    wc.to_file('wc2.png')
+    
