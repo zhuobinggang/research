@@ -4,6 +4,7 @@ from exp7 import load_mld
 import torch as t
 import numpy as np
 font = '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf'
+# font = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
 from wordcloud import WordCloud
 
 def load_m():
