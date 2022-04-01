@@ -9,13 +9,15 @@ font = '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf'
 from wordcloud import WordCloud
 from sec_paragraph import chrome_render_v3
 
-def load_m():
-    return t.load('save/r01_fl50_0.tch')
-    # return t.load('save/analyse_r02_para.tch')
+def load_m(AUX=True):
+    if AUX:
+        return t.load('save/r01_fl50_0.tch')  
+    else:
+        return t.load('save/fl20_0_e3.tch')  
 
 # 从mld选出取出正确率最高的100个例子
-def get_info_ranking_by_posibility():
-    m = load_m()
+def get_info_ranking_by_posibility(AUX = True):
+    m = load_m(AUX)
     pcases = cases_positive(load_mld())
     need = cases_ranking_from_max(m, pcases)
     return need, m.toker

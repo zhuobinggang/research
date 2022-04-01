@@ -101,9 +101,11 @@ def filter(r, idx):
             res.append(item)
     return res
 
+# NOTE： 使用时注意更改逻辑
 def filter_aux_loss_win(r):
     return [(global_idxs, case, row) for global_idxs, case, row in r 
-        if row[0] < 0.5 and row[1] < 0.5 and row[2] > 0.5 and row[3] > 0.5]
+        # if row[0] < 0.5 and row[1] < 0.5 and row[2] > 0.5 and row[3] > 0.5]
+        if row[0] > 0.5 and row[1] > 0.5 and row[2] < 0.5 and row[3] < 0.5]
         
 
 def filter_focal_loss_win(r):
