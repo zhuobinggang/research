@@ -1,4 +1,5 @@
-# 选出最受瞩目的token，用wordcloud来展示
+# 1: 选出最受瞩目的token，用wordcloud来展示
+# 2: 用谷歌浏览器渲染
 from sec_paragraph import get_att_ours
 from exp7 import load_mld
 import torch as t
@@ -6,6 +7,7 @@ import numpy as np
 font = '/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf'
 # font = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
 from wordcloud import WordCloud
+from sec_paragraph import chrome_render_v3
 
 def load_m():
     return t.load('save/r01_fl50_0.tch')
@@ -61,4 +63,16 @@ def run(need, toker):
     wc = WordCloud(width=480, height=320, background_color="white", font_path=font)
     wc.generate(text)
     wc.to_file('wc2.png')
+
+def case_checker(need, idx):
+    res, case, att, ids = need[idx]
+    print(f'{res}: {case}')
     
+
+# 2: 用谷歌浏览器渲染
+def run_chrome_render():
+    idx = 16
+    case_checker(need, idx)
+    res, case, att, ids = need[idx]
+    chrome_render_v3(toker, ids, att, labels = case[0][1], rank = idx, p = res)
+

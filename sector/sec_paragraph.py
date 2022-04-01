@@ -190,6 +190,7 @@ def cal_exceed_rate(toker, arts):
     return count
 
 
+# 多个sep，取出中间那个sep
 def get_att_ours(m, mass):
     sss, labels, poss = m.handle_mass(mass)
     atts = []
@@ -251,10 +252,25 @@ def get_att_baseline(m, mass):
 
 
 def copy_to_chrome_console_then_render(toker, idss, atts, labels = [-1,-1,-1,-1]):
-    arg1 = str([toker.decode(item) for item in idss])
+    arg1 = str([toker.decode(item).replace(' ', '') for item in idss])
     arg2 = str([round(item,3) for item in atts])
     arg3 = str(labels)
     text = f'generate({arg1}, {arg2}, {arg3})'
+    print(text)
+
+def copy_to_chrome_console_then_render_v2(toker, idss, atts, labels = [-1,-1,-1,-1]):
+    arg1 = str([toker.decode(item).replace(' ', '') for item in idss])
+    arg2 = str([round(item,3) for item in atts])
+    arg3 = str(labels)
+    text = f'generate_v2({arg1}, {arg2}, {arg3})'
+    print(text)
+
+def chrome_render_v3(toker, idss, atts, labels = [-1,-1,-1,-1], rank = -1, p = -1):
+    arg1 = str([toker.decode(item).replace(' ', '') for item in idss])
+    arg2 = str([round(item,3) for item in atts])
+    arg3 = str(labels)
+    desc_text = f'rank: {rank}, possibility: {p}'
+    text = f'generate_v2({arg1}, {arg2}, {arg3}, "{desc_text}")'
     print(text)
 
 def dic_index_to_chrome_console(toker, dic, idx, labels = [-1,-1,-1,-1]):

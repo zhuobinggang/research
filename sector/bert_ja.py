@@ -306,6 +306,7 @@ def wrap_idss_with_special_tokens_then_compress(bert, toker, idss, output_att = 
     att_sentence = [a[:-1] for a in att_tokens]
     return (cls, att_cls), (seps, att_seps), (sentence_tokens, att_sentence), ids
 
+# 如果左右句子数量不对称，需要pad
 def processed_idss(toker, ss, pos, len2pad, max_len = None):
   if max_len is None:
     max_len = int(500 / len2pad) # 4句时候125 tokens/句, 2句250 tokens/句
@@ -325,6 +326,7 @@ def processed_idss(toker, ss, pos, len2pad, max_len = None):
       idss = idss + [[]]
   assert len(idss) == len2pad
   return idss, pad_left_nums, pad_right_nums
+
 
 def compress_by_ss_then_pad(bert, toker, ss, pos, len2pad, max_len = None, with_att = False):
   idss, pad_left_nums, pad_right_nums = processed_idss(toker, ss, pos, len2pad, max_len)

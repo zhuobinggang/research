@@ -20,6 +20,53 @@
 <script>
 k = 0.3
 
+function generate_v2(tokens, atts, labels = [-1, -1, -1, -1], desc_text = ''){
+        console.assert(tokens.length == atts.length)
+        let container = document.createElement('div')
+        container.style.marginTop = '50px'
+        let sep_count = 0
+        let over_size_count = 0
+        let paragraph = document.createElement('div')
+        for (let i = 0; i < tokens.length; i++){
+                text = tokens[i]
+                
+                att = atts[i]
+                degree = att * tokens.length
+                if(degree > 1){
+                        over_size_count += 1
+                }
+                // opacity = degree * 0.17 + 0.34
+                opacity = degree * k
+                // create div
+                let div = document.createElement('div');
+                div.innerHTML = text;
+                div.className = 'inline';
+                div.style.backgroundColor = `rgba(255, 87, 51, ${opacity})`
+                paragraph.appendChild(div)
+                if (text == '[SEP]'){
+                        sep_count += 1
+                        if (labels[sep_count] == -1){
+                            // Do Nothing
+                        }else if (labels[sep_count] == 1){
+                            container.appendChild(paragraph)
+                            paragraph = document.createElement('div')
+                        }else{
+                            // Do Nothing
+                        }
+                }
+        }
+        container.appendChild(paragraph)
+        // Create Description
+        let desc = document.createElement('div');
+        // let percent = (over_size_count / tokens.length) * 100
+        // desc.innerHTML = `significant tokens percent:  ${percent}%`;
+        desc.innerHTML = `${desc_text}`;
+        container.appendChild(desc)
+        // Append Container to Slot
+        slot = document.getElementById('slot')
+        slot.appendChild(container)
+}
+
 function generate(tokens, atts, labels = [-1, -1, -1, -1], replace_sep = true){
         console.assert(tokens.length == atts.length)
         let container = document.createElement('div')
