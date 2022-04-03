@@ -1,6 +1,6 @@
 # 1: 选出最受瞩目的token，用wordcloud来展示
 # 2: 用谷歌浏览器渲染
-from sec_paragraph import get_att_ours
+from sec_paragraph import get_att_ours, get_att_baseline
 from exp7 import load_mld
 import torch as t
 import numpy as np
@@ -19,7 +19,7 @@ def load_m(AUX=True):
 def get_info_ranking_by_posibility(AUX = True):
     m = load_m(AUX)
     pcases = cases_positive(load_mld())
-    need = cases_ranking_from_max(m, pcases)
+    need = cases_ranking_from_max(m, pcases, AUX)
     return need, m.toker
 
 def cases_positive(ld):
@@ -30,10 +30,13 @@ def cases_positive(ld):
             results.append(case)
     return results
 
-def cases_ranking_from_max(m, cases):
+def cases_ranking_from_max(m, cases, AUX = True):
     need = []
     for case in cases:
-        atts, idss, results, targets, labelss = get_att_ours(m, case)
+        if AUX:
+            atts, idss, results, targets, labelss = get_att_ours(m, case)
+        else:
+            atts, idss, results, targets, labelss = get_att_baseline(m, case)
         need.append((results[0], case, atts[0], idss[0]))
     need = list(reversed(sorted(need, key = lambda x : x[0])))
     return need
