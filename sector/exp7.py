@@ -198,8 +198,8 @@ def filter_fl_only_loss_0(r):
         if row[2] > 0.5 and row[1] < 0.5 and row[3] < 0.5]
 
 # NOTE： 在EXP7上增加考察，计算使用aux之后胜出&败北的例子百分比
-def run_aux_win_and_loss():
-    ld = load_mld('test0')
+def run_aux_win_and_loss(path):
+    ld = load_mld(path)
     org_idxs_1 = get_all_target_one_idxs(ld)
     org_idxs_0 = get_all_target_zero_idxs(ld)
     dd1 = method4_model5_res(org_idxs_1, ld) # (4, len(org_idxs_1), n)
@@ -216,5 +216,9 @@ def run_aux_win_and_loss():
     dic['fllose1'] = len(filter_fl_only_loss_1(r1))
     dic['fllose0'] = len(filter_fl_only_loss_0(r0))
     request_my_logger(dic, desc = f"{len(org_idxs_1)}, {len(org_idxs_0)}, 用计算器看看是否跟之前的百分比相近")
-    return r1, r0
+    return r0, r1
 
+def run2():
+    r10, r11 = run_aux_win_and_loss('test0')
+    r00, r01 = run_aux_win_and_loss('manual_exp')
+    return r00, r01, r10, r11
