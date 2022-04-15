@@ -223,12 +223,10 @@ def filter_auxfl_win_0(r):
         if row[0] < 0.5 and row[2] > 0.5 and row[3] > 0.5]
 
 def filter_auxfl_lose_1(r):
-    return [(global_idxs, case, row) for global_idxs, case, row in r 
-        if row[0] < 0.5 and row[2] > 0.5 and row[3] > 0.5]
+    return filter_auxfl_win_0(r)
 
 def filter_auxfl_lose_0(r):
-    return [(global_idxs, case, row) for global_idxs, case, row in r 
-        if row[0] > 0.5 and row[2] < 0.5 and row[3] < 0.5]
+    return filter_auxfl_win_1(r)
 
 def filter_fl_win_aux_1(r):
     return [(global_idxs, case, row) for global_idxs, case, row in r 
@@ -239,12 +237,10 @@ def filter_fl_win_aux_0(r):
         if row[2] < 0.5 and row[0] > 0.5 and row[3] > 0.5]
 
 def filter_fl_lose_aux_1(r):
-    return [(global_idxs, case, row) for global_idxs, case, row in r 
-        if row[2] < 0.5 and row[0] > 0.5 and row[3] > 0.5]
+    return filter_fl_win_aux_0(r)
 
 def filter_fl_lose_aux_0(r):
-    return [(global_idxs, case, row) for global_idxs, case, row in r 
-        if row[2] > 0.5 and row[0] < 0.5 and row[3] < 0.5]
+    return filter_fl_win_aux_1(r)
 
 def filter_stand_win_aux_1(r):
     return [(global_idxs, case, row) for global_idxs, case, row in r 
@@ -287,6 +283,81 @@ def table_create(r0, r1):
     dic['sdlose'] = f'{sdlose1 + sdlose0}({round((sdlose1 + sdlose0) / (case1_len + case0_len), 3) * 100}%)'
     return dic
 
+
+def table_create_AUXFL(r0, r1):
+    case1_len = len(r1)
+    case0_len = len(r0)
+    dic = {}
+    dic['auxwin1'] = auxwin1 = len(filter_auxfl_win_1(r1)) 
+    dic['auxwin0'] = auxwin0 = len(filter_auxfl_win_0(r0))
+    dic['auxwin'] = f'{auxwin0 + auxwin1}({round((auxwin0 + auxwin1) / (case1_len + case0_len), 3) * 100}%)'
+    dic['auxlose1'] = auxlose1 = len(filter_auxfl_lose_1(r1))
+    dic['auxlose0'] = auxlose0 = len(filter_auxfl_lose_0(r0))
+    dic['auxlose'] = f'{auxlose1 + auxlose0}({round((auxlose1 + auxlose0) / (case1_len + case0_len), 3) * 100}%)'
+    # dd
+    dic['flwin1'] = flwin1 = len(filter_fl_win_aux_1(r1))
+    dic['flwin0'] = flwin0 = len(filter_fl_win_aux_0(r0))
+    dic['flwin'] = f'{flwin1 + flwin0}({round((flwin1 + flwin0) / (case1_len + case0_len), 3) * 100}%)'
+    dic['fllose1'] = fllose1 = len(filter_fl_lose_aux_1(r1))
+    dic['fllose0'] = fllose0 = len(filter_fl_lose_aux_0(r0))
+    dic['fllose'] = f'{fllose1 + fllose0}({round((fllose1 + fllose0) / (case1_len + case0_len), 3) * 100}%)'
+    # dd
+    dic['sdwin1'] = sdwin1 = len(filter_stand_win_aux_1(r1))
+    dic['sdwin0'] = sdwin0 = len(filter_stand_win_aux_0(r0))
+    dic['sdwin'] = f'{sdwin1 + sdwin0}({round((sdwin1 + sdwin0) / (case1_len + case0_len), 3) * 100}%)'
+    dic['sdlose1'] = sdlose1 = len(filter_stand_lose_aux_1(r1))
+    dic['sdlose0'] = sdlose0 = len(filter_stand_lose_aux_0(r0))
+    dic['sdlose'] = f'{sdlose1 + sdlose0}({round((sdlose1 + sdlose0) / (case1_len + case0_len), 3) * 100}%)'
+    return dic
+
+
+def filter_aux_win_auxfl_1(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[1] > 0.5 and row[0] < 0.5]
+
+def filter_aux_win_auxfl_0(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[1] < 0.5 and row[0] > 0.5]
+
+def filter_aux_lose_auxfl_1(r):
+    return filter_aux_win_auxfl_0(r)
+
+def filter_aux_lose_auxfl_0(r):
+    return filter_aux_win_auxfl_1(r)
+
+def filter_auxfl_win_aux_1(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[0] > 0.5 and row[1] < 0.5]
+
+def filter_auxfl_win_aux_0(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r 
+        if row[0] < 0.5 and row[1] > 0.5]
+
+def filter_auxfl_lose_aux_1(r):
+    return filter_auxfl_win_aux_0(r)
+
+def filter_auxfl_lose_aux_0(r):
+    return filter_auxfl_win_aux_1(r)
+
+def table_create_AUX_AUXFL(r0, r1):
+    case1_len = len(r1)
+    case0_len = len(r0)
+    dic = {}
+    dic['auxwin1'] = auxwin1 = len(filter_aux_win_auxfl_1(r1)) 
+    dic['auxwin0'] = auxwin0 = len(filter_aux_win_auxfl_0(r0))
+    dic['auxwin'] = f'{auxwin0 + auxwin1}({round((auxwin0 + auxwin1) / (case1_len + case0_len), 3) * 100}%)'
+    dic['auxlose1'] = auxlose1 = len(filter_aux_lose_auxfl_1(r1))
+    dic['auxlose0'] = auxlose0 = len(filter_aux_lose_auxfl_0(r0))
+    dic['auxlose'] = f'{auxlose1 + auxlose0}({round((auxlose1 + auxlose0) / (case1_len + case0_len), 3) * 100}%)'
+    # dd
+    dic['auxflwin1'] = flwin1 = len(filter_auxfl_win_aux_1(r1))
+    dic['auxflwin0'] = flwin0 = len(filter_auxfl_win_aux_0(r0))
+    dic['auxflwin'] = f'{flwin1 + flwin0}({round((flwin1 + flwin0) / (case1_len + case0_len), 3) * 100}%)'
+    dic['auxfllose1'] = fllose1 = len(filter_auxfl_lose_aux_1(r1))
+    dic['auxfllose0'] = fllose0 = len(filter_auxfl_lose_aux_0(r0))
+    dic['auxfllose'] = f'{fllose1 + fllose0}({round((fllose1 + fllose0) / (case1_len + case0_len), 3) * 100}%)'
+    return dic
+
 # NOTE： 在EXP7上增加考察，计算使用aux之后胜出&败北的例子百分比
 def run_aux_win_and_loss(path):
     ld = load_mld(path)
@@ -307,3 +378,19 @@ def run2():
         r0, r1 = run_aux_win_and_loss(f'test{i}')
         raw_r0r1s.append((r0, r1))
     return raw_r0r1s
+
+
+# 最后的case study，只要列出两种
+
+def filter_AUX_AUXFL_win(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r
+        if row[0] > 0.5 and row[1] > 0.5 and row[2] < 0.5 and row[3] < 0.5]
+
+def filter_FL_Vanilla_win(r):
+    return [(global_idxs, case, row) for global_idxs, case, row in r
+        if row[0] < 0.5 and row[1] < 0.5 and row[2] > 0.5 and row[3] > 0.5]
+
+
+
+
+
