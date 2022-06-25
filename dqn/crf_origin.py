@@ -7,10 +7,7 @@
 # emb = wiki2vec.get_word_vector(word)
 import torch as t
 
-emiss = t.tensor([[6,2,2],[2,4,4]])
-trans = t.tensor([[8,2],[6,4],[8,2]])
-# datas = [(0, 2), (1, 0)]
-datas = [(0, 2), (1, 0), (0, 1)]
+
 
 # (0,2) -> (1,0)
 
@@ -72,6 +69,20 @@ def cal_denominators(datas):
         prev_denominator = denominator
         denominators.append(denominator)
     return  prev_denominator, denominators
+
+
+emiss = t.tensor([[6,2,2],[2,4,4]])
+trans = t.tensor([[8,2],[6,4],[8,2]])
+# datas = [(0, 2), (1, 0)]
+datas = [(0, 2), (1, 0), (0, 1)]
+
+# 一个例子
+def run():
+    nom = cal_numerators(datas)
+    denom, _ = cal_denominators(datas)
+    result = (nom[0] * nom[1] * nom[2]) / sum(denom)
+    print(result)
+
 
 
 
