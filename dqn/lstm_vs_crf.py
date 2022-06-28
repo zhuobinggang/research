@@ -7,6 +7,7 @@ F = t.nn.functional
 # from wikipedia2vec import Wikipedia2Vec
 # wiki2vec = Wikipedia2Vec.load('/usr01/ZhuoBinggang/enwiki_20180420_win10_300d.pkl')
 from transformers import BertTokenizer, BertModel, BertTokenizerFast
+import datetime
 
 
 def get_ds():
@@ -32,6 +33,7 @@ class Model(nn.Module):
 
 
 def train(ds_train, m, epoch = 1):
+    first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
@@ -44,17 +46,24 @@ def train(ds_train, m, epoch = 1):
             tokens_org = row['tokens']
             # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
             tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
-            out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-            out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
-            out_mlp = m.mlp(out_lstm) # (1, n, 9)
-            ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
-            # cal loss
-            labels = t.LongTensor(row['ner_tags']) # Long: (n)
-            loss = m.CEL(ys.squeeze(0), labels.cuda())
-            # backward
-            m.zero_grad()
-            loss.backward()
-            opter.step()
+            if tokens is None:
+                print('跳过训练')
+            else:
+                out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+                out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
+                out_mlp = m.mlp(out_lstm) # (1, n, 9)
+                ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+                # cal loss
+                labels = t.LongTensor(row['ner_tags']) # Long: (n)
+                loss = CEL(ys.squeeze(0), labels.cuda())
+                # backward
+                m.zero_grad()
+                loss.backward()
+                opter.step()
+    last_time = datetime.datetime.now()
+    eps = last_time - first_time 
+    print(eps.strftime('%H hours %M minutes %S seconds'))
+    return eps
     
 
 
@@ -69,11 +78,15 @@ def subword_tokenize(tokens_org, toker):
         tokens += sub_tokens
         headword_indexs.append(index)
         index += len(sub_tokens)
-    ids = toker.encode(tokens) 
-    # NOTE: BUG fixed, encode的时候会增加[cls][sep]，因为cls是增加在左边的，所以headword需要加一
-    headword_indexs = [idx + 1 for idx in headword_indexs]
-    ids = t.tensor(ids).unsqueeze(0)
-    return tokens, ids, headword_indexs
+    if len(tokens) < 1:
+        print(f'解码出来的tokens数量为0, {tokens_org}')
+        return None, None, None
+    else:
+        ids = toker.encode(tokens) 
+        # NOTE: BUG fixed, encode的时候会增加[cls][sep]，因为cls是增加在左边的，所以headword需要加一
+        headword_indexs = [idx + 1 for idx in headword_indexs]
+        ids = t.tensor(ids).unsqueeze(0)
+        return tokens, ids, headword_indexs
 
 def test_subword_tokenize(tokens_org, toker):
     tokens, ids, headword_indexs = subword_tokenize(tokens_org, toker)
