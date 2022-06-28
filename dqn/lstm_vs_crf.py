@@ -37,7 +37,7 @@ def train(ds_train, m, epoch = 1):
     toker = m.toker
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
-    CEL = nn.CrossEntropyLoss()
+    CEL = nn.CrossEntropyLoss(weight=t.tensor([0.3, 1, 1, 1, 1, 1, 1, 1, 1]))
     for epoch_idx in range(epoch):
         print(f'epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
@@ -61,10 +61,29 @@ def train(ds_train, m, epoch = 1):
                 loss.backward()
                 opter.step()
     last_time = datetime.datetime.now()
-    eps = last_time - first_time 
-    print(eps.strftime('%H hours %M minutes %S seconds'))
-    return eps
+    delta = last_time - first_time 
+    print(delta.seconds)
+    return delta.seconds
     
+def test(ds_test, m):
+    results = []
+    targets = []
+    toker = m.toker
+    bert = m.bert
+    for row_idx, row in enumerate(ds_test):
+        tokens_org = row['tokens']
+        # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
+        tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
+        if tokens is None:
+            print('跳过')
+        else:
+            out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+            out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
+            out_mlp = m.mlp(out_lstm) # (1, n, 9)
+            ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+            results += ys.argmax(2).squeeze(0).tolist()
+            targets += row['ner_tags']
+    return results, targets
 
 
 # Checked, 可以放心使用, 可以运行test_subword_tokenize尝试
@@ -94,3 +113,29 @@ def test_subword_tokenize(tokens_org, toker):
     id_heads = ids[headword_indexs]
     print(' '.join(tokens_org))
     print(toker.decode(id_heads))
+
+
+
+def cal_prec_rec_f1_v2(results, targets):
+  TP = 0
+  FP = 0
+  FN = 0
+  TN = 0
+  for guess, target in zip(results, targets):
+    if guess == 1:
+      if target == 1:
+        TP += 1
+      elif target == 0:
+        FP += 1
+    elif guess == 0:
+      if target == 1:
+        FN += 1
+      elif target == 0:
+        TN += 1
+  prec = TP / (TP + FP) if (TP + FP) > 0 else 0
+  rec = TP / (TP + FN) if (TP + FN) > 0 else 0
+  f1 = (2 * prec * rec) / (prec + rec) if (prec + rec) != 0 else 0
+  balanced_acc_factor1 = TP / (TP + FN) if (TP + FN) > 0 else 0
+  balanced_acc_factor2 = TN / (FP + TN) if (FP + TN) > 0 else 0
+  balanced_acc = (balanced_acc_factor1 + balanced_acc_factor2) / 2
+  return prec, rec, f1, balanced_acc
