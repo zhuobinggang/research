@@ -11,8 +11,8 @@ from transformers import BertTokenizer, BertModel, BertTokenizerFast
 
 def get_ds():
     ds = load_dataset("conll2003")
+    train = ds['train']
     test = ds['test']
-    train = ds['test']
     return train, test
 
 
@@ -28,25 +28,29 @@ class Model(nn.Module):
             nn.Tanh(),
             nn.Linear(768, 9),
     )
-    self.CEL = nn.CrossEntropyLoss()
+    self.cuda()
 
 
 def train(ds_train, m, epoch = 1):
     toker = m.toker
     bert = m.bert
-    opter = t.optim.Adam(m, lr=2e-5)
-    for _ in epoch:
-        for row in np.random.permutation(ds_train):
+    opter = t.optim.Adam(m.parameters(), lr=2e-5)
+    CEL = nn.CrossEntropyLoss()
+    for epoch_idx in range(epoch):
+        print(f'epoch {epoch_idx}')
+        for row_idx, row in enumerate(np.random.permutation(ds_train)):
+            if row_idx % 1000 == 0:
+                print(f'finished: {row_idx}/{len(ds_train)}')
             tokens_org = row['tokens']
             # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
-            tokens, ids, headword_indexs = subword_tokenize(tokens_org)
-            out_bert = bert(ids).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+            tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
+            out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
             out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
             out_mlp = m.mlp(out_lstm) # (1, n, 9)
             ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
             # cal loss
             labels = t.LongTensor(row['ner_tags']) # Long: (n)
-            loss = self.CEL(ys.squeeze(0), labels)
+            loss = m.CEL(ys.squeeze(0), labels.cuda())
             # backward
             m.zero_grad()
             loss.backward()
