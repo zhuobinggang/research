@@ -37,7 +37,7 @@ def train(ds_train, m, epoch = 1):
     toker = m.toker
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
-    CEL = nn.CrossEntropyLoss(weight=t.tensor([0.3, 1, 1, 1, 1, 1, 1, 1, 1]))
+    CEL = nn.CrossEntropyLoss(weight=t.tensor([0.1, 1, 1, 1, 1, 1, 1, 1, 1]).cuda())
     for epoch_idx in range(epoch):
         print(f'epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
