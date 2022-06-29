@@ -17,7 +17,7 @@ def get_ds():
     return train, test
 
 
-class Model(nn.Module):
+class BERT_LSTM(nn.Module):
   def __init__(self):
     super().__init__()
     self.bert = BertModel.from_pretrained('bert-base-uncased')
