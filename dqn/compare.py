@@ -20,7 +20,7 @@ def run(times = 5):
         results, targets = test_lstm(ds_test, m)
         lstms.append(cal_prec_rec_f1_v2(results, targets))
         # CRF
-        m = BERT_LSTM()
+        m = BERT_CRF()
         _ = train_crf(ds_train, m)
         results, targets = test_crf(ds_test, m)
         crfs.append(cal_prec_rec_f1_v2(results, targets))
