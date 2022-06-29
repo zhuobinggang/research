@@ -84,8 +84,9 @@ def test(ds_test, m):
             out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
             out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
             out_mlp = m.mlp(out_lstm) # (1, n, 9)
-            ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
-            results += ys.argmax(2).squeeze(0).tolist()
+            # ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+            ys = m.crf.decode(out_mlp)
+            results += ys[0]
             targets += row['ner_tags']
     return results, targets
 
