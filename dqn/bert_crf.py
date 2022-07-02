@@ -33,10 +33,10 @@ class BERT_LSTM_CRF(nn.Module):
     self.crf = CRF(9, batch_first=True)
     self.cuda()
 
-  def forward(ids, headword_indexs):
-    out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-    out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
-    out_mlp = m.mlp(out_lstm) # (1, n, 9)
+  def forward(self, ids, headword_indexs):
+    out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    out_lstm, _ = self.lstm(out_bert) # (1, n, 256 * 2)
+    out_mlp = self.mlp(out_lstm) # (1, n, 9)
     return out_mlp
 
 
@@ -56,9 +56,9 @@ class BERT_MLP_CRF(nn.Module):
     self.crf = CRF(9, batch_first=True)
     self.cuda()
 
-  def forward(ids, headword_indexs):
-    out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-    out_mlp = m.mlp(out_bert) # (1, n, 9)
+  def forward(self, ids, headword_indexs):
+    out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    out_mlp = self.mlp(out_bert) # (1, n, 9)
     return out_mlp
 
 def train(ds_train, m, epoch = 1):
