@@ -33,6 +33,33 @@ class BERT_LSTM_CRF(nn.Module):
     self.crf = CRF(9, batch_first=True)
     self.cuda()
 
+  def forward(ids, headword_indexs):
+    out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
+    out_mlp = m.mlp(out_lstm) # (1, n, 9)
+    return out_mlp
+
+
+class BERT_MLP_CRF(nn.Module):
+  def __init__(self):
+    super().__init__()
+    self.bert = BertModel.from_pretrained('bert-base-uncased')
+    self.bert.train()
+    self.toker = BertTokenizer.from_pretrained('bert-base-uncased')
+    self.mlp = nn.Sequential(
+            nn.Linear(768, 1024),
+            nn.Tanh(),
+            nn.Linear(1024, 512),
+            nn.Tanh(),
+            nn.Linear(512, 9),
+    )
+    self.crf = CRF(9, batch_first=True)
+    self.cuda()
+
+  def forward(ids, headword_indexs):
+    out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    out_mlp = m.mlp(out_bert) # (1, n, 9)
+    return out_mlp
 
 def train(ds_train, m, epoch = 1):
     first_time = datetime.datetime.now()
@@ -51,9 +78,7 @@ def train(ds_train, m, epoch = 1):
             if tokens is None:
                 print('跳过训练')
             else:
-                out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-                out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
-                out_mlp = m.mlp(out_lstm) # (1, n, 9)
+                out_mlp = m.forward(ids, headword_indexs) # (1, n, 9)
                 # ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
                 # cal loss
                 # labels = t.LongTensor(row['ner_tags']) # Long: (1, n)
