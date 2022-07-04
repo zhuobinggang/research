@@ -10,6 +10,10 @@ from transformers import BertTokenizer, BertModel, BertTokenizerFast
 import datetime
 from torchcrf import CRF
 
+keys = ['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC', 'B-MISC', 'I-MISC']
+
+def idxs2key(idxs):
+    return [keys[idx] for idx in idxs]
 
 def get_ds():
     ds = load_dataset("conll2003")
@@ -94,7 +98,7 @@ def train(ds_train, m, epoch = 1):
     print(delta.seconds)
     return delta.seconds
     
-def test(ds_test, m):
+def test_old(ds_test, m):
     results = []
     targets = []
     toker = m.toker
@@ -106,14 +110,31 @@ def test(ds_test, m):
         if tokens is None:
             print('跳过')
         else:
-            out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-            out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
-            out_mlp = m.mlp(out_lstm) # (1, n, 9)
+            out_mlp = m.forward(ids, headword_indexs) # (1, n, 9)
             # ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
             ys = m.crf.decode(out_mlp)
             results += ys[0]
             targets += row['ner_tags']
     return results, targets
+
+def test(ds_test, m):
+    y_true = []
+    y_pred = []
+    toker = m.toker
+    bert = m.bert
+    for row_idx, row in enumerate(ds_test):
+        tokens_org = row['tokens']
+        # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
+        tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
+        if tokens is None:
+            print('跳过')
+        else:
+            out_mlp = m.forward(ids, headword_indexs) # (1, n, 9)
+            # ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+            ys = m.crf.decode(out_mlp)
+            y_pred.append(idxs2key(ys[0]))
+            y_true.append(idxs2key(row['ner_tags'])) 
+    return y_true, y_pred
 
 
 # Checked, 可以放心使用, 可以运行test_subword_tokenize尝试
@@ -147,25 +168,5 @@ def test_subword_tokenize(tokens_org, toker):
 
 
 def cal_prec_rec_f1_v2(results, targets):
-  TP = 0
-  FP = 0
-  FN = 0
-  TN = 0
-  for guess, target in zip(results, targets):
-    if guess == 1:
-      if target == 1:
-        TP += 1
-      elif target == 0:
-        FP += 1
-    elif guess == 0:
-      if target == 1:
-        FN += 1
-      elif target == 0:
-        TN += 1
-  prec = TP / (TP + FP) if (TP + FP) > 0 else 0
-  rec = TP / (TP + FN) if (TP + FN) > 0 else 0
-  f1 = (2 * prec * rec) / (prec + rec) if (prec + rec) != 0 else 0
-  balanced_acc_factor1 = TP / (TP + FN) if (TP + FN) > 0 else 0
-  balanced_acc_factor2 = TN / (FP + TN) if (FP + TN) > 0 else 0
-  balanced_acc = (balanced_acc_factor1 + balanced_acc_factor2) / 2
-  return prec, rec, f1, balanced_acc
+    pass
+

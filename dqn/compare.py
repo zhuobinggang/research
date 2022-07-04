@@ -1,9 +1,10 @@
 from bert_mlp import BERT_MLP, train as train_mlp, test as test_mlp
 from bert_lstm import BERT_LSTM, train as train_lstm, test as test_lstm
-from bert_crf import BERT_LSTM_CRF, get_ds, cal_prec_rec_f1_v2, train as train_crf, test as test_crf
+from bert_crf import BERT_LSTM_CRF, BERT_MLP_CRF, get_ds, cal_prec_rec_f1_v2, train as train_crf, test as test_crf
 
 mlps = []
 lstms = []
+lstm_crfs = []
 crfs = []
 
 def run(times = 5):
@@ -21,6 +22,11 @@ def run(times = 5):
         lstms.append(cal_prec_rec_f1_v2(results, targets))
         # CRF
         m = BERT_LSTM_CRF()
+        _ = train_crf(ds_train, m)
+        results, targets = test_crf(ds_test, m)
+        lstm_crfs.append(cal_prec_rec_f1_v2(results, targets))
+        # CRF
+        m = BERT_MLP_CRF()
         _ = train_crf(ds_train, m)
         results, targets = test_crf(ds_test, m)
         crfs.append(cal_prec_rec_f1_v2(results, targets))
