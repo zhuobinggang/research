@@ -7,6 +7,26 @@ lstms = []
 lstm_crfs = []
 crfs = []
 
+def idxs2key(idxs):
+    return [keys[idx] for idx in idxs]
+
+def test(ds_test, m):
+    y_true = []
+    y_pred = []
+    toker = m.toker
+    bert = m.bert
+    for row_idx, row in enumerate(ds_test):
+        tokens_org = row['tokens']
+        # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
+        tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
+        if tokens is None:
+            print('跳过')
+        else:
+            ys = m.forward(ids, headword_indexs)
+            y_pred.append(idxs2key(ys))
+            y_true.append(idxs2key(row['ner_tags'])) 
+    return y_true, y_pred
+
 def run(times = 5):
     ds_train, ds_test = get_ds()
     for _ in range(times):

@@ -9,11 +9,11 @@ F = t.nn.functional
 from transformers import BertTokenizer, BertModel, BertTokenizerFast
 import datetime
 from torchcrf import CRF
+from seqeval.metrics import classification_report
 
 keys = ['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC', 'B-MISC', 'I-MISC']
 
-def idxs2key(idxs):
-    return [keys[idx] for idx in idxs]
+
 
 def get_ds():
     ds = load_dataset("conll2003")
@@ -41,7 +41,8 @@ class BERT_LSTM_CRF(nn.Module):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_lstm, _ = self.lstm(out_bert) # (1, n, 256 * 2)
     out_mlp = self.mlp(out_lstm) # (1, n, 9)
-    return out_mlp
+    ys = m.crf.decode(out_mlp)
+    return ys[0]
 
 
 class BERT_MLP_CRF(nn.Module):
@@ -63,7 +64,8 @@ class BERT_MLP_CRF(nn.Module):
   def forward(self, ids, headword_indexs):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_mlp = self.mlp(out_bert) # (1, n, 9)
-    return out_mlp
+    ys = m.crf.decode(out_mlp)
+    return ys[0]
 
 def train(ds_train, m, epoch = 1):
     first_time = datetime.datetime.now()
@@ -116,25 +118,6 @@ def test_old(ds_test, m):
             results += ys[0]
             targets += row['ner_tags']
     return results, targets
-
-def test(ds_test, m):
-    y_true = []
-    y_pred = []
-    toker = m.toker
-    bert = m.bert
-    for row_idx, row in enumerate(ds_test):
-        tokens_org = row['tokens']
-        # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
-        tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
-        if tokens is None:
-            print('跳过')
-        else:
-            out_mlp = m.forward(ids, headword_indexs) # (1, n, 9)
-            # ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
-            ys = m.crf.decode(out_mlp)
-            y_pred.append(idxs2key(ys[0]))
-            y_true.append(idxs2key(row['ner_tags'])) 
-    return y_true, y_pred
 
 
 # Checked, 可以放心使用, 可以运行test_subword_tokenize尝试

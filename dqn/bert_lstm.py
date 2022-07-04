@@ -31,6 +31,14 @@ class BERT_LSTM(nn.Module):
     )
     self.cuda()
 
+  def forward(self, ids, headword_indexs):
+    out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    out_lstm, _ = self.lstm(out_bert) # (1, n, 256 * 2)
+    out_mlp = self.mlp(out_lstm) # (1, n, 9)
+    ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+    ys = ys.argmax(2).squeeze(0).tolist()
+    return ys
+
 
 def train(ds_train, m, epoch = 1):
     first_time = datetime.datetime.now()
@@ -64,26 +72,6 @@ def train(ds_train, m, epoch = 1):
     delta = last_time - first_time 
     print(delta.seconds)
     return delta.seconds
-    
-def test(ds_test, m):
-    results = []
-    targets = []
-    toker = m.toker
-    bert = m.bert
-    for row_idx, row in enumerate(ds_test):
-        tokens_org = row['tokens']
-        # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
-        tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
-        if tokens is None:
-            print('跳过')
-        else:
-            out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-            out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
-            out_mlp = m.mlp(out_lstm) # (1, n, 9)
-            ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
-            results += ys.argmax(2).squeeze(0).tolist()
-            targets += row['ner_tags']
-    return results, targets
 
 
 # Checked, 可以放心使用, 可以运行test_subword_tokenize尝试
