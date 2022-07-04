@@ -32,7 +32,7 @@ class BERT_MLP(nn.Module):
     )
     self.cuda()
 
-  def forward(self, ids, headword_indexs):
+  def dry_run(self, ids, headword_indexs):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_mlp = self.mlp(out_bert) # (1, n, 9)
     ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)

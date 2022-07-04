@@ -31,7 +31,7 @@ class BERT_LSTM(nn.Module):
     )
     self.cuda()
 
-  def forward(self, ids, headword_indexs):
+  def dry_run(self, ids, headword_indexs):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_lstm, _ = self.lstm(out_bert) # (1, n, 256 * 2)
     out_mlp = self.mlp(out_lstm) # (1, n, 9)

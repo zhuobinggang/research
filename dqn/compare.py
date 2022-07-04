@@ -1,6 +1,10 @@
-from bert_mlp import BERT_MLP, train as train_mlp, test as test_mlp
-from bert_lstm import BERT_LSTM, train as train_lstm, test as test_lstm
-from bert_crf import BERT_LSTM_CRF, BERT_MLP_CRF, get_ds, cal_prec_rec_f1_v2, train as train_crf, test as test_crf
+from bert_mlp import BERT_MLP, train as train_mlp
+from bert_lstm import BERT_LSTM, train as train_lstm
+from bert_crf import BERT_LSTM_CRF, BERT_MLP_CRF, get_ds, cal_prec_rec_f1_v2, train as train_crf
+from datasets import load_metric
+# metric = load_metric('seqeval')
+# metric.compute(predictions = y_pred, references = y_true)
+
 
 mlps = []
 lstms = []
@@ -22,32 +26,33 @@ def test(ds_test, m):
         if tokens is None:
             print('跳过')
         else:
-            ys = m.forward(ids, headword_indexs)
+            ys = m.dry_run(ids, headword_indexs)
             y_pred.append(idxs2key(ys))
             y_true.append(idxs2key(row['ner_tags'])) 
     return y_true, y_pred
 
 def run(times = 5):
     ds_train, ds_test = get_ds()
+    metric = load_metric('seqeval')
     for _ in range(times):
         # MLP
         m = BERT_MLP()
         _ = train_mlp(ds_train, m)
-        results, targets = test_mlp(ds_test, m)
-        mlps.append(cal_prec_rec_f1_v2(results, targets))
+        y_true, y_pred = test(ds_test, m)
+        mlps.append(metric.compute(predictions = y_pred, references = y_true))
         # LSTM
         m = BERT_LSTM()
         _ = train_lstm(ds_train, m)
-        results, targets = test_lstm(ds_test, m)
-        lstms.append(cal_prec_rec_f1_v2(results, targets))
+        y_true, y_pred = test(ds_test, m)
+        lstms.append(metric.compute(predictions = y_pred, references = y_true))
         # CRF
         m = BERT_LSTM_CRF()
         _ = train_crf(ds_train, m)
-        results, targets = test_crf(ds_test, m)
-        lstm_crfs.append(cal_prec_rec_f1_v2(results, targets))
+        y_true, y_pred = test(ds_test, m)
+        lstm_crfs.append(metric.compute(predictions = y_pred, references = y_true))
         # CRF
         m = BERT_MLP_CRF()
         _ = train_crf(ds_train, m)
-        results, targets = test_crf(ds_test, m)
-        crfs.append(cal_prec_rec_f1_v2(results, targets))
+        y_true, y_pred = test(ds_test, m)
+        crfs.append(metric.compute(predictions = y_pred, references = y_true))
     

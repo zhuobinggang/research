@@ -9,7 +9,6 @@ F = t.nn.functional
 from transformers import BertTokenizer, BertModel, BertTokenizerFast
 import datetime
 from torchcrf import CRF
-from seqeval.metrics import classification_report
 
 keys = ['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC', 'B-MISC', 'I-MISC']
 
@@ -41,6 +40,12 @@ class BERT_LSTM_CRF(nn.Module):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_lstm, _ = self.lstm(out_bert) # (1, n, 256 * 2)
     out_mlp = self.mlp(out_lstm) # (1, n, 9)
+    return out_mlp
+
+  def dry_run(self, ids, headword_indexs):
+    out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    out_lstm, _ = self.lstm(out_bert) # (1, n, 256 * 2)
+    out_mlp = self.mlp(out_lstm) # (1, n, 9)
     ys = m.crf.decode(out_mlp)
     return ys[0]
 
@@ -64,7 +69,12 @@ class BERT_MLP_CRF(nn.Module):
   def forward(self, ids, headword_indexs):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_mlp = self.mlp(out_bert) # (1, n, 9)
-    ys = m.crf.decode(out_mlp)
+    return out_mlp
+
+  def dry_run(self, ids, headword_indexs):
+    out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    out_mlp = self.mlp(out_bert) # (1, n, 9)
+    ys = self.crf.decode(out_mlp)
     return ys[0]
 
 def train(ds_train, m, epoch = 1):
