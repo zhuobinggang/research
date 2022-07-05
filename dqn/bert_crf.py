@@ -10,9 +10,6 @@ from transformers import BertTokenizer, BertModel, BertTokenizerFast
 import datetime
 from torchcrf import CRF
 
-keys = ['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC', 'B-MISC', 'I-MISC']
-
-
 
 def get_ds():
     ds = load_dataset("conll2003")

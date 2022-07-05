@@ -12,6 +12,8 @@ lstms = []
 lstm_crfs = []
 crfs = []
 
+keys = ['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC', 'B-MISC', 'I-MISC']
+
 def idxs2key(idxs):
     return [keys[idx] for idx in idxs]
 
