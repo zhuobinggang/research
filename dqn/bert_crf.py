@@ -43,7 +43,7 @@ class BERT_LSTM_CRF(nn.Module):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_lstm, _ = self.lstm(out_bert) # (1, n, 256 * 2)
     out_mlp = self.mlp(out_lstm) # (1, n, 9)
-    ys = m.crf.decode(out_mlp)
+    ys = self.crf.decode(out_mlp)
     return ys[0]
 
 
