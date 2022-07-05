@@ -55,7 +55,7 @@ def test(ds_test, m):
             y_true.append(idxs2key(row['ner_tags'])) 
     return y_true, y_pred
 
-def run(times = 5):
+def run(times = 3):
     ds_train, ds_test = get_ds()
     metric = load_metric('seqeval')
     for _ in range(times):

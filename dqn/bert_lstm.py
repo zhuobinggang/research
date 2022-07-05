@@ -50,7 +50,8 @@ def train(ds_train, m, epoch = 1):
         print(f'epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
             if row_idx % 1000 == 0:
-                print(f'finished: {row_idx}/{len(ds_train)}')
+                # print(f'finished: {row_idx}/{len(ds_train)}')
+                pass
             tokens_org = row['tokens']
             # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
             tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
