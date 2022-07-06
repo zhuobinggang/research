@@ -55,28 +55,28 @@ def test(ds_test, m):
             y_true.append(idxs2key(row['ner_tags'])) 
     return y_true, y_pred
 
-def run(times = 3):
+def run(times = 3, epoch = 2):
     ds_train, ds_test = get_ds()
     metric = load_metric('seqeval')
     for _ in range(times):
         # MLP
         m = BERT_MLP()
-        _ = train_mlp(ds_train, m)
+        _ = train_mlp(ds_train, m, epoch = epoch)
         y_true, y_pred = test(ds_test, m)
         mlps.append(metric.compute(predictions = y_pred, references = y_true))
         # LSTM
         m = BERT_LSTM()
-        _ = train_lstm(ds_train, m)
+        _ = train_lstm(ds_train, m, epoch = epoch)
         y_true, y_pred = test(ds_test, m)
         lstms.append(metric.compute(predictions = y_pred, references = y_true))
         # CRF
         m = BERT_LSTM_CRF()
-        _ = train_crf(ds_train, m)
+        _ = train_crf(ds_train, m, epoch = epoch)
         y_true, y_pred = test(ds_test, m)
         lstm_crfs.append(metric.compute(predictions = y_pred, references = y_true))
         # CRF
         m = BERT_MLP_CRF()
-        _ = train_crf(ds_train, m)
+        _ = train_crf(ds_train, m, epoch = epoch)
         y_true, y_pred = test(ds_test, m)
         crfs.append(metric.compute(predictions = y_pred, references = y_true))
     

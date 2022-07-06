@@ -47,7 +47,7 @@ def train(ds_train, m, epoch = 1):
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
     CEL = nn.CrossEntropyLoss(weight=t.tensor([0.1, 1, 1, 1, 1, 1, 1, 1, 1]).cuda())
     for epoch_idx in range(epoch):
-        print(f'epoch {epoch_idx}')
+        print(f'LSTM epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
             if row_idx % 1000 == 0:
                 # print(f'finished: {row_idx}/{len(ds_train)}')
