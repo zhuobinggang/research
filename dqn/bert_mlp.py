@@ -31,6 +31,64 @@ class BERT_MLP(nn.Module):
     ys = ys.argmax(2).squeeze(0).tolist()
     return ys
 
+def pad_idss(idss):
+    PAD_TOKEN_ID = 0
+    max_length = np.max([len(ids) for ids in idss])
+    idss_padded = []
+    masks = []
+    if hasattr(idss[0], 'tolist'):
+        idss = [ids.tolist() for ids in idss]
+    for ids in idss:
+        idss_padded.append(ids + [0] * (max_length - len(ids)))
+        masks.append([1] * len(ids) + [0] * (max_length - len(ids)))
+    return idss_padded, masks
+
+
+def batch(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
+
+def batched_random_dataset(dataset, batch_size = 4):
+    return batch(np.random.permutation(dataset), batch_size)
+
+def train_by_batch(ds_train, m, epoch = 1, batch = 4):
+    first_time = datetime.datetime.now()
+    toker = m.toker
+    bert = m.bert
+    opter = t.optim.Adam(m.parameters(), lr=2e-5)
+    CEL = nn.CrossEntropyLoss(weight=t.tensor([0.1, 1, 1, 1, 1, 1, 1, 1, 1]).cuda())
+    # CEL = nn.CrossEntropyLoss()
+    for epoch_idx in range(epoch):
+        print(f'MLP epoch {epoch_idx}')
+        for row_idx, row in enumerate(np.random.permutation(ds_train)):
+            if row_idx % 1000 == 0:
+                # print(f'finished: {row_idx}/{len(ds_train)}')
+                pass
+            tokens_org = row['tokens']
+            # DESC: 每个token可能会被分解成多个subword，所以用headword_indexs来获取开头的subword对应的embedding
+            tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
+            if tokens is None:
+                print('跳过训练')
+            else:
+                out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+                out_mlp = m.mlp(out_bert) # (1, n, 9)
+                ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+                # cal loss
+                labels = t.LongTensor(row['ner_tags']) # Long: (n)
+                loss = CEL(ys.squeeze(0), labels.cuda())
+                loss.backward() # 累积模拟batch
+                # backward
+                if (i + 1) % batch == 0:
+                    opter.step()
+                    opter.zero_grad()
+    # 最后一次backward
+    opter.step()
+    opter.zero_grad()
+    last_time = datetime.datetime.now()
+    delta = last_time - first_time 
+    print(delta.seconds)
+    return delta.seconds
 
 def train(ds_train, m, epoch = 1):
     first_time = datetime.datetime.now()

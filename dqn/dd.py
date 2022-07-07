@@ -1,8 +1,7 @@
 
 def pad_idss(idss):
     PAD_TOKEN_ID = 0
-    lengths = [len(ids) for ids in idss]
-    max_length = np.max(lengths)
+    max_length = np.max([len(ids) for ids in idss])
     idss_padded = []
     masks = []
     if hasattr(idss[0], 'tolist'):
@@ -12,6 +11,14 @@ def pad_idss(idss):
         masks.append([1] * len(ids) + [0] * (max_length - len(ids)))
     return idss_padded, masks
 
+
+def batch(iterable, n=1):
+    l = len(iterable)
+    for ndx in range(0, l, n):
+        yield iterable[ndx:min(ndx + n, l)]
+
+def batched_random_dataset(dataset, batch_size = 4):
+    return batch([(row_idx, row) for row_idx, row in enumerate(np.random.permutation(dataset))], batch_size)
 
 
 def dd(train, m):
