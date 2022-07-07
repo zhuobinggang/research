@@ -79,7 +79,7 @@ def train_by_batch(ds_train, m, epoch = 1, batch = 4):
                 loss = CEL(ys.squeeze(0), labels.cuda())
                 loss.backward() # 累积模拟batch
                 # backward
-                if (i + 1) % batch == 0:
+                if (row_idx + 1) % batch == 0:
                     opter.step()
                     opter.zero_grad()
     # 最后一次backward
