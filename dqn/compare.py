@@ -1,6 +1,6 @@
 from bert_mlp import BERT_MLP, train as train_mlp
 from bert_lstm import BERT_LSTM, train as train_lstm
-from bert_crf import BERT_LSTM_CRF, BERT_MLP_CRF, get_ds, cal_prec_rec_f1_v2, train as train_crf
+from bert_crf import BERT_LSTM_CRF, BERT_MLP_CRF, cal_prec_rec_f1_v2, train as train_crf
 from datasets import load_metric
 import torch as t
 # metric = load_metric('seqeval')
@@ -11,6 +11,12 @@ mlps = []
 lstms = []
 lstm_crfs = []
 crfs = []
+
+def get_ds():
+    ds = load_dataset("conll2003")
+    train = ds['train']
+    test = ds['test']
+    return train, test
 
 keys = ['O', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-LOC', 'I-LOC', 'B-MISC', 'I-MISC']
 

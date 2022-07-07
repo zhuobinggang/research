@@ -1,5 +1,4 @@
 import torch as t
-from datasets import load_dataset
 import numpy as np
 nn = t.nn
 F = t.nn.functional
@@ -8,13 +7,6 @@ F = t.nn.functional
 # wiki2vec = Wikipedia2Vec.load('/usr01/ZhuoBinggang/enwiki_20180420_win10_300d.pkl')
 from transformers import BertTokenizer, BertModel, BertTokenizerFast
 import datetime
-
-
-def get_ds():
-    ds = load_dataset("conll2003")
-    train = ds['train']
-    test = ds['test']
-    return train, test
 
 
 class BERT_LSTM(nn.Module):

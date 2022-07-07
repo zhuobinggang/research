@@ -1,5 +1,4 @@
 import torch as t
-from datasets import load_dataset
 import numpy as np
 nn = t.nn
 F = t.nn.functional
@@ -9,13 +8,6 @@ F = t.nn.functional
 from transformers import BertTokenizer, BertModel, BertTokenizerFast
 import datetime
 from torchcrf import CRF
-
-
-def get_ds():
-    ds = load_dataset("conll2003")
-    train = ds['train']
-    test = ds['test']
-    return train, test
 
 
 class BERT_LSTM_CRF(nn.Module):

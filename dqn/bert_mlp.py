@@ -1,5 +1,4 @@
 import torch as t
-from datasets import load_dataset
 import numpy as np
 nn = t.nn
 F = t.nn.functional
@@ -8,13 +7,6 @@ F = t.nn.functional
 # wiki2vec = Wikipedia2Vec.load('/usr01/ZhuoBinggang/enwiki_20180420_win10_300d.pkl')
 from transformers import BertTokenizer, BertModel, BertTokenizerFast
 import datetime
-
-
-def get_ds():
-    ds = load_dataset("conll2003")
-    train = ds['train']
-    test = ds['test']
-    return train, test
 
 
 class BERT_MLP(nn.Module):
@@ -46,6 +38,7 @@ def train(ds_train, m, epoch = 1):
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
     CEL = nn.CrossEntropyLoss(weight=t.tensor([0.1, 1, 1, 1, 1, 1, 1, 1, 1]).cuda())
+    # CEL = nn.CrossEntropyLoss()
     for epoch_idx in range(epoch):
         print(f'MLP epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
