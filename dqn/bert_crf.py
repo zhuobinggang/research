@@ -66,12 +66,11 @@ class BERT_MLP_CRF(nn.Module):
     ys = self.crf.decode(out_mlp)
     return ys[0]
 
-def train(ds_train, m, epoch = 1):
+def train(ds_train, m, epoch = 1, batch = 4):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
-    CEL = nn.CrossEntropyLoss(weight=t.tensor([0.1, 1, 1, 1, 1, 1, 1, 1, 1]).cuda())
     for epoch_idx in range(epoch):
         print(f'CRF or LSTM_CRF epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
@@ -91,10 +90,12 @@ def train(ds_train, m, epoch = 1):
                 tags = t.LongTensor(row['ner_tags']).unsqueeze(0) # Long: (1, n)
                 # loss = CEL(ys.squeeze(0), labels.cuda())
                 loss = -m.crf(out_mlp, tags)
-                # backward
-                m.zero_grad()
                 loss.backward()
-                opter.step()
+                if (row_idx + 1) % batch == 0:
+                    opter.step()
+                    opter.zero_grad()
+    opter.step()
+    opter.zero_grad()
     last_time = datetime.datetime.now()
     delta = last_time - first_time 
     print(delta.seconds)
