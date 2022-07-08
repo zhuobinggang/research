@@ -33,7 +33,7 @@ class BERT_MLP(nn.Module):
     return ys
 
 
-class BERT_MLP2(nn.Module)
+class BERT_MLP2(nn.Module):
   def __init__(self):
     super().__init__()
     config = BertConfig.from_pretrained('bert-base-uncased', num_labels=9, finetuning_task='ner')
