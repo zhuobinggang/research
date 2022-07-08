@@ -52,8 +52,9 @@ def train(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
             else:
                 out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
                 out_lstm, _ = m.lstm(out_bert) # (1, n, 256 * 2)
-                out_mlp = m.mlp(out_lstm) # (1, n, 9)
-                ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+                # out_mlp = m.mlp(out_lstm) # (1, n, 9)
+                ys = m.mlp(out_lstm) # (1, n, 9)
+                # ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
                 # cal loss
                 labels = t.LongTensor(row['ner_tags']) # Long: (n)
                 loss = CEL(ys.squeeze(0), labels.cuda())

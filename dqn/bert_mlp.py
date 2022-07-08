@@ -5,7 +5,7 @@ F = t.nn.functional
 # 放弃使用word2vec了，太多单词不存在
 # from wikipedia2vec import Wikipedia2Vec
 # wiki2vec = Wikipedia2Vec.load('/usr01/ZhuoBinggang/enwiki_20180420_win10_300d.pkl')
-from transformers import BertTokenizer, BertModel, BertTokenizerFast
+from transformers import BertTokenizer, BertModel, BertForTokenClassification, BertConfig
 import datetime
 
 
@@ -25,10 +25,27 @@ class BERT_MLP(nn.Module):
     self.cuda()
 
   def dry_run(self, ids, headword_indexs):
+    loss, scores = self.bert(ids.cuda())
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_mlp = self.mlp(out_bert) # (1, n, 9)
     ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
     ys = ys.argmax(2).squeeze(0).tolist()
+    return ys
+
+
+class BERT_MLP2(nn.Module)
+  def __init__(self):
+    super().__init__()
+    config = BertConfig.from_pretrained('bert-base-uncased', num_labels=9, finetuning_task='ner')
+    self.bert = BertForTokenClassification.from_pretrained('bert-base-uncased', config = config)
+    self.bert.train()
+    self.toker = BertTokenizer.from_pretrained('bert-base-uncased')
+    self.cuda()
+
+  def dry_run(self, ids, headword_indexs):
+    # out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    logits = self.bert(ids.cuda()).logits # (1, n, 9)
+    ys = logits.argmax(2).squeeze(0).tolist()
     return ys
 
 def pad_idss(idss):
@@ -71,8 +88,7 @@ def train_by_batch(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
                 print('跳过训练')
             else:
                 out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-                out_mlp = m.mlp(out_bert) # (1, n, 9)
-                ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+                ys = m.mlp(out_bert) # (1, n, 9)
                 # cal loss
                 labels = t.LongTensor(row['ner_tags']) # Long: (n)
                 loss = CEL(ys.squeeze(0), labels.cuda())
@@ -89,13 +105,13 @@ def train_by_batch(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     print(delta.seconds)
     return delta.seconds
 
-def train(ds_train, m, epoch = 1):
+
+def train2(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
-    CEL = nn.CrossEntropyLoss(weight=t.tensor([0.1, 1, 1, 1, 1, 1, 1, 1, 1]).cuda())
-    # CEL = nn.CrossEntropyLoss()
+    CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
     for epoch_idx in range(epoch):
         print(f'MLP epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
@@ -108,21 +124,23 @@ def train(ds_train, m, epoch = 1):
             if tokens is None:
                 print('跳过训练')
             else:
-                out_bert = bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-                out_mlp = m.mlp(out_bert) # (1, n, 9)
-                ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
+                out_bert = bert(ids.cuda()) 
+                logits = out_bert.logits # (1, n, 9) 
                 # cal loss
                 labels = t.LongTensor(row['ner_tags']) # Long: (n)
                 loss = CEL(ys.squeeze(0), labels.cuda())
+                loss.backward() # 累积模拟batch
                 # backward
-                m.zero_grad()
-                loss.backward()
-                opter.step()
+                if (row_idx + 1) % batch == 0:
+                    opter.step()
+                    opter.zero_grad()
+    # 最后一次backward
+    opter.step()
+    opter.zero_grad()
     last_time = datetime.datetime.now()
     delta = last_time - first_time 
     print(delta.seconds)
     return delta.seconds
-    
 
 # Checked, 可以放心使用, 可以运行test_subword_tokenize尝试
 def subword_tokenize(tokens_org, toker):
