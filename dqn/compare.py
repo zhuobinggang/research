@@ -88,7 +88,8 @@ def run_special(times = 5, epoch = 2, batch = 4, weight = True):
 
 def run():
     # Batch alternave
-    run_special(3, 2, 4, True)
-    run_special(3, 2, 8, True)
-    run_special(3, 2, 16, True)
+    # run_special(3, 2, 4, True)
+    # run_special(3, 2, 8, True)
+    # run_special(3, 2, 16, True)
+    run_special(3, 2, 8, False)
 

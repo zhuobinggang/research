@@ -32,15 +32,12 @@ class BERT_LSTM(nn.Module):
     return ys
 
 
-def train(ds_train, m, epoch = 1, batch = 4, weight = True):
+def train(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
-    if weight:
-        CEL = nn.CrossEntropyLoss(weight=t.tensor([0.1, 1, 1, 1, 1, 1, 1, 1, 1]).cuda())
-    else:
-        CEL = nn.CrossEntropyLoss()
+    CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
     for epoch_idx in range(epoch):
         print(f'LSTM epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
