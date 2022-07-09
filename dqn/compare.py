@@ -74,22 +74,22 @@ def run_special(times = 5, epoch = 2, batch = 4, weight = 1.0):
         _ = train_lstm(ds_train, m, epoch = epoch, batch = batch, weight = weight)
         y_true, y_pred = test(ds_test, m)
         lstms.append(metric.compute(predictions = y_pred, references = y_true))
-        # NOTE: 为了恢复论文中的设置暂时停止CRF的训练
-        # # CRF
-        # m = BERT_LSTM_CRF()
-        # _ = train_crf(ds_train, m, epoch = epoch, batch = batch)
-        # y_true, y_pred = test(ds_test, m)
-        # lstm_crfs.append(metric.compute(predictions = y_pred, references = y_true))
-        # # CRF
-        # m = BERT_MLP_CRF()
-        # _ = train_crf(ds_train, m, epoch = epoch, batch = batch)
-        # y_true, y_pred = test(ds_test, m)
-        # crfs.append(metric.compute(predictions = y_pred, references = y_true))
+        # CRF
+        m = BERT_LSTM_CRF()
+        _ = train_crf(ds_train, m, epoch = epoch, batch = batch)
+        y_true, y_pred = test(ds_test, m)
+        lstm_crfs.append(metric.compute(predictions = y_pred, references = y_true))
+        # CRF
+        m = BERT_MLP_CRF()
+        _ = train_crf(ds_train, m, epoch = epoch, batch = batch)
+        y_true, y_pred = test(ds_test, m)
+        crfs.append(metric.compute(predictions = y_pred, references = y_true))
 
 def run():
-    run_special(5, 2, 16, 0.5)
-    run_special(5, 2, 32, 0.5)
-    run_special(5, 2, 16, 0)
-    run_special(5, 2, 32, 0)
+    run_special(4, 2, 1, 0.5)
+    run_special(4, 2, 4, 0.5)
+    run_special(4, 2, 8, 0.5)
+    run_special(4, 2, 16, 0.5)
+    run_special(4, 2, 32, 0.5)
 
 
