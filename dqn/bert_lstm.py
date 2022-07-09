@@ -74,7 +74,6 @@ def train(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
 
 # Checked, 可以放心使用, 可以运行test_subword_tokenize尝试
 def subword_tokenize(tokens_org, toker):
-    tokens_org = [token.lower() for token in tokens_org]
     headword_indexs = []
     tokens = []
     index = 0

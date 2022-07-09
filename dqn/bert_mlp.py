@@ -23,9 +23,7 @@ class BERT_MLP(nn.Module):
             nn.Linear(512, 9),
     )
     self.cuda()
-
   def dry_run(self, ids, headword_indexs):
-    loss, scores = self.bert(ids.cuda())
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_mlp = self.mlp(out_bert) # (1, n, 9)
     ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
@@ -33,6 +31,7 @@ class BERT_MLP(nn.Module):
     return ys
 
 
+# 不使用subword来增加信息似乎会大幅削弱模型性能
 class BERT_MLP2(nn.Module):
   def __init__(self):
     super().__init__()
@@ -41,9 +40,9 @@ class BERT_MLP2(nn.Module):
     self.bert.train()
     self.toker = BertTokenizer.from_pretrained('bert-base-uncased')
     self.cuda()
-
   def dry_run(self, ids, headword_indexs):
     # out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+    ids = ids[:, headword_indexs]
     logits = self.bert(ids.cuda()).logits # (1, n, 9)
     ys = logits.argmax(2).squeeze(0).tolist()
     return ys
@@ -74,7 +73,8 @@ def train_by_batch(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     toker = m.toker
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
-    CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
+    # CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
+    CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda(), reduction='sum')
     for epoch_idx in range(epoch):
         print(f'MLP epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
@@ -112,6 +112,7 @@ def train2(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     bert = m.bert
     opter = t.optim.Adam(m.parameters(), lr=2e-5)
     CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
+    # CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda(), reduction='sum')
     for epoch_idx in range(epoch):
         print(f'MLP epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
@@ -124,11 +125,10 @@ def train2(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
             if tokens is None:
                 print('跳过训练')
             else:
-                out_bert = bert(ids.cuda()) 
-                logits = out_bert.logits # (1, n, 9) 
-                # cal loss
                 labels = t.LongTensor(row['ner_tags']) # Long: (n)
-                loss = CEL(ys.squeeze(0), labels.cuda())
+                ids = ids[:, headword_indexs]
+                out_bert = bert(ids.cuda(), labels = labels.cuda()) 
+                loss = out_bert.loss
                 loss.backward() # 累积模拟batch
                 # backward
                 if (row_idx + 1) % batch == 0:
@@ -144,12 +144,11 @@ def train2(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
 
 # Checked, 可以放心使用, 可以运行test_subword_tokenize尝试
 def subword_tokenize(tokens_org, toker):
-    tokens_org = [token.lower() for token in tokens_org]
     headword_indexs = []
     tokens = []
     index = 0
     for token in tokens_org:
-        sub_tokens = toker.tokenize(token)
+        sub_tokens = toker.tokenize(token) # 自动lowercase
         tokens += sub_tokens
         headword_indexs.append(index)
         index += len(sub_tokens)
@@ -171,27 +170,3 @@ def test_subword_tokenize(tokens_org, toker):
     print(toker.decode(id_heads))
 
 
-
-def cal_prec_rec_f1_v2(results, targets):
-  TP = 0
-  FP = 0
-  FN = 0
-  TN = 0
-  for guess, target in zip(results, targets):
-    if guess == 1:
-      if target == 1:
-        TP += 1
-      elif target == 0:
-        FP += 1
-    elif guess == 0:
-      if target == 1:
-        FN += 1
-      elif target == 0:
-        TN += 1
-  prec = TP / (TP + FP) if (TP + FP) > 0 else 0
-  rec = TP / (TP + FN) if (TP + FN) > 0 else 0
-  f1 = (2 * prec * rec) / (prec + rec) if (prec + rec) != 0 else 0
-  balanced_acc_factor1 = TP / (TP + FN) if (TP + FN) > 0 else 0
-  balanced_acc_factor2 = TN / (FP + TN) if (FP + TN) > 0 else 0
-  balanced_acc = (balanced_acc_factor1 + balanced_acc_factor2) / 2
-  return prec, rec, f1, balanced_acc
