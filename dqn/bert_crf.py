@@ -71,7 +71,7 @@ def train(ds_train, m, epoch = 1, batch = 4):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
-    opter = t.optim.Adam(m.parameters(), lr=2e-5)
+    opter = t.optim.Adam(m.parameters(), lr=3e-5)
     for epoch_idx in range(epoch):
         print(f'CRF or LSTM_CRF epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
@@ -149,8 +149,4 @@ def test_subword_tokenize(tokens_org, toker):
     print(' '.join(tokens_org))
     print(toker.decode(id_heads))
 
-
-
-def cal_prec_rec_f1_v2(results, targets):
-    pass
 

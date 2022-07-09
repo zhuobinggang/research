@@ -74,9 +74,9 @@ def train_by_batch(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
-    opter = t.optim.Adam(m.parameters(), lr=2e-5)
-    # CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
-    CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda(), reduction='sum')
+    opter = t.optim.Adam(m.parameters(), lr=3e-5)
+    CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
+    # CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda(), reduction='sum')
     for epoch_idx in range(epoch):
         print(f'MLP epoch {epoch_idx}')
         for row_idx, row in enumerate(np.random.permutation(ds_train)):
