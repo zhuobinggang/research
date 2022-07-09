@@ -10,11 +10,12 @@ import datetime
 
 
 class BERT_MLP(nn.Module):
-  def __init__(self):
+  def __init__(self, uncased = True):
     super().__init__()
-    self.bert = BertModel.from_pretrained('bert-base-uncased')
+    model_name = 'bert-base-uncased' if uncased else 'bert-base-cased'
+    self.bert = BertModel.from_pretrained(model_name)
     self.bert.train()
-    self.toker = BertTokenizer.from_pretrained('bert-base-uncased')
+    self.toker = BertTokenizer.from_pretrained(model_name)
     self.mlp = nn.Sequential(
             nn.Linear(768, 1024),
             nn.Tanh(),
@@ -33,12 +34,13 @@ class BERT_MLP(nn.Module):
 
 # 不使用subword来增加信息似乎会大幅削弱模型性能
 class BERT_MLP2(nn.Module):
-  def __init__(self):
+  def __init__(self, uncased = True):
     super().__init__()
-    config = BertConfig.from_pretrained('bert-base-uncased', num_labels=9, finetuning_task='ner')
-    self.bert = BertForTokenClassification.from_pretrained('bert-base-uncased', config = config)
+    model_name = 'bert-base-uncased' if uncased else 'bert-base-cased'
+    config = BertConfig.from_pretrained(model_name, num_labels=9, finetuning_task='ner')
+    self.bert = BertForTokenClassification.from_pretrained(model_name, config = config)
     self.bert.train()
-    self.toker = BertTokenizer.from_pretrained('bert-base-uncased')
+    self.toker = BertTokenizer.from_pretrained(model_name)
     self.cuda()
   def dry_run(self, ids, headword_indexs):
     # out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)

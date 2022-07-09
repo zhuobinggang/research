@@ -11,11 +11,12 @@ from torchcrf import CRF
 
 
 class BERT_LSTM_CRF(nn.Module):
-  def __init__(self):
+  def __init__(self, uncased = True):
     super().__init__()
-    self.bert = BertModel.from_pretrained('bert-base-uncased')
+    model_name = 'bert-base-uncased' if uncased else 'bert-base-cased'
+    self.bert = BertModel.from_pretrained(model_name)
     self.bert.train()
-    self.toker = BertTokenizer.from_pretrained('bert-base-uncased')
+    self.toker = BertTokenizer.from_pretrained(model_name)
     self.lstm = nn.LSTM(768, 256, batch_first = True, bidirectional=True) # TODO: 尝试512和768的隐藏值
     self.mlp = nn.Sequential(
             nn.Linear(512, 768),
