@@ -7,21 +7,27 @@ F = t.nn.functional
 # wiki2vec = Wikipedia2Vec.load('/usr01/ZhuoBinggang/enwiki_20180420_win10_300d.pkl')
 from transformers import BertTokenizer, BertModel, BertTokenizerFast
 import datetime
+from itertools import chain
 
 
 class BERT_LSTM(nn.Module):
-  def __init__(self, uncased = True):
+  def __init__(self, uncased = True, feature_based = False):
     super().__init__()
     model_name = 'bert-base-uncased' if uncased else 'bert-base-cased'
     self.bert = BertModel.from_pretrained(model_name)
-    self.bert.train()
     self.toker = BertTokenizer.from_pretrained(model_name)
-    self.lstm = nn.LSTM(768, 256, batch_first = True, bidirectional=True) # TODO: 尝试512和768的隐藏值
     self.mlp = nn.Sequential(
             nn.Linear(512, 768),
             nn.Tanh(),
             nn.Linear(768, 9),
     )
+    if not feature_based: # 如果feature based增加一层lstm
+        self.lstm = nn.LSTM(768, 256, batch_first = True, bidirectional=True) # TODO: 尝试512和768的隐藏值
+        self.bert.train()
+        self.opter = t.optim.Adam(self.parameters(), lr=3e-5)
+    else:
+        self.lstm = nn.LSTM(768, 256, batch_first = True, bidirectional=True, num_layers = 2) # TODO: 尝试512和768的隐藏值
+        self.opter = t.optim.Adam(chain(self.lstm.parameters(), self.mlp.parameters()), lr=3e-5)
     self.cuda()
 
   def dry_run(self, ids, headword_indexs):
@@ -37,7 +43,7 @@ def train(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
-    opter = t.optim.Adam(m.parameters(), lr=3e-5)
+    opter = m.opter
     CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
     for epoch_idx in range(epoch):
         print(f'LSTM epoch {epoch_idx}')
