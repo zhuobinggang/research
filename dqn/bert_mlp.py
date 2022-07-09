@@ -10,11 +10,10 @@ import datetime
 
 
 class BERT_MLP(nn.Module):
-  def __init__(self, uncased = True):
+  def __init__(self, uncased = True, feature_based = False):
     super().__init__()
     model_name = 'bert-base-uncased' if uncased else 'bert-base-cased'
     self.bert = BertModel.from_pretrained(model_name)
-    self.bert.train()
     self.toker = BertTokenizer.from_pretrained(model_name)
     self.mlp = nn.Sequential(
             nn.Linear(768, 1024),
@@ -24,6 +23,11 @@ class BERT_MLP(nn.Module):
             nn.Linear(512, 9),
     )
     self.cuda()
+    if not feature_based:
+        self.bert.train()
+        self.opter = t.optim.Adam(self.parameters(), lr=3e-5)
+    else:
+        self.opter = t.optim.Adam(self.mlp.parameters(), lr=3e-5)
   def dry_run(self, ids, headword_indexs):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     out_mlp = self.mlp(out_bert) # (1, n, 9)
@@ -42,6 +46,7 @@ class BERT_MLP2(nn.Module):
     self.bert.train()
     self.toker = BertTokenizer.from_pretrained(model_name)
     self.cuda()
+    self.opter = t.optim.Adam(self.parameters(), lr=3e-5)
   def dry_run(self, ids, headword_indexs):
     # out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
     ids = ids[:, headword_indexs]
@@ -74,7 +79,7 @@ def train_by_batch(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
-    opter = t.optim.Adam(m.parameters(), lr=3e-5)
+    opter = m.opter
     CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
     # CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda(), reduction='sum')
     for epoch_idx in range(epoch):
@@ -112,7 +117,7 @@ def train2(ds_train, m, epoch = 1, batch = 4, weight = 1.0):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
-    opter = t.optim.Adam(m.parameters(), lr=2e-5)
+    opter = m.opter
     CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda())
     # CEL = nn.CrossEntropyLoss(weight=t.tensor([weight, 1, 1, 1, 1, 1, 1, 1, 1.0]).cuda(), reduction='sum')
     for epoch_idx in range(epoch):
