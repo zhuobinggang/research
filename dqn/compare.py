@@ -91,5 +91,11 @@ def run():
     run_special(4, 2, 8, 0.5)
     run_special(4, 2, 16, 0.5)
     run_special(4, 2, 32, 0.5)
+    for start, end in [(0, 4),(4, 8),(8, 12),(12, 16), (16, 20)]:
+        for array,name in [(mlps, 'mlps'), (lstms, 'lstms'), (crfs, 'crfs'), (lstm_crfs, 'lstm_crfs')]:
+            f1 = np.mean([item['overall_f1'] for item in array[start:end]]).round(4)
+            prec = np.mean([item['overall_precision'] for item in array[start:end]]).round(4)
+            rec = np.mean([item['overall_recall'] for item in array[start:end]]).round(4)
+            print(f'{name}: {f1}, {prec}, {rec}')
 
 

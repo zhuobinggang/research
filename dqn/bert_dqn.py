@@ -23,9 +23,9 @@ class BERT_LSTM(nn.Module):
     self.GAMMA = 0.99
     self.cuda()
 
-  def forward(self, obs): # return: (9)
-      # TODO:
-      pass
+  # obs: (1, 768)
+  def action(self, obs): # return: (9)
+      return self.q_net(obs).suqeeze()
 
   def dry_run(self, ids, headword_indexs):
     out_bert = self.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
@@ -41,9 +41,9 @@ def logic(m, token_embs, labels, epsilon = 0.2):
     seq_lenth = token_embs.shape[1]
     for i in range(seq_lenth)
         done = (i == seq_lenth - 1)
-        obs = token_embs[i]
-        action = np.random.randint(0, 9) if random.random() <= epsilon else m(obs).argmax().item()
-        q_pred = m(obs)[action]
+        obs = token_embs[0:i] # (1, 768)
+        action = np.random.randint(0, 9) if random.random() <= epsilon else m.action(obs).argmax().item()
+        q_pred = m.action(obs)[action]
         reward = 1 if labels[i] == action else -1
         if done:
             with t.no_grad():

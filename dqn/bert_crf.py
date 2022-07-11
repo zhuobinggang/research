@@ -41,11 +41,12 @@ class BERT_LSTM_CRF(nn.Module):
 
 
 class BERT_MLP_CRF(nn.Module):
-  def __init__(self):
+  def __init__(self, uncased = True):
     super().__init__()
-    self.bert = BertModel.from_pretrained('bert-base-uncased')
+    model_name = 'bert-base-uncased' if uncased else 'bert-base-cased'
+    self.bert = BertModel.from_pretrained(model_name)
     self.bert.train()
-    self.toker = BertTokenizer.from_pretrained('bert-base-uncased')
+    self.toker = BertTokenizer.from_pretrained(model_name)
     self.mlp = nn.Sequential(
             nn.Linear(768, 1024),
             nn.Tanh(),
