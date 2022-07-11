@@ -39,7 +39,7 @@ class BERT_LSTM(nn.Module):
 # labels: (n)
 def logic(m, token_embs, labels, epsilon = 0.2):
     seq_lenth = token_embs.shape[1]
-    for i in range(seq_lenth)
+    for i in range(seq_lenth):
         done = (i == seq_lenth - 1)
         obs = token_embs[0:i] # (1, 768)
         action = np.random.randint(0, 9) if random.random() <= epsilon else m.action(obs).argmax().item()
