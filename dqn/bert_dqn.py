@@ -99,3 +99,22 @@ def train_dqn(ds_train, m, epoch = 1, batch = 4):
     print(delta.seconds)
     return delta.seconds
 
+# Checked, 可以放心使用, 可以运行test_subword_tokenize尝试
+def subword_tokenize(tokens_org, toker):
+    headword_indexs = []
+    tokens = []
+    index = 0
+    for token in tokens_org:
+        sub_tokens = toker.tokenize(token)
+        tokens += sub_tokens
+        headword_indexs.append(index)
+        index += len(sub_tokens)
+    if len(tokens) < 1:
+        print(f'解码出来的tokens数量为0, {tokens_org}')
+        return None, None, None
+    else:
+        ids = toker.encode(tokens) 
+        # NOTE: BUG fixed, encode的时候会增加[cls][sep]，因为cls是增加在左边的，所以headword需要加一
+        headword_indexs = [idx + 1 for idx in headword_indexs]
+        ids = t.tensor(ids).unsqueeze(0)
+        return tokens, ids, headword_indexs
