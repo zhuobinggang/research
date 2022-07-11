@@ -35,9 +35,10 @@ class BERT_DQN(nn.Module):
 
 # token_embs: (1, n, 768)
 # labels: (n)
-def step_through_episode(m, token_embs, labels, epsilon = 0.2, batch_size = 1):
+def step_through_episode(m, token_embs, labels, epsilon = 0.2):
     reward_sum = 0
     seq_lenth = token_embs.shape[1]
+    total_loss = 0
     for i in range(seq_lenth):
         done = (i == seq_lenth - 1)
         obs = token_embs[0,i] # (768)
@@ -48,14 +49,11 @@ def step_through_episode(m, token_embs, labels, epsilon = 0.2, batch_size = 1):
         with t.no_grad():
             q_true = m.GAMMA * (1-done) * m.q_net(token_embs[0, i + 1]).max() + reward
         loss = nn.functional.smooth_l1_loss(q_pred, q_true)
-        # step back
-        loss.backward()
-        if (i + 1) % batch_size == 0:
-            opter.step()
-            opter.zero_grad()
-    # The last step
-    opter.step()
-    opter.zero_grad()
+        total_loss += loss
+    # step back
+    m.opter.zero_grad()
+    total_loss.backward()
+    m.opter.step()
     return reward_sum
 
 def cal_epsilon(start, end, step, total_steps, end_fraction):
@@ -65,7 +63,7 @@ def cal_epsilon(start, end, step, total_steps, end_fraction):
     else:
         return start + progress * (end - start) / end_fraction
 
-def episode(m, row, epsilon, batch_size = 4):
+def episode(m, row, epsilon):
     tokens_org = row['tokens']
     tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
     if tokens is None:
@@ -74,12 +72,12 @@ def episode(m, row, epsilon, batch_size = 4):
     else:
         out_bert = m.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
         labels = row['ner_tags']
-        reward_sum = step_through_episode(m, out_bert, labels, epsilon = epsilon, batch_size = batch_size)
+        reward_sum = step_through_episode(m, out_bert, labels, epsilon = epsilon)
         return reward_sum
 
 reward_per_episode = []
 
-def train_dqn(ds_train, m, epoch = 1, batch = 4):
+def train_dqn(ds_train, m, epoch = 1):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
@@ -94,7 +92,7 @@ def train_dqn(ds_train, m, epoch = 1, batch = 4):
                 print(f'finished: {row_idx}/{len(ds_train)}')
                 pass
             epsilon = cal_epsilon(1, 0.05, row_idx + 1, total_length + 1, 0.5)
-            reward_per_episode.append(episode(m, row, epsilon, batch_size = 4))
+            reward_per_episode.append(episode(m, row, epsilon))
     last_time = datetime.datetime.now()
     delta = last_time - first_time 
     print(delta.seconds)
