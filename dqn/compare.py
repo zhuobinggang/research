@@ -12,6 +12,7 @@ mlps = []
 lstms = []
 lstm_crfs = []
 crfs = []
+dqns = []
 
 def get_ds():
     ds = load_dataset("conll2003")
@@ -99,5 +100,37 @@ def run():
             prec = np.mean([item['overall_precision'] for item in array[start:end]]).round(4)
             rec = np.mean([item['overall_recall'] for item in array[start:end]]).round(4)
             print(f'{name}: {f1}, {prec}, {rec}')
+
+
+rewards = []
+
+def run_dqn():
+    ds_train, ds_test = get_ds()
+    metric = load_metric('seqeval')
+    m = BERT_DQN()
+    train_dqn(ds_train, m, 1, weight = 0.5)
+    y_true, y_pred = test(ds_test, m)
+    dqns.append(metric.compute(predictions = y_pred, references = y_true))
+    rewards.append(reward_per_episode)
+    m = BERT_DQN()
+    train_dqn(ds_train, m, 1, weight = 0.1)
+    y_true, y_pred = test(ds_test, m)
+    dqns.append(metric.compute(predictions = y_pred, references = y_true))
+    rewards.append(reward_per_episode)
+    m = BERT_DQN()
+    train_dqn(ds_train, m, 2, weight = 0.1)
+    y_true, y_pred = test(ds_test, m)
+    dqns.append(metric.compute(predictions = y_pred, references = y_true))
+    rewards.append(reward_per_episode)
+    m = BERT_DQN()
+    train_dqn(ds_train, m, 3, weight = 0.1)
+    y_true, y_pred = test(ds_test, m)
+    dqns.append(metric.compute(predictions = y_pred, references = y_true))
+    rewards.append(reward_per_episode)
+    m = BERT_DQN()
+    train_dqn(ds_train, m, 4, weight = 0.1)
+    y_true, y_pred = test(ds_test, m)
+    dqns.append(metric.compute(predictions = y_pred, references = y_true))
+    rewards.append(reward_per_episode)
 
 

@@ -35,7 +35,7 @@ class BERT_DQN(nn.Module):
 
 # token_embs: (1, n, 768)
 # labels: (n)
-def step_through_episode(m, token_embs, labels, epsilon = 0.2):
+def step_through_episode(m, token_embs, labels, epsilon = 0.2, weight = 0.5):
     reward_sum = 0
     seq_lenth = token_embs.shape[1]
     total_loss = 0
@@ -44,7 +44,13 @@ def step_through_episode(m, token_embs, labels, epsilon = 0.2):
         obs = token_embs[0,i] # (768)
         action = np.random.randint(0, 9) if random.random() <= epsilon else m.q_net(obs).argmax().item()
         q_pred = m.q_net(obs)[action]
-        reward = 1 if labels[i] == action else -1
+        if labels[i] == action:
+            if labels[i] == 0:
+                reward = weight
+            else:
+                reward = 1
+        else:
+            reward = -1
         reward_sum += reward
         with t.no_grad():
             if done:
@@ -66,7 +72,7 @@ def cal_epsilon(start, end, step, total_steps, end_fraction):
     else:
         return start + progress * (end - start) / end_fraction
 
-def episode(m, row, epsilon):
+def episode(m, row, epsilon, weight = 0.5):
     tokens_org = row['tokens']
     tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
     if tokens is None:
@@ -75,12 +81,12 @@ def episode(m, row, epsilon):
     else:
         out_bert = m.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
         labels = row['ner_tags']
-        reward_sum = step_through_episode(m, out_bert, labels, epsilon = epsilon)
+        reward_sum = step_through_episode(m, out_bert, labels, epsilon = epsilon, weight = weight)
         return reward_sum
 
 reward_per_episode = []
 
-def train_dqn(ds_train, m, epoch = 1):
+def train_dqn(ds_train, m, epoch = 1, weight = 0.5):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
@@ -94,8 +100,8 @@ def train_dqn(ds_train, m, epoch = 1):
             if row_idx % 1000 == 0:
                 print(f'finished: {row_idx}/{len(ds_train)}')
                 pass
-            epsilon = cal_epsilon(1, 0.05, row_idx + 1, total_length + 1, 0.5)
-            reward_per_episode.append(episode(m, row, epsilon))
+            epsilon = cal_epsilon(1, 0.05, row_idx + 1 + (epoch_idx * total_length),  epoch * (total_length + 1), 0.5)
+            reward_per_episode.append(episode(m, row, epsilon, weight = weight))
     last_time = datetime.datetime.now()
     delta = last_time - first_time 
     print(delta.seconds)
