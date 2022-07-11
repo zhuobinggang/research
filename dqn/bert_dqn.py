@@ -45,11 +45,8 @@ def step_through_episode(m, token_embs, labels, epsilon = 0.2, batch_size = 1):
         q_pred = m.q_net(obs)[action]
         reward = 1 if labels[i] == action else -1
         reward_sum += reward
-        if done:
-            with t.no_grad():
-                q_true = m.GAMMA * m.q_net(token_embs[0, i + 1]).max() + reward
-        else: 
-                q_true = t.tensor(1.0 * reward).cuda()
+        with t.no_grad():
+            q_true = m.GAMMA * (1-done) * m.q_net(token_embs[0, i + 1]).max() + reward
         loss = nn.functional.smooth_l1_loss(q_pred, q_true)
         # step back
         loss.backward()
@@ -71,10 +68,14 @@ def cal_epsilon(start, end, step, total_steps, end_fraction):
 def episode(m, row, epsilon, batch_size = 4):
     tokens_org = row['tokens']
     tokens, ids, headword_indexs = subword_tokenize(tokens_org, m.toker)
-    out_bert = m.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
-    labels = row['ner_tags']
-    reward_sum = step_through_episode(m, out_bert, labels, epsilon = epsilon, batch_size = batch_size)
-    return reward_sum
+    if tokens is None:
+        print('跳过训练')
+        return 0
+    else:
+        out_bert = m.bert(ids.cuda()).last_hidden_state[:, headword_indexs, :] # (1, n, 768)
+        labels = row['ner_tags']
+        reward_sum = step_through_episode(m, out_bert, labels, epsilon = epsilon, batch_size = batch_size)
+        return reward_sum
 
 reward_per_episode = []
 
