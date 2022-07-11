@@ -1,6 +1,7 @@
 from bert_mlp import BERT_MLP, train_by_batch as train_mlp
 from bert_lstm import BERT_LSTM, train as train_lstm
 from bert_crf import BERT_LSTM_CRF, BERT_MLP_CRF, train as train_crf
+from bert_dqn import BERT_DQN, train_dqn, reward_per_episode
 from datasets import load_metric, load_dataset
 import torch as t
 # metric = load_metric('seqeval')
@@ -59,6 +60,7 @@ def test(ds_test, m):
             y_pred.append(idxs2key(ys))
             y_true.append(idxs2key(row['ner_tags'])) 
     return y_true, y_pred
+    
 
 def run_special(times = 5, epoch = 2, batch = 4, weight = 1.0):
     ds_train, ds_test = get_ds()
