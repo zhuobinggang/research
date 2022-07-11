@@ -47,7 +47,10 @@ def step_through_episode(m, token_embs, labels, epsilon = 0.2):
         reward = 1 if labels[i] == action else -1
         reward_sum += reward
         with t.no_grad():
-            q_true = m.GAMMA * (1-done) * m.q_net(token_embs[0, i + 1]).max() + reward
+            if done:
+                q_true = t.tensor(1.0 * reward)
+            else:
+                q_true = m.GAMMA * (1-done) * m.q_net(token_embs[0, i + 1]).max() + reward
         loss = nn.functional.smooth_l1_loss(q_pred, q_true)
         total_loss += loss
     # step back
