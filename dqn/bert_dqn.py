@@ -49,7 +49,7 @@ def step_through_episode(m, token_embs, labels, epsilon = 0.2, batch_size = 1):
             with t.no_grad():
                 q_true = m.GAMMA * m.q_net(token_embs[0, i + 1]).max() + reward
         else: 
-                q_true = t.FloatTensor(reward)
+                q_true = t.FloatTensor(reward).cuda()
         loss = nn.functional.smooth_l1_loss(q_pred, q_true)
         # step back
         loss.backward()
