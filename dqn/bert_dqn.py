@@ -53,7 +53,7 @@ def step_through_episode(m, token_embs, labels, epsilon = 0.2, batch_size = 1):
         loss = nn.functional.smooth_l1_loss(q_pred, q_true)
         # step back
         loss.backward()
-        if (row_idx + 1) % batch_size == 0:
+        if (i + 1) % batch_size == 0:
             opter.step()
             opter.zero_grad()
     # The last step
