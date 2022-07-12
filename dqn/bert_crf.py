@@ -89,7 +89,7 @@ def train(ds_train, m, epoch = 1, batch = 4):
                 # ys = F.softmax(out_mlp, dim = 2) # (1, n, 9)
                 # cal loss
                 # labels = t.LongTensor(row['ner_tags']) # Long: (1, n)
-                tags = t.LongTensor(row['ner_tags']).unsqueeze(0) # Long: (1, n)
+                tags = t.LongTensor(row['ner_tags']).unsqueeze(0).cuda() # Long: (1, n)
                 # loss = CEL(ys.squeeze(0), labels.cuda())
                 loss = -m.crf(out_mlp, tags)
                 loss.backward()
