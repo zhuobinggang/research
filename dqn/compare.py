@@ -45,7 +45,7 @@ def subword_tokenize(tokens_org, toker):
         ids = t.tensor(ids).unsqueeze(0)
         return tokens, ids, headword_indexs
 
-def test(ds_test, m):
+def test(ds_test, m, to_key=True):
     y_true = []
     y_pred = []
     toker = m.toker
@@ -58,8 +58,12 @@ def test(ds_test, m):
             print('跳过')
         else:
             ys = m.dry_run(ids, headword_indexs)
-            y_pred.append(idxs2key(ys))
-            y_true.append(idxs2key(row['ner_tags'])) 
+            if to_key:
+                y_pred.append(idxs2key(ys))
+                y_true.append(idxs2key(row['ner_tags'])) 
+            else:
+                y_pred += ys
+                y_true += row['ner_tags']
     return y_true, y_pred
     
 

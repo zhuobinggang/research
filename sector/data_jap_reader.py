@@ -24,66 +24,24 @@ def read_lines(data_id = 1):
     lines += doc
   return [line.replace(' ', '').replace('\n', '') for line in lines]
 
+END_CHARACTERS = ['。', '？']
+
 def read_sentences(data_id = 1): 
   lines = read_lines(data_id) # 隐式根据换行划分句子
   sentences = []
   for line in lines:
-    ss = line.split('。')
-    if len(ss) == 1: # 如果句中没有句号，说明是根据换行分的，大概是对话
-      sentences.append(ss[0])
-    else:
-      for i,s in enumerate(ss):
-        if len(s) > 1: # 恢复句号，因为句号重要，但是最后一句不需要，也需要提防空白的情况
-          if i != len(ss) - 1: 
-            sentences.append(s + '。')
-          else:
-            sentences.append(s) # 最后一句不需要加句号
+    s = ''
+    for c in line:
+      s += c
+      if c in END_CHARACTERS:
+        sentences.append(s)
+        s = ''
+    if len(s) > 0:
+      if len(s) < 3:
+        sentences[-1] += s
+      else:
+        sentences.append(s)
   return sentences
-
-# 废弃： 这个方法行不通，一个对话框可以跨越很多行
-def read_sentences_v2(data_id = 1): 
-  lines = read_lines(data_id) # 隐式根据换行划分句子
-  mess = ''.join(lines)
-  mess = re.sub(r'［.*?］', '', mess) # 去掉诸如此类强调：［＃「帰って来た」は底本では「帰った来た」］
-  dd = re.findall(r'「.*?」|[^「^」]*?。', mess2) # length = 26942，不知为何少了很多, 原文27823
-  sentences = []
-  return sentences
-
-def read_sentences_v3(data_id = 1): 
-  lines = read_lines(data_id) # 隐式根据换行划分句子
-  lines = replace_emphasize(lines) # 删除所有强调
-  sentences = []
-  for line in lines:
-    ss = line.split('。')
-    if len(ss) == 1: # 如果一行中没有句号，还蛮多这种情况的
-      sentences.append(ss[0])
-    else:
-      for i,s in enumerate(ss):
-        if len(s) > 1: # 恢复句号，因为句号重要，但是最后一句不需要，也需要提防空白的情况
-          if i != len(ss) - 1: # 如果不是最后一句, 恢复句号
-            sentences.append(s + '。')
-          else: # 如果是最后一句，说明本身就没有句号
-            if s == '……' or s == '――': # 排除奇怪结尾的情况
-              pass
-            else:
-              sentences.append(s) # 最后一句不需要加句号
-        else: # 如果为‘’，即空白，什么也不用做
-            pass
-  return sentences
-
-def replace_emphasize(lines):
-  lines = [line.replace('$', '') for line in lines]
-  mess = '$'.join(lines)
-  mess = re.sub(r'［.*?］', '', mess) # 去掉诸如此类强调：［＃「帰って来た」は底本では「帰った来た」］
-  lines = mess.split('$')
-  return lines
-
-def read_sentences_v4(data_id = 1): 
-  lines = read_lines(data_id) 
-  lines = replace_emphasize(lines) # 删除所有强调符号
-  mess = ''.join(lines)
-  dd = re.findall(r'.*?[。」]', mess) # 所有以句号或者问号结尾的都当成句子
-  return dd # length = 24866, 原文27823
 
 def read_trains():
   return read_sentences(1)
@@ -96,6 +54,12 @@ def read_devs():
 
 def no_indicator(ss):
   return [s.replace('\u3000', '') for s in ss]
+
+def is_begining(s):
+  return s.startswith('\u3000')
+
+def cal_label_one(ss):
+  return sum([1 for s in ss if is_begining(s)])
 
 
 class Dataset():
