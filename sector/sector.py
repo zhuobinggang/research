@@ -5,7 +5,7 @@ F = t.nn.functional
 from transformers import BertJapaneseTokenizer, BertModel
 import datetime
 from itertools import chain
-from dataset_for_sector import ld_train, ld_test, ld_dev
+from dataset_for_sector import read_ld_train, read_ld_test, read_ld_dev
 
 # 分裂sector, 2vs2的时候，同时判断三个分割点
 class Sector_2022(nn.Module):
@@ -38,7 +38,7 @@ class Sector_2022(nn.Module):
     )
 
 
-def focal_aux_loss(out, labels, fl_rate = 0, aux_rate = 1, main_pos = 1):
+def focal_aux_loss(out, labels, fl_rate, aux_rate, main_pos = 1):
     assert len(labels.shape) == 1
     assert len(out.shape) == 1
     assert labels.shape[0] == out.shape[0]
@@ -46,7 +46,7 @@ def focal_aux_loss(out, labels, fl_rate = 0, aux_rate = 1, main_pos = 1):
     for idx, (o, l) in enumerate(zip(out, labels)):
       pt = o if (l == 1) else (1 - o)
       loss = (-1) * t.log(pt) * t.pow((1 - pt), fl_rate)
-      if idx != main_pos: # AUX loss
+      if idx != main_pos: # AUX loss, windows size = 4
           loss = loss * aux_rate
       total.append(loss)
     total = t.stack(total)
@@ -94,7 +94,7 @@ def encode(ss, toker):
     for s in ss:
         ids = toker.encode(s, add_special_tokens = False)
         if len(ids) > PART_LEN_MAX:
-            print(f'WARN: len(ids) > PART_LEN_MAX! ===\n{s}')
+            # print(f'WARN: len(ids) > PART_LEN_MAX! ===\n{s}')
             idss.append(ids[:PART_LEN_MAX])
         else:
             idss.append(ids)
@@ -124,4 +124,44 @@ def test(ds_test, m):
         y_true += labels
     return y_true, y_pred
 
+def fomatted_results(y_true, y_pred):
+    MAX_LEN = len(y_pred)
+    trues = []
+    preds = []
+    preds_rounded = []
+    idx = 1
+    while idx < MAX_LEN:
+        trues.append(y_true[idx])
+        preds.append(y_pred[idx])
+        preds_rounded.append(1 if y_pred[idx] > 0.5 else 0)
+        idx += 3
+    return trues, preds, preds_rounded
 
+def test_chain(m, ld_test):
+    y_true, y_pred = test(ld_test, m)
+    trues, _, preds_rounded = fomatted_results(y_true, y_pred)
+    return cal_prec_rec_f1_v2(preds_rounded, trues)
+
+def cal_prec_rec_f1_v2(results, targets):
+  TP = 0
+  FP = 0
+  FN = 0
+  TN = 0
+  for guess, target in zip(results, targets):
+    if guess == 1:
+      if target == 1:
+        TP += 1
+      elif target == 0:
+        FP += 1
+    elif guess == 0:
+      if target == 1:
+        FN += 1
+      elif target == 0:
+        TN += 1
+  prec = TP / (TP + FP) if (TP + FP) > 0 else 0
+  rec = TP / (TP + FN) if (TP + FN) > 0 else 0
+  f1 = (2 * prec * rec) / (prec + rec) if (prec + rec) != 0 else 0
+  balanced_acc_factor1 = TP / (TP + FN) if (TP + FN) > 0 else 0
+  balanced_acc_factor2 = TN / (FP + TN) if (FP + TN) > 0 else 0
+  balanced_acc = (balanced_acc_factor1 + balanced_acc_factor2) / 2
+  return prec, rec, f1, balanced_acc

@@ -18,12 +18,12 @@ def create_loader(sentences, window_size = 4):
     assert len(loader) == (length_max - window_size + 1)
     return loader
 
-def ld_train():
+def read_ld_train():
     return create_loader(read_trains(), 4)
 
-def ld_test():
+def read_ld_test():
     return create_loader(read_tests(), 4)
 
 
-def ld_dev():
+def read_ld_dev():
     return create_loader(read_devs(), 4)
