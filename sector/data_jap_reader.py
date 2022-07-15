@@ -52,8 +52,8 @@ def read_tests():
 def read_devs():
   return read_sentences(2)
 
-def no_indicator(ss):
-  return [s.replace('\u3000', '') for s in ss]
+def no_indicator(s):
+  return s.replace('\u3000', '')
 
 def is_begining(s):
   return s.startswith('\u3000')
