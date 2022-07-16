@@ -26,6 +26,22 @@ dic = {
   'E1FL50AUX00': [],       
   'E2FL50AUX00': [],     
   'E3FL50AUX00': [],
+
+  'E1FL00': [],
+  'E2FL00': [],
+  'E3FL00': [],
+  'E1FL05': [],
+  'E2FL05': [],
+  'E3FL05': [],
+  'E1FL10': [],
+  'E2FL10': [],
+  'E3FL10': [],
+  'E1FL20': [],
+  'E2FL20': [],
+  'E3FL20': [],
+  'E1FL50': [],
+  'E2FL50': [],
+  'E3FL50': [],
 }
 
 def save_dic():
@@ -116,4 +132,54 @@ def run_explore2():
         dic['E3FL50AUX00'].append(test_chain(m, ld_test))
         save_dic()
 
+
+def run_explore3():
+    ld_train = read_ld_train()
+    ld_test = read_ld_test()
+    # 25 * 3 * 3 * 5 = 1125 (mins) = 18.75 (hours)
+    for _ in range(3):
+        m = Sector_2022()
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0)
+        dic['E1FL00'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0)
+        dic['E2FL00'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0)
+        dic['E3FL00'].append(test_chain(m, ld_test))
+        save_dic()
+    for _ in range(3):
+        m = Sector_2022()
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0.5)
+        dic['E1FL05'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0.5)
+        dic['E2FL05'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0.5)
+        dic['E3FL05'].append(test_chain(m, ld_test))
+        save_dic()
+    for _ in range(3):
+        m = Sector_2022()
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 1.0)
+        dic['E1FL10'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 1.0)
+        dic['E2FL10'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 1.0)
+        dic['E3FL10'].append(test_chain(m, ld_test))
+        save_dic()
+    for _ in range(3):
+        m = Sector_2022()
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 2.0)
+        dic['E1FL20'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 2.0)
+        dic['E2FL20'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 2.0)
+        dic['E3FL20'].append(test_chain(m, ld_test))
+        save_dic()
+    for _ in range(3):
+        m = Sector_2022()
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 5.0)
+        dic['E1FL50'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 5.0)
+        dic['E2FL50'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 5.0)
+        dic['E3FL50'].append(test_chain(m, ld_test))
+        save_dic()
 

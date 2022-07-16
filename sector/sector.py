@@ -51,6 +51,13 @@ def focal_aux_loss(out, labels, fl_rate, aux_rate, main_pos = 1):
       total.append(loss)
     total = t.stack(total)
     return total.sum()
+
+def focal_loss(o, l, fl_rate):
+    assert len(l.shape) == 0 
+    assert len(o.shape) == 0 
+    pt = o if (l == 1) else (1 - o)
+    loss = (-1) * t.log(pt) * t.pow((1 - pt), fl_rate)
+    return loss
     
 def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0):
     first_time = datetime.datetime.now()
@@ -88,6 +95,44 @@ def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0):
     print(delta.seconds)
     return delta.seconds
   
+# NOTE: 还需要更改loss function以抹除aux loss的tricky操作
+def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0):
+    first_time = datetime.datetime.now()
+    toker = m.toker
+    bert = m.bert
+    opter = m.opter
+    CLS_POS = 0 # baseline需要调用encode_standard（只添加一个sep在中间）然后取出CLS对应的embedding
+    for epoch_idx in range(epoch):
+        print(f'Train epoch {epoch_idx}')
+        for row_idx, (ss, labels) in enumerate(np.random.permutation(ds_train)):
+            if row_idx % 1000 == 0:
+                print(f'finished: {row_idx}/{len(ds_train)}')
+                pass
+            combined_ids, _ = encode_standard(ss, toker)
+            labels = [int(label) for label in labels]
+            assert len(labels) == 4
+            label = labels[2] # 取中间的label
+            out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, CLS_POS, :] # (1, 1, 768)
+            out_mlp = m.classifier(out_bert) # (1, 1, 1)
+            # cal loss
+            loss = focal_loss( # 不使用focal loss & 不使用辅助损失
+                    out_mlp.squeeze(), # (scalar)
+                    t.tensor(label).cuda(), # (scalar)
+                    fl_rate = fl_rate)
+            loss.backward()
+            # backward
+            if (row_idx + 1) % batch == 0:
+                opter.step()
+                opter.zero_grad()
+    opter.step()
+    opter.zero_grad()
+    last_time = datetime.datetime.now()
+    delta = last_time - first_time
+    print(delta.seconds)
+    return delta.seconds
+
+# 复数个SEP
+# NOTE: 更改了encode之后train的逻辑也要更改
 def encode(ss, toker):
     PART_LEN_MAX = int(500 / len(ss)) # 默认是512上限，考虑到特殊字符使用500作为分子
     idss = []
@@ -105,6 +150,32 @@ def encode(ss, toker):
         ids.append(toker.sep_token_id)
         idx_counter += len(ids)
         sep_idxs.append(idx_counter - 1)
+        combined_ids += ids
+    return t.LongTensor(combined_ids), sep_idxs
+
+# 单个SEP
+def encode_standard(ss, toker):
+    PART_LEN_MAX = int(500 / len(ss)) # 默认是512上限，考虑到特殊字符使用500作为分子
+    idss = []
+    for s in ss:
+        ids = toker.encode(s, add_special_tokens = False)
+        if len(ids) > PART_LEN_MAX:
+            # print(f'WARN: len(ids) > PART_LEN_MAX! ===\n{s}')
+            idss.append(ids[:PART_LEN_MAX])
+        else:
+            idss.append(ids)
+    combined_ids = [toker.cls_token_id]
+    sep_idxs = []
+    assert len(idss) == 4
+    # left
+    for i in range(0, 2):
+        ids = idss[i]
+        combined_ids += ids
+    sep_idxs.append(len(combined_ids))
+    combined_ids.append(toker.sep_token_id)
+    # right
+    for i in range(2, 4):
+        ids = idss[i]
         combined_ids += ids
     return t.LongTensor(combined_ids), sep_idxs
 
