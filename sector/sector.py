@@ -195,6 +195,24 @@ def test(ds_test, m):
         y_true += labels
     return y_true, y_pred
 
+def test_baseline(ds_test, m):
+    y_true = []
+    y_pred = []
+    toker = m.toker
+    bert = m.bert
+    CLS_POS = 0
+    for row_idx, row in enumerate(ds_test):
+        ss, labels = row
+        combined_ids, _ = encode_standard(ss, toker)
+        labels = [int(label) for label in labels]
+        assert len(labels) == 4
+        label = labels[2] # 取中间的label
+        out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, CLS_POS, :] # (1, 1, 768)
+        out_mlp = m.classifier(out_bert) # (1, 1, 1)
+        y_pred.append(out_mlp.squeeze().item())
+        y_true.append(label)
+    return y_true, y_pred
+
 def fomatted_results(y_true, y_pred):
     MAX_LEN = len(y_pred)
     trues = []
@@ -212,6 +230,11 @@ def test_chain(m, ld_test):
     y_true, y_pred = test(ld_test, m)
     trues, _, preds_rounded = fomatted_results(y_true, y_pred)
     return cal_prec_rec_f1_v2(preds_rounded, trues)
+
+def test_chain_baseline(m, ld_test):
+    y_true, y_pred = test_baseline(ld_test, m)
+    y_pred_rounded = [(1 if y > 0.5 else 0) for y in y_pred]
+    return cal_prec_rec_f1_v2(y_pred_rounded, y_true)
 
 def cal_prec_rec_f1_v2(results, targets):
   TP = 0
