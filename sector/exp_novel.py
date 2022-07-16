@@ -195,7 +195,7 @@ def run_explore_FL():
 
 def run_explore4():
     ld_train = read_ld_train()
-    ld_test = read_ld_test()
+    ld_test = read_ld_dev()
     # 25 * 3 * 3 * 4 = 900 (mins) = 15 (hours)
     for _ in range(3):
         m = Sector_2022()
