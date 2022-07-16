@@ -30,6 +30,8 @@ dic = {
   'E1FL00': [],
   'E2FL00': [],
   'E3FL00': [],
+  'E4FL00': [],
+  'E5FL00': [],
   'E1FL05': [],
   'E2FL05': [],
   'E3FL05': [],
@@ -139,14 +141,18 @@ def run_explore_FL():
     ld_train = read_ld_train()
     ld_test = read_ld_dev()
     # 25 * 3 * 3 * 5 = 1125 (mins) = 18.75 (hours)
-    for _ in range(3):
-        m = Sector_2022()
+    for _ in range(3): # Baseline BCE loss
+        m = Sector_2022() 
         train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0)
         dic['E1FL00'].append(test_chain(m, ld_test))
         train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0)
         dic['E2FL00'].append(test_chain(m, ld_test))
         train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0)
         dic['E3FL00'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0)
+        dic['E4FL00'].append(test_chain(m, ld_test))
+        train_baseline(m, ld_train, epoch = 1, batch = 16, fl_rate = 0)
+        dic['E5FL00'].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(3):
         m = Sector_2022()
