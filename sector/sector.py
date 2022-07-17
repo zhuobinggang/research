@@ -9,7 +9,7 @@ from dataset_for_sector import read_ld_train, read_ld_test, read_ld_dev
 
 # 分裂sector, 2vs2的时候，同时判断三个分割点
 class Sector_2022(nn.Module):
-  def __init__(self, learning_rate = 5e-6):
+  def __init__(self, learning_rate = 2e-5):
     super().__init__()
     self.learning_rate = learning_rate
     self.bert_size = 768
@@ -101,7 +101,7 @@ def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0):
     toker = m.toker
     bert = m.bert
     opter = m.opter
-    CLS_POS = 0 # baseline需要调用encode_standard（只添加一个sep在中间）然后取出CLS对应的embedding
+    CLS_POS = [0] # baseline需要调用encode_standard（只添加一个sep在中间）然后取出CLS对应的embedding
     for epoch_idx in range(epoch):
         print(f'Train epoch {epoch_idx}')
         for row_idx, (ss, labels) in enumerate(np.random.permutation(ds_train)):
@@ -200,7 +200,7 @@ def test_baseline(ds_test, m):
     y_pred = []
     toker = m.toker
     bert = m.bert
-    CLS_POS = 0
+    CLS_POS = [0]
     for row_idx, row in enumerate(ds_test):
         ss, labels = row
         combined_ids, _ = encode_standard(ss, toker)
