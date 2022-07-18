@@ -134,6 +134,16 @@ dic = {
   'E3FL50': [],
   'E4FL50': [],
   'E5FL50': [],
+
+  # compare
+  'E1AUX': [],
+  'E2AUX': [],
+  'E1FL': [],
+  'E2FL': [],
+  'E1AUX_FL': [],
+  'E2AUX_FL': [],
+  'E1STANDARD': [],
+  'E2STANDARD': [],
 }
 
 def save_dic(name = 'exp_novel.txt'):
@@ -370,6 +380,43 @@ def run2():
     run_explore_AUX() # 8.5
     run_explore_FL_AUX02() # 8.5 
     run_explore_FL_AUX03() # 8.5 
+
+
+
+def run_comparison():
+    PATH = 'comparison.txt'
+    times = 5
+    ld_train = read_ld_train()
+    ld_test = read_ld_test() # NOTE: 必须是test
+    # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
+    for _ in range(times):
+        m = Sector_2022()
+        for i in range(2):
+            key = f'E{i+1}FL'
+            train_baseline(m, ld_train, fl_rate = 1.0)
+            dic[key].append(test_chain_baseline(m, ld_test))
+        save_dic(PATH)
+    for _ in range(times):
+        m = Sector_2022()
+        for i in range(2):
+            key = f'E{i+1}STANDARD'
+            train_baseline(m, ld_train, fl_rate = 0)
+            dic[key].append(test_chain_baseline(m, ld_test))
+        save_dic(PATH)
+    for _ in range(times):
+        m = Sector_2022()
+        for i in range(1):
+            key = f'E{i+1}AUX_FL'
+            train(m, ld_train, fl_rate = 2.0, aux_rate = 0.3)
+            dic[key].append(test_chain(m, ld_test))
+        save_dic(PATH)
+    for _ in range(times):
+        m = Sector_2022()
+        for i in range(2):
+            key = f'E{i+1}AUX'
+            train(m, ld_train, fl_rate = 0, aux_rate = 0.1)
+            dic[key].append(test_chain(m, ld_test))
+        save_dic(PATH)
 
 
 
