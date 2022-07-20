@@ -38,20 +38,25 @@ class Sector_2022(nn.Module):
     )
 
 
+# NOTE: 增加了对特殊情况的处理, 在focal_aux_loss里处理
 def focal_aux_loss(out, labels, fl_rate, aux_rate, main_pos = 1):
     assert len(labels.shape) == 1
     assert len(out.shape) == 1
     assert labels.shape[0] == out.shape[0]
     total = []
     for idx, (o, l) in enumerate(zip(out, labels)):
-      pt = o if (l == 1) else (1 - o)
-      loss = (-1) * t.log(pt) * t.pow((1 - pt), fl_rate)
-      if idx != main_pos: # AUX loss, windows size = 4
-          loss = loss * aux_rate
-      total.append(loss)
+      if l is None: # NOTE: 处理None的情况, 保证不出现特殊情况
+        assert idx != main_pos
+      else:
+        pt = o if (l == 1) else (1 - o)
+        loss = (-1) * t.log(pt) * t.pow((1 - pt), fl_rate)
+        if idx != main_pos: # AUX loss, windows size = 4
+            loss = loss * aux_rate
+        total.append(loss)
     total = t.stack(total)
     return total.sum()
 
+# NOTE: 不需要处理None的情况，不会出现
 def focal_loss(o, l, fl_rate):
     assert len(l.shape) == 0 
     assert len(o.shape) == 0 
@@ -59,6 +64,7 @@ def focal_loss(o, l, fl_rate):
     loss = (-1) * t.log(pt) * t.pow((1 - pt), fl_rate)
     return loss
     
+# NOTE: 增加了对特殊情况的处理, 在focal_aux_loss里处理
 def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0):
     first_time = datetime.datetime.now()
     toker = m.toker
@@ -71,7 +77,7 @@ def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0):
                 print(f'finished: {row_idx}/{len(ds_train)}')
                 pass
             combined_ids, sep_idxs = encode(ss, toker)
-            labels = [int(label) for label in labels]
+            labels = [int(label) if label is not None else None for label in labels] # 处理np random带来的int 变成string的问题
             labels = labels[1:] # (3)，不需要第一个label
             sep_idxs = sep_idxs[0:-1] # (3), 不需要最后一个sep
             out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, sep_idxs, :] # (1, 3, 768)
@@ -109,9 +115,7 @@ def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0):
                 print(f'finished: {row_idx}/{len(ds_train)}')
                 pass
             combined_ids, _ = encode_standard(ss, toker)
-            labels = [int(label) for label in labels]
-            assert len(labels) == 4
-            label = labels[2] # 取中间的label
+            label = int(labels[2]) # 取中间的label, NOTE: 绝对不应该是None
             out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, CLS_POS, :] # (1, 1, 768)
             out_mlp = m.classifier(out_bert) # (1, 1, 1)
             # cal loss
@@ -132,12 +136,12 @@ def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0):
     return delta.seconds
 
 # 复数个SEP
-# NOTE: 更改了encode之后train的逻辑也要更改
+# NOTE: 处理NONE
 def encode(ss, toker):
     PART_LEN_MAX = int(500 / len(ss)) # 默认是512上限，考虑到特殊字符使用500作为分子
     idss = []
     for s in ss:
-        ids = toker.encode(s, add_special_tokens = False)
+        ids = [] if s is None else toker.encode(s, add_special_tokens = False) # NOTE: 处理None
         if len(ids) > PART_LEN_MAX:
             # print(f'WARN: len(ids) > PART_LEN_MAX! ===\n{s}')
             idss.append(ids[:PART_LEN_MAX])
@@ -154,11 +158,12 @@ def encode(ss, toker):
     return t.LongTensor(combined_ids), sep_idxs
 
 # 单个SEP
+# NOTE: 处理None
 def encode_standard(ss, toker):
     PART_LEN_MAX = int(500 / len(ss)) # 默认是512上限，考虑到特殊字符使用500作为分子
     idss = []
     for s in ss:
-        ids = toker.encode(s, add_special_tokens = False)
+        ids = [] if s is None else toker.encode(s, add_special_tokens = False) # NOTE: 处理None
         if len(ids) > PART_LEN_MAX:
             # print(f'WARN: len(ids) > PART_LEN_MAX! ===\n{s}')
             idss.append(ids[:PART_LEN_MAX])
@@ -179,6 +184,8 @@ def encode_standard(ss, toker):
         combined_ids += ids
     return t.LongTensor(combined_ids), sep_idxs
 
+# NOTE: 已处理None的情况
+# NOTE: 只需要处理中间的sep
 def test(ds_test, m):
     y_true = []
     y_pred = []
@@ -187,12 +194,12 @@ def test(ds_test, m):
     for row_idx, row in enumerate(ds_test):
         ss, labels = row
         combined_ids, sep_idxs = encode(ss, toker)
-        labels = labels[1:] # (3)，不需要第一个label
-        sep_idxs = sep_idxs[0:-1] # (3), 不需要最后一个sep
-        out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, sep_idxs, :] # (1, 3, 768)
-        out_mlp = m.classifier(out_bert) # (1, 3, 1)
-        y_pred += out_mlp.squeeze().tolist()
-        y_true += labels
+        main_label = labels[2] # (1)
+        main_sep_idx = sep_idxs[1] # (1)
+        out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, main_sep_idx, :] # (1, 768)
+        out_mlp = m.classifier(out_bert) # (1, 1)
+        y_pred.append(out_mlp.item())
+        y_true.append(main_label)
     return y_true, y_pred
 
 def test_baseline(ds_test, m):
@@ -213,23 +220,10 @@ def test_baseline(ds_test, m):
         y_true.append(label)
     return y_true, y_pred
 
-def fomatted_results(y_true, y_pred):
-    MAX_LEN = len(y_pred)
-    trues = []
-    preds = []
-    preds_rounded = []
-    idx = 1
-    while idx < MAX_LEN:
-        trues.append(y_true[idx])
-        preds.append(y_pred[idx])
-        preds_rounded.append(1 if y_pred[idx] > 0.5 else 0)
-        idx += 3
-    return trues, preds, preds_rounded
-
 def test_chain(m, ld_test):
     y_true, y_pred = test(ld_test, m)
-    trues, _, preds_rounded = fomatted_results(y_true, y_pred)
-    return cal_prec_rec_f1_v2(preds_rounded, trues)
+    y_pred_rounded = [(1 if y > 0.5 else 0) for y in y_pred]
+    return cal_prec_rec_f1_v2(y_pred_rounded, trues)
 
 def test_chain_baseline(m, ld_test):
     y_true, y_pred = test_baseline(ld_test, m)
