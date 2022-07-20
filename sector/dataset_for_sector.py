@@ -31,17 +31,17 @@ def read_ld_dev():
 # =============================================================================
 
 # NOTE: 要考虑章节接续点
-def read_ld_train_from_chapters():
-    return create_loader_from_chapters(read_trains_from_chapters(), 4)
+def read_ld_train_from_chapters(window_size = 4):
+    return create_loader_from_chapters(read_trains_from_chapters(), window_size)
 
-def read_ld_test_from_chapters():
-    return create_loader_from_chapters(read_tests_from_chapters(), 4)
+def read_ld_test_from_chapters(window_size = 4):
+    return create_loader_from_chapters(read_tests_from_chapters(), window_size)
 
-def read_ld_dev_from_chapters():
-    return create_loader_from_chapters(read_devs_from_chapters(), 4)
+def read_ld_dev_from_chapters(window_size = 4):
+    return create_loader_from_chapters(read_devs_from_chapters(), window_size)
 
 # NOTE: 要考虑章节接续点
-# NOTE: 还没有考虑到ws = 6的情况
+# NOTE: TESTED, window_size = 6的情况也已经测试 
 def create_loader_from_chapters(chapters, window_size = 4):
     loader = []
     assert window_size % 2 == 0
@@ -65,4 +65,12 @@ def create_loader_from_chapters(chapters, window_size = 4):
     count = sum([len(sentences) - 1 for sentences in chapters])
     assert len(loader) == count
     return loader
+
+
+def test_create_loader_from_chapters():
+    ld = read_ld_dev_from_chapters(window_size = 6)
+    print(ld[37])
+    print(ld[38])
+    print(ld[-1])
+    
 
