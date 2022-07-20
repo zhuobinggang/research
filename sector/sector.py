@@ -5,7 +5,6 @@ F = t.nn.functional
 from transformers import BertJapaneseTokenizer, BertModel
 import datetime
 from itertools import chain
-from dataset_for_sector import read_ld_train, read_ld_test, read_ld_dev
 
 # 分裂sector, 2vs2的时候，同时判断三个分割点
 class Sector_2022(nn.Module):

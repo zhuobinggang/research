@@ -1,4 +1,8 @@
 from sector import *
+from dataset_for_sector import read_ld_train_from_chapters, read_ld_test_from_chapters, read_ld_dev_from_chapters
+read_ld_train = read_ld_train_from_chapters
+read_ld_test = read_ld_test_from_chapters
+read_ld_dev = read_ld_dev_from_chapters
 
 dic = {
   # AUX ONLY
