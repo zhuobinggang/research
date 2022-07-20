@@ -22,7 +22,7 @@ def read_lines(data_id = 1):
   lines = []
   for doc in docs:
     lines += doc
-  return [line.replace(' ', '').replace('\n', '') for line in lines]
+  return [line.replace(' ', '').replace('\n', '').replace('\r', '') for line in lines] # 去掉空格和换行符
 
 END_CHARACTERS = ['。', '？']
 
@@ -42,6 +42,31 @@ def read_sentences(data_id = 1):
       else:
         sentences.append(s)
   return sentences
+
+# 需要根据空行分割成不同的章节
+def read_chapters(data_id = 1): 
+  lines = read_lines(data_id) # 隐式根据换行划分句子
+  chapters = []
+  sentences = []
+  for line in lines:
+      if len(line) == 0: # 空行
+          chapters.append(sentences.copy())
+          sentences = []
+      else:
+          s = ''
+          for c in line: # 遍历行内所有character
+              s += c
+              if c in END_CHARACTERS:
+                  sentences.append(s)
+                  s = ''
+          if len(s) > 0: # 处理最后留下来的一点
+              if len(s) < 3:
+                  sentences[-1] += s
+              else:
+                  sentences.append(s)
+  if len(sentences) > 0:
+      print('似乎出了点意外情况，理论上EOF应该是一个空行，所以不应该剩下这个才对')
+  return chapters
 
 def read_trains():
   return read_sentences(1)
