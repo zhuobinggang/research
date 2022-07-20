@@ -77,6 +77,15 @@ def read_tests():
 def read_devs():
   return read_sentences(2)
 
+def read_trains_from_chapters():
+  return read_chapters(1)
+
+def read_tests_from_chapters():
+  return read_chapters(3)
+
+def read_devs_from_chapters():
+  return read_chapters(2)
+
 def no_indicator(s):
   return s.replace('\u3000', '')
 
