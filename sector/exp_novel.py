@@ -159,32 +159,33 @@ def run_explore_AUX():
     PATH = 'run_explore_AUX.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
-    # 25 * 5 * 1 * 4 = 500 (mins) = 8.33 (hours)
+    # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
+    epochs = 3
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL0AUX00'
             train(m, ld_train, fl_rate = 0, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL0AUX01'
             train(m, ld_train, fl_rate = 0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL0AUX02'
             train(m, ld_train, fl_rate = 0, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL0AUX03'
             train(m, ld_train, fl_rate = 0, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
@@ -194,32 +195,33 @@ def run_explore_FL_AUX00():
     PATH = 'run_explore_FL_AUX00.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
-    # 25 * 5 * 1 * 4 = 500 (mins) = 8.33 (hours)
+    # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
+    epochs = 3
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL05AUX00'
             train(m, ld_train, fl_rate = 0.5, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL10AUX00'
             train(m, ld_train, fl_rate = 1.0, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL20AUX00'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL50AUX00'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
@@ -229,32 +231,33 @@ def run_explore_FL_AUX01():
     PATH = 'run_explore_FL_AUX01.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
-    # 25 * 5 * 1 * 4 = 500 (mins) = 8.33 (hours)
+    # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
+    epochs = 3
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL05AUX01'
             train(m, ld_train, fl_rate = 0.5, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL10AUX01'
             train(m, ld_train, fl_rate = 1.0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL20AUX01'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL50AUX01'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
@@ -264,32 +267,33 @@ def run_explore_FL_AUX02():
     PATH = 'run_explore_FL_AUX02.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
-    # 25 * 5 * 1 * 4 = 500 (mins) = 8.33 (hours)
+    # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
+    epochs = 3
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL05AUX02'
             train(m, ld_train, fl_rate = 0.5, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL10AUX02'
             train(m, ld_train, fl_rate = 1.0, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL20AUX02'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL50AUX02'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
@@ -300,32 +304,33 @@ def run_explore_FL_AUX03():
     PATH = 'run_explore_FL_AUX03.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
-    # 25 * 5 * 1 * 4 = 500 (mins) = 8.33 (hours)
+    # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
+    epochs = 3
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL05AUX03'
             train(m, ld_train, fl_rate = 0.5, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL10AUX03'
             train(m, ld_train, fl_rate = 1.0, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL20AUX03'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL50AUX03'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
@@ -335,56 +340,56 @@ def run_explore_FL():
     PATH = 'run_explore_FL.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev()
-    # 25 * 1 * 5 * 5 = 625 (mins) = 10.42 (hours)
+    # 25 * 1 * 5 * 3 = 375 (mins) = 6.25 (hours)
     times = 1
+    epochs = 3
     for _ in range(times): # Baseline BCE loss
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL00'
             train_baseline(m, ld_train, fl_rate = 0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL05'
             train_baseline(m, ld_train, fl_rate = 0.5)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL10'
             train_baseline(m, ld_train, fl_rate = 1.0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL20'
             train_baseline(m, ld_train, fl_rate = 2.0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(5):
+        for i in range(epochs):
             key = f'E{i+1}FL50'
             train_baseline(m, ld_train, fl_rate = 5.0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
 
 
-def run1():
-    run_explore_FL() # 10.5 hours
-    run_explore_FL_AUX00() # 8.5 hours
-    run_explore_FL_AUX01() # 8.5 
+def run1(): # 16小时
+    run_explore_FL() # 6.25 hours
+    run_explore_AUX() # 5 hours
+    run_explore_FL_AUX00() # 5 hours
 
 
-def run2():
-    run_explore_AUX() # 8.5
-    run_explore_FL_AUX02() # 8.5 
-    run_explore_FL_AUX03() # 8.5 
-
+def run2(): # 15小时
+    run_explore_FL_AUX01() # 5 
+    run_explore_FL_AUX02() # 5
+    run_explore_FL_AUX03() # 5 
 
 
 def run_comparison():
