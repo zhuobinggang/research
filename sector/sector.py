@@ -193,7 +193,7 @@ def test(ds_test, m):
     for row_idx, row in enumerate(ds_test):
         ss, labels = row
         combined_ids, sep_idxs = encode(ss, toker)
-        main_label = labels[2] # (1)
+        main_label = int(labels[2]) # (1)
         main_sep_idx = sep_idxs[1] # (1)
         out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, main_sep_idx, :] # (1, 768)
         out_mlp = m.classifier(out_bert) # (1, 1)
@@ -210,9 +210,8 @@ def test_baseline(ds_test, m):
     for row_idx, row in enumerate(ds_test):
         ss, labels = row
         combined_ids, _ = encode_standard(ss, toker)
-        labels = [int(label) for label in labels]
         assert len(labels) == 4
-        label = labels[2] # 取中间的label
+        label = int(labels[2]) # 取中间的label
         out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, CLS_POS, :] # (1, 1, 768)
         out_mlp = m.classifier(out_bert) # (1, 1, 1)
         y_pred.append(out_mlp.squeeze().item())
