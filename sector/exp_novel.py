@@ -400,20 +400,6 @@ def run_comparison():
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
     for _ in range(times):
         m = Sector_2022()
-        for i in range(2):
-            key = f'E{i+1}FL'
-            train_baseline(m, ld_train, fl_rate = 1.0)
-            dic[key].append(test_chain_baseline(m, ld_test))
-        save_dic(PATH)
-    for _ in range(times):
-        m = Sector_2022()
-        for i in range(2):
-            key = f'E{i+1}STANDARD'
-            train_baseline(m, ld_train, fl_rate = 0)
-            dic[key].append(test_chain_baseline(m, ld_test))
-        save_dic(PATH)
-    for _ in range(times):
-        m = Sector_2022()
         for i in range(1):
             key = f'E{i+1}AUX_FL'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0.3)
@@ -426,6 +412,21 @@ def run_comparison():
             train(m, ld_train, fl_rate = 0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
+    for _ in range(times):
+        m = Sector_2022()
+        for i in range(2):
+            key = f'E{i+1}FL'
+            train_baseline(m, ld_train, fl_rate = 1.0)
+            dic[key].append(test_chain_baseline(m, ld_test))
+        save_dic(PATH)
+    for _ in range(times):
+        m = Sector_2022()
+        for i in range(2):
+            key = f'E{i+1}STANDARD'
+            train_baseline(m, ld_train, fl_rate = 0)
+            dic[key].append(test_chain_baseline(m, ld_test))
+        save_dic(PATH)
+
 
 def run_comparison_plus():
     PATH = 'comparison_plus.txt'

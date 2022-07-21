@@ -219,7 +219,7 @@ def test_baseline(ds_test, m):
 def test_chain(m, ld_test):
     y_true, y_pred = test(ld_test, m)
     y_pred_rounded = [(1 if y > 0.5 else 0) for y in y_pred]
-    return cal_prec_rec_f1_v2(y_pred_rounded, trues)
+    return cal_prec_rec_f1_v2(y_pred_rounded, y_true)
 
 def test_chain_baseline(m, ld_test):
     y_true, y_pred = test_baseline(ld_test, m)
