@@ -39,9 +39,7 @@ class Sector_2022(nn.Module):
 
 # NOTE: 增加了对特殊情况的处理, 在focal_aux_loss里处理
 def focal_aux_loss(out, labels, fl_rate, aux_rate, main_pos = 1):
-    assert len(labels.shape) == 1
-    assert len(out.shape) == 1
-    assert labels.shape[0] == out.shape[0]
+    assert len(labels) == out.shape[0]
     total = []
     for idx, (o, l) in enumerate(zip(out, labels)):
       if l is None: # NOTE: 处理None的情况, 保证不出现特殊情况
@@ -84,7 +82,7 @@ def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0):
             # cal loss
             loss = focal_aux_loss( # 不使用focal loss & 不使用辅助损失
                     out_mlp.squeeze(), 
-                    t.LongTensor(labels).cuda(), 
+                    labels, 
                     fl_rate = fl_rate, 
                     aux_rate = aux_rate,
                     main_pos = 1)
