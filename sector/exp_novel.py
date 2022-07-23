@@ -142,12 +142,16 @@ dic = {
   # compare
   'E1AUX': [],
   'E2AUX': [],
+  'E3AUX': [],
   'E1FL': [],
   'E2FL': [],
+  'E3FL': [],
   'E1AUX_FL': [],
   'E2AUX_FL': [],
+  'E3AUX_FL': [],
   'E1STANDARD': [],
   'E2STANDARD': [],
+  'E3STANDARD': [],
 }
 
 def save_dic(name = 'exp_novel.txt'):
@@ -391,41 +395,47 @@ def run2(): # 15小时
     run_explore_FL_AUX02() # 5
     run_explore_FL_AUX03() # 5 
 
+def save_model(m, name):
+    t.save(m, f'/usr01/taku/sector_models/{name}.tch')
 
-def run_comparison():
+def run_comparison_and_save():
     PATH = 'comparison.txt'
     times = 5
     ld_train = read_ld_train()
     ld_test = read_ld_test() # NOTE: 必须是test
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
-    for _ in range(times):
+    for model_idx in range(times):
         m = Sector_2022()
-        for i in range(1):
+        for i in range(2):
             key = f'E{i+1}AUX_FL'
-            train(m, ld_train, fl_rate = 2.0, aux_rate = 0.3)
+            train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
-    for _ in range(times):
+        save_model(m, f'AUX01FL50E2_{model_idx}')
+    # for model_idx in range(times):
+    #     m = Sector_2022()
+    #     for i in range(1):
+    #         key = f'E{i+1}AUX'
+    #         train(m, ld_train, fl_rate = 0, aux_rate = 0.3)
+    #         dic[key].append(test_chain(m, ld_test))
+    #     save_dic(PATH)
+    #     save_model(m, f'AUX03E1_{model_idx}')
+    for model_idx in range(times):
         m = Sector_2022()
-        for i in range(2):
-            key = f'E{i+1}AUX'
-            train(m, ld_train, fl_rate = 0, aux_rate = 0.1)
-            dic[key].append(test_chain(m, ld_test))
-        save_dic(PATH)
-    for _ in range(times):
-        m = Sector_2022()
-        for i in range(2):
+        for i in range(3):
             key = f'E{i+1}FL'
-            train_baseline(m, ld_train, fl_rate = 1.0)
+            train_baseline(m, ld_train, fl_rate = 5.0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
-    for _ in range(times):
+        save_model(m, 'FL50E3_{model_idx}')
+    for model_idx in range(times):
         m = Sector_2022()
         for i in range(2):
             key = f'E{i+1}STANDARD'
             train_baseline(m, ld_train, fl_rate = 0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
+        save_model(m, 'STANDARDE2_{model_idx}')
 
 
 def run_comparison_plus():
