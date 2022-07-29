@@ -82,7 +82,6 @@ def train_and_plot_by_iteration_theirs(kind = 0):
     for model_idx in range(times):
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'FL_FS_DEV{model_idx}', m, ld_dev)
-        intensively_callback_indexs = 
         for i in range(epochs):
             train_baseline(m, ld_train, fl_rate = 5.0, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None)
     for model_idx in range(times):
