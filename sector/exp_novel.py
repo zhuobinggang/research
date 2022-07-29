@@ -448,35 +448,6 @@ def run_comparison_and_save():
         save_dic(PATH)
         save_model(m, f'STANDARDE2_{model_idx + 5}')
 
-
-def run_comparison_plus():
-    PATH = 'comparison_plus.txt'
-    times = 1
-    ld_train = read_ld_train()
-    ld_test = read_ld_test() # NOTE: 必须是test
-    # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
-    for _ in range(times):
-        m = Sector_2022()
-        for i in range(2):
-            key = f'E{i+1}STANDARD'
-            train_baseline(m, ld_train, fl_rate = 0)
-            dic[key].append(test_chain_baseline(m, ld_test))
-        save_dic(PATH)
-
-def run_comparison_plus2():
-    PATH = 'comparison_plus.txt'
-    times = 1
-    ld_train = read_ld_train()
-    ld_test = read_ld_test() # NOTE: 必须是test
-    for _ in range(times):
-        m = Sector_2022()
-        for i in range(2):
-            key = f'E{i+1}AUX'
-            train(m, ld_train, fl_rate = 0, aux_rate = 0.1)
-            dic[key].append(test_chain(m, ld_test))
-        save_dic(PATH)
-
-
 def run_comparison_by_trained():
     PATH = 'comparisoned.txt'
     times = 5
