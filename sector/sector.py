@@ -62,7 +62,7 @@ def focal_loss(o, l, fl_rate):
     return loss
     
 # NOTE: 增加了对特殊情况的处理, 在focal_aux_loss里处理
-def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, callback_iterations = 100):
+def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, callback_iterations = 100, intensively_callback_indexs = None):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
@@ -95,6 +95,9 @@ def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iterati
                     iteration_callback()
                 opter.step()
                 opter.zero_grad()
+            if (row_idx + 1) < callback_iterations and intensively_callback_indexs is not None:
+                if (row_idx + 1) in intensively_callback_indexs:
+                    iteration_callback()
     opter.step()
     opter.zero_grad()
     last_time = datetime.datetime.now()
@@ -103,12 +106,13 @@ def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iterati
     return delta.seconds
   
 # NOTE: 还需要更改loss function以抹除aux loss的tricky操作
-def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0):
+def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, iteration_callback = None, callback_iterations = 100, intensively_callback_indexs = None):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
     opter = m.opter
     CLS_POS = [0] # baseline需要调用encode_standard（只添加一个sep在中间）然后取出CLS对应的embedding
+    iteration = 0
     for epoch_idx in range(epoch):
         print(f'Train epoch {epoch_idx}')
         for row_idx, (ss, labels) in enumerate(np.random.permutation(ds_train)):
@@ -127,8 +131,14 @@ def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0):
             loss.backward()
             # backward
             if (row_idx + 1) % batch == 0:
+                iteration += 1
+                if iteration_callback is not None and iteration % callback_iterations == 0:
+                    iteration_callback()
                 opter.step()
                 opter.zero_grad()
+            if (row_idx + 1) < callback_iterations and intensively_callback_indexs is not None:
+                if (row_idx + 1) in intensively_callback_indexs:
+                    iteration_callback()
     opter.step()
     opter.zero_grad()
     last_time = datetime.datetime.now()
