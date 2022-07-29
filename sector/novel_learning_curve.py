@@ -63,12 +63,14 @@ def train_and_plot_by_iteration_ours():
         m = Sector_2022()
         cb = create_iteration_callback(f'AUXFL_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
-            train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)))
+            intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None
+            train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1, iteration_callback = cb, intensively_callback_indexs = intensively_callback_indexs)
     for model_idx in range(times):
         m = Sector_2022()
         cb = create_iteration_callback(f'AUX_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
-            train(m, ld_train, fl_rate = 0, aux_rate = 0.3, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)))
+            intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None
+            train(m, ld_train, fl_rate = 0, aux_rate = 0.3, iteration_callback = cb, intensively_callback_indexs = intensively_callback_indexs)
 
 
 def train_and_plot_by_iteration_theirs(kind = 0):
@@ -80,11 +82,12 @@ def train_and_plot_by_iteration_theirs(kind = 0):
     for model_idx in range(times):
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'FL_FS_DEV{model_idx}', m, ld_dev)
+        intensively_callback_indexs = 
         for i in range(epochs):
-            train_baseline(m, ld_train, fl_rate = 5.0, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)))
+            train_baseline(m, ld_train, fl_rate = 5.0, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None)
     for model_idx in range(times):
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'STAND_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
-            train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)))
+            train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None)
 
