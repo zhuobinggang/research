@@ -37,6 +37,15 @@ def read_ld_train_from_chapters(window_size = 4):
 def read_ld_test_from_chapters(window_size = 4):
     return create_loader_from_chapters(read_tests_from_chapters(), window_size)
 
+# NOTE: 用来计算t值 
+# 读取188个章节，每个章节一个loader
+def read_lds_test_from_chapters(window_size = 4):
+    chapters = read_tests_from_chapters()
+    lds = []
+    for chapter in chapters:
+        lds.append(create_loader_from_chapters([chapter], window_size))
+    return lds
+
 def read_ld_dev_from_chapters(window_size = 4):
     return create_loader_from_chapters(read_devs_from_chapters(), window_size)
 
@@ -74,3 +83,9 @@ def test_create_loader_from_chapters():
     print(ld[-1])
     
 
+
+def cal_ones(ds_from_chapter):
+    ones = 0
+    for ss, labels in ds_from_chapter:
+        ones += labels[2]
+    return ones

@@ -1,5 +1,6 @@
 from sector import *
-from dataset_for_sector import read_ld_train_from_chapters, read_ld_test_from_chapters, read_ld_dev_from_chapters
+from dataset_for_sector import read_ld_train_from_chapters, read_ld_test_from_chapters, read_ld_dev_from_chapters, read_lds_test_from_chapters
+
 read_ld_train = read_ld_train_from_chapters
 read_ld_test = read_ld_test_from_chapters
 read_ld_dev = read_ld_dev_from_chapters
@@ -152,6 +153,12 @@ dic = {
   'E1STANDARD': [],
   'E2STANDARD': [],
   'E3STANDARD': [],
+
+  # fs by chapters
+  'AUX188': [], # (10, 188)
+  'FL188': [], # (10, 188)
+  'AUX_FL188': [], # (10, 188)
+  'STAND188': [], # (10, 188)
 }
 
 def save_dic(name = 'exp_novel.txt'):
@@ -398,6 +405,10 @@ def run2(): # 15小时
 def save_model(m, name):
     t.save(m, f'/usr01/taku/sector_models/{name}.tch')
 
+def load_model(name):
+    print(f'load {name}')
+    return t.load(f'/usr01/taku/sector_models/{name}.tch')
+
 def run_comparison_and_save():
     PATH = 'comparison.txt'
     times = 5
@@ -409,33 +420,33 @@ def run_comparison_and_save():
         for i in range(2):
             key = f'E{i+1}AUX_FL'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1)
-            dic[key].append(test_chain(m, ld_test))
+            # dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
-        save_model(m, f'AUX01FL50E2_{model_idx}')
-    # for model_idx in range(times):
-    #     m = Sector_2022()
-    #     for i in range(1):
-    #         key = f'E{i+1}AUX'
-    #         train(m, ld_train, fl_rate = 0, aux_rate = 0.3)
-    #         dic[key].append(test_chain(m, ld_test))
-    #     save_dic(PATH)
-    #     save_model(m, f'AUX03E1_{model_idx}')
+        save_model(m, f'AUX01FL50E2_{model_idx + 5}')
+    for model_idx in range(times):
+        m = Sector_2022()
+        for i in range(1):
+            key = f'E{i+1}AUX'
+            train(m, ld_train, fl_rate = 0, aux_rate = 0.3)
+            # dic[key].append(test_chain(m, ld_test))
+        save_dic(PATH)
+        save_model(m, f'AUX03E1_{model_idx + 5}')
     for model_idx in range(times):
         m = Sector_2022()
         for i in range(3):
             key = f'E{i+1}FL'
             train_baseline(m, ld_train, fl_rate = 5.0)
-            dic[key].append(test_chain_baseline(m, ld_test))
+            # dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
-        save_model(m, 'FL50E3_{model_idx}')
+        save_model(m, f'FL50E3_{model_idx + 5}')
     for model_idx in range(times):
         m = Sector_2022()
         for i in range(2):
             key = f'E{i+1}STANDARD'
             train_baseline(m, ld_train, fl_rate = 0)
-            dic[key].append(test_chain_baseline(m, ld_test))
+            # dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
-        save_model(m, 'STANDARDE2_{model_idx}')
+        save_model(m, f'STANDARDE2_{model_idx + 5}')
 
 
 def run_comparison_plus():
@@ -466,3 +477,70 @@ def run_comparison_plus2():
         save_dic(PATH)
 
 
+def run_comparison_by_trained():
+    PATH = 'comparisoned.txt'
+    times = 5
+    ld_train = read_ld_train()
+    ld_test = read_ld_test() # NOTE: 必须是test
+    ld_dev = read_ld_dev_from_chapters() 
+    # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
+    start_idx = 5
+    for model_idx in range(times):
+        m = load_model(f'AUX01FL50E2_{model_idx + start_idx}')
+        dic['E1AUX_FL'].append(test_chain(m, ld_test))
+        dic['E2AUX_FL'].append(test_chain(m, ld_dev))
+        save_dic(PATH)
+    for model_idx in range(times):
+        m = load_model(f'AUX03E1_{model_idx + start_idx}')
+        dic['E1AUX'].append(test_chain(m, ld_test))
+        dic['E2AUX'].append(test_chain(m, ld_dev))
+        save_dic(PATH)
+    for model_idx in range(times):
+        m = load_model(f'FL50E3_{model_idx + start_idx}')
+        dic['E1FL'].append(test_chain_baseline(m, ld_test))
+        dic['E2FL'].append(test_chain_baseline(m, ld_dev))
+        save_dic(PATH)
+    for model_idx in range(times):
+        m = load_model(f'STANDARDE2_{model_idx + start_idx}')
+        dic['E1STANDARD'].append(test_chain_baseline(m, ld_test))
+        dic['E2STANDARD'].append(test_chain_baseline(m, ld_dev))
+        save_dic(PATH)
+
+def get_f_by_188_chapters():
+    PATH = 'get_f_by_188_chapters.txt'
+    times = 10
+    ld_train = read_ld_train()
+    lds = read_lds_test_from_chapters() # NOTE: 必须是test
+    start_idx = 0
+    for model_idx in range(times):
+        m = load_model(f'AUX01FL50E2_{model_idx + start_idx}')
+        fs = []
+        for ld in lds:
+            prec, rec, f, _ = test_chain(m, ld)
+            fs.append(f)
+        dic['AUX_FL188'].append(fs)
+        save_dic(PATH)
+    for model_idx in range(times):
+        m = load_model(f'AUX03E1_{model_idx + start_idx}')
+        fs = []
+        for ld in lds:
+            prec, rec, f, _ = test_chain(m, ld)
+            fs.append(f)
+        dic['AUX188'].append(fs)
+        save_dic(PATH)
+    for model_idx in range(times):
+        m = load_model(f'FL50E3_{model_idx + start_idx}')
+        fs = []
+        for ld in lds:
+            prec, rec, f, _ = test_chain_baseline(m, ld)
+            fs.append(f)
+        dic['FL188'].append(fs)
+        save_dic(PATH)
+    for model_idx in range(times):
+        m = load_model(f'STANDARDE2_{model_idx + start_idx}')
+        fs = []
+        for ld in lds:
+            prec, rec, f, _ = test_chain_baseline(m, ld)
+            fs.append(f)
+        dic['STAND188'].append(fs)
+        save_dic(PATH)
