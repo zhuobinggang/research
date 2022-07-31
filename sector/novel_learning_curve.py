@@ -49,7 +49,7 @@ def create_iteration_callback_baseline(key, m, ld_dev):
         dic[key].append(f)
         save_dic()
     def cb():
-        global count
+        nonlocal count
         count += 1
         if count < intensive_log_until:
             if count % intensively_log_interval == 0:
@@ -71,7 +71,7 @@ def create_iteration_callback(key, m, ld_dev):
         dic[key].append(f)
         save_dic()
     def cb():
-        global count
+        nonlocal count
         count += 1
         if count < intensive_log_until:
             if count % intensively_log_interval == 0:
