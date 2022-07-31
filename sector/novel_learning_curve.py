@@ -39,19 +39,45 @@ def save_dic(name = 'exp_novel.txt'):
 
 
 def create_iteration_callback_baseline(key, m, ld_dev):
-    def res():
+    count = 0
+    intensively_log_interval = 10
+    intensive_log_until = 500
+    normal_log_interval = 100
+    def record():
+        print('record')
         prec, rec, f, _ = test_chain_baseline(m, ld_dev)
         dic[key].append(f)
         save_dic()
-    return res
+    def cb():
+        count += 1
+        if count < intensive_log_until:
+            if count % intensively_log_interval == 0:
+                record()
+        else:
+            if count % normal_log_interval == 0:
+                record()
+    return cb
 
 
 def create_iteration_callback(key, m, ld_dev):
-    def res():
+    count = 0
+    intensively_log_interval = 10
+    intensive_log_until = 500
+    normal_log_interval = 100
+    def record():
+        print('record')
         prec, rec, f, _ = test_chain(m, ld_dev)
         dic[key].append(f)
         save_dic()
-    return res
+    def cb():
+        count += 1
+        if count < intensive_log_until:
+            if count % intensively_log_interval == 0:
+                record()
+        else:
+            if count % normal_log_interval == 0:
+                record()
+    return cb
 
 def train_and_plot_by_iteration_ours():
     times = 3
@@ -63,14 +89,12 @@ def train_and_plot_by_iteration_ours():
         m = Sector_2022()
         cb = create_iteration_callback(f'AUXFL_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
-            intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None
-            train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1, iteration_callback = cb, intensively_callback_indexs = intensively_callback_indexs)
+            train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1, iteration_callback = cb)
     for model_idx in range(times):
         m = Sector_2022()
         cb = create_iteration_callback(f'AUX_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
-            intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None
-            train(m, ld_train, fl_rate = 0, aux_rate = 0.3, iteration_callback = cb, intensively_callback_indexs = intensively_callback_indexs)
+            train(m, ld_train, fl_rate = 0, aux_rate = 0.3, iteration_callback = cb)
 
 
 def train_and_plot_by_iteration_theirs(kind = 0):
@@ -83,10 +107,10 @@ def train_and_plot_by_iteration_theirs(kind = 0):
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'FL_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
-            train_baseline(m, ld_train, fl_rate = 5.0, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None)
+            train_baseline(m, ld_train, fl_rate = 5.0, iteration_callback = cb)
     for model_idx in range(times):
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'STAND_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
-            train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb, intensively_callback_indexs = list(range(10, 100, 10)) if i == 0 else None)
+            train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb)
 
