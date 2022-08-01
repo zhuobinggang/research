@@ -6,6 +6,8 @@ from transformers import BertJapaneseTokenizer, BertModel
 import datetime
 from itertools import chain
 
+RANDOM_SEED = 2022
+
 # 分裂sector, 2vs2的时候，同时判断三个分割点
 class Sector_2022(nn.Module):
   def __init__(self, learning_rate = 2e-5):
@@ -62,13 +64,15 @@ def focal_loss(o, l, fl_rate):
     return loss
     
 # NOTE: 增加了对特殊情况的处理, 在focal_aux_loss里处理
-def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None):
+def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, random_seed = True):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
     opter = m.opter
     for epoch_idx in range(epoch):
         print(f'Train epoch {epoch_idx}')
+        if random_seed:
+            np.random.seed(RANDOM_SEED)
         for row_idx, (ss, labels) in enumerate(np.random.permutation(ds_train)):
             if row_idx % 1000 == 0:
                 print(f'finished: {row_idx}/{len(ds_train)}')
@@ -100,7 +104,7 @@ def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iterati
     return delta.seconds
   
 # NOTE: 还需要更改loss function以抹除aux loss的tricky操作
-def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, iteration_callback = None):
+def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, iteration_callback = None, random_seed = True):
     first_time = datetime.datetime.now()
     toker = m.toker
     bert = m.bert
@@ -109,6 +113,8 @@ def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, iteration_ca
     iteration = 0
     for epoch_idx in range(epoch):
         print(f'Train epoch {epoch_idx}')
+        if random_seed:
+            np.random.seed(RANDOM_SEED)
         for row_idx, (ss, labels) in enumerate(np.random.permutation(ds_train)):
             if row_idx % 1000 == 0:
                 print(f'finished: {row_idx}/{len(ds_train)}')

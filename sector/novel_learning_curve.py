@@ -5,6 +5,8 @@ read_ld_train = read_ld_train_from_chapters
 read_ld_test = read_ld_test_from_chapters
 read_ld_dev = read_ld_dev_from_chapters
 
+RANDOM_SEED = 2022
+
 dic = {
     'STAND_FS_TEST0': [],
     'STAND_FS_TEST1': [],
@@ -88,11 +90,13 @@ def train_and_plot_by_iteration_ours():
     ld_dev = read_ld_dev() 
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
     for model_idx in range(times):
+        t.manual_seed(RANDOM_SEED)
         m = Sector_2022()
         cb = create_iteration_callback(f'AUXFL_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1, iteration_callback = cb)
     for model_idx in range(times):
+        t.manual_seed(RANDOM_SEED)
         m = Sector_2022()
         cb = create_iteration_callback(f'AUX_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
@@ -106,11 +110,13 @@ def train_and_plot_by_iteration_theirs(kind = 0):
     ld_dev = read_ld_dev() 
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
     for model_idx in range(times):
+        t.manual_seed(RANDOM_SEED)
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'FL_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
             train_baseline(m, ld_train, fl_rate = 5.0, iteration_callback = cb)
     for model_idx in range(times):
+        t.manual_seed(RANDOM_SEED)
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'STAND_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
