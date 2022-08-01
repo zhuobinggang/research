@@ -5,7 +5,7 @@ read_ld_train = read_ld_train_from_chapters
 read_ld_test = read_ld_test_from_chapters
 read_ld_dev = read_ld_dev_from_chapters
 
-RANDOM_SEED = 2022
+RANDOM_SEEDs = [2022, 2023, 2024]
 
 dic = {
     'STAND_FS_TEST0': [],
@@ -90,13 +90,13 @@ def train_and_plot_by_iteration_ours():
     ld_dev = read_ld_dev() 
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
     for model_idx in range(times):
-        t.manual_seed(RANDOM_SEED)
+        t.manual_seed(RANDOM_SEEDs[model_idx])
         m = Sector_2022()
         cb = create_iteration_callback(f'AUXFL_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1, iteration_callback = cb)
     for model_idx in range(times):
-        t.manual_seed(RANDOM_SEED)
+        t.manual_seed(RANDOM_SEEDs[model_idx])
         m = Sector_2022()
         cb = create_iteration_callback(f'AUX_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
@@ -110,15 +110,36 @@ def train_and_plot_by_iteration_theirs(kind = 0):
     ld_dev = read_ld_dev() 
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
     for model_idx in range(times):
-        t.manual_seed(RANDOM_SEED)
+        t.manual_seed(RANDOM_SEEDs[model_idx])
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'FL_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
             train_baseline(m, ld_train, fl_rate = 5.0, iteration_callback = cb)
     for model_idx in range(times):
-        t.manual_seed(RANDOM_SEED)
+        t.manual_seed(RANDOM_SEEDs[model_idx])
         m = Sector_2022()
         cb = create_iteration_callback_baseline(f'STAND_FS_DEV{model_idx}', m, ld_dev)
         for i in range(epochs):
             train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb)
+
+
+def expand_scale(fs):
+    res = []
+    for f in fs[:50]: # 0 ~ 49 => 10 ~ 500
+        res.append(f)
+    for f in fs[50:]: # 50 ~ 97 => 500 ~ 5200
+        res += [f] * 10
+    return res
+
+def labels():
+    start = 10
+    itensive = []
+    for i in range(0, 50):
+        itensive.append(start + i * 10)
+    start = 600
+    normal = []
+    for i in range(0, 47):
+        normal.append(start + i * 100)
+    return itensive + normal
+
 
