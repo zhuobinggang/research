@@ -40,11 +40,8 @@ def save_dic(name = 'exp_novel.txt'):
     f.close()
 
 
-def create_iteration_callback_baseline(key, m, ld_dev):
+def create_iteration_callback_baseline(key, m, ld_dev, intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
     count = 0
-    intensively_log_interval = 10
-    intensive_log_until = 500
-    normal_log_interval = 100
     def record():
         print('record')
         prec, rec, f, _ = test_chain_baseline(m, ld_dev)
@@ -62,11 +59,8 @@ def create_iteration_callback_baseline(key, m, ld_dev):
     return cb
 
 
-def create_iteration_callback(key, m, ld_dev):
+def create_iteration_callback(key, m, ld_dev, intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
     count = 0
-    intensively_log_interval = 10
-    intensive_log_until = 500
-    normal_log_interval = 100
     def record():
         print('record')
         prec, rec, f, _ = test_chain(m, ld_dev)
