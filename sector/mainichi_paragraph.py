@@ -149,3 +149,57 @@ def cal_para_count(arts):
     return counts
 
 
+# =============== 全新数据集创建逻辑 ================
+
+def is_begining(s):
+  return s.startswith('\u3000')
+
+def no_indicator(s):
+  return s.replace('\u3000', '')
+
+def read_chapters(file_name = 'train'):
+    arts = read_sentences_per_art(f'datasets/{file_name}.paragraph.txt')
+    arts_without_linebreak = []
+    for art in arts:
+        art = [line.replace(' ', '').replace('\n', '').replace('\r', '') for line in art]
+        arts_without_linebreak.append(art)
+    return arts_without_linebreak
+
+def create_loader_from_chapters(chapters, window_size = 4):
+    loader = []
+    assert window_size % 2 == 0
+    half_window_size = int(window_size / 2)
+    for sentences in chapters:
+        length = len(sentences)
+        end = len(sentences)
+        for center_idx in range(1, length):
+            ss = []
+            labels = []
+            for idx in range(center_idx - half_window_size, center_idx + half_window_size): # idx = 2 时候 range(0, 4)
+                if idx < 0 or idx >= length:
+                    labels.append(None) # NOTE: 一定要handle None
+                    ss.append(None)
+                else:
+                    s = sentences[idx]
+                    labels.append(1 if is_begining(s) else 0)
+                    ss.append(no_indicator(s)) # NOTE: 一定要去掉段落开头指示器
+            loader.append((ss, labels))
+    # NOTE: ASSERT
+    count = sum([len(sentences) - 1 for sentences in chapters])
+    assert len(loader) == count
+    return loader
+
+def read_ld_train(window_size = 4):
+    return create_loader_from_chapters(read_chapters('train'), window_size)
+
+def read_ld_test(window_size = 4):
+    return create_loader_from_chapters(read_chapters('test'), window_size)
+
+def read_ld_tests(window_size = 4):
+    lds = []
+    for i in range(10):
+        lds.append(create_loader_from_chapters(read_chapters(f'test{i}'), window_size))
+    return lds
+
+def read_ld_dev(window_size = 4):
+    return create_loader_from_chapters(read_chapters('dev'), window_size)
