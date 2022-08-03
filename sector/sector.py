@@ -93,7 +93,8 @@ def train(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iterati
             loss.backward()
             # backward
             if (row_idx + 1) % batch == 0:
-                iteration_callback()
+                if iteration_callback is not None:
+                    iteration_callback()
                 opter.step()
                 opter.zero_grad()
     opter.step()
@@ -131,7 +132,8 @@ def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, iteration_ca
             loss.backward()
             # backward
             if (row_idx + 1) % batch == 0:
-                iteration_callback()
+                if iteration_callback is not None:
+                    iteration_callback()
                 opter.step()
                 opter.zero_grad()
     opter.step()
