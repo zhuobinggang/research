@@ -5,6 +5,13 @@ read_ld_train = read_ld_train_from_chapters
 read_ld_test = read_ld_test_from_chapters
 read_ld_dev = read_ld_dev_from_chapters
 
+GRID_SEARCH_SEED = 777 # totally random
+
+def create_model_with_seed(seed):
+    t.manual_seed(seed)
+    m = Sector_2022()
+    return m
+
 dic = {
   # AUX ONLY
   'E1FL0AUX00': [],        
@@ -166,144 +173,144 @@ def save_dic(name = 'exp_novel.txt'):
     f.write(str(dic))
     f.close()
 
-def run_explore_AUX():
+def run_explore_AUX(seed):
     PATH = 'run_explore_AUX.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
     # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
-    epochs = 3
+    epochs = 2
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL0AUX00'
             train(m, ld_train, fl_rate = 0, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL0AUX01'
             train(m, ld_train, fl_rate = 0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL0AUX02'
             train(m, ld_train, fl_rate = 0, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL0AUX03'
             train(m, ld_train, fl_rate = 0, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
 
-def run_explore_FL_AUX00():
+def run_explore_FL_AUX00(seed):
     PATH = 'run_explore_FL_AUX00.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
     # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
-    epochs = 3
+    epochs = 2
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL05AUX00'
             train(m, ld_train, fl_rate = 0.5, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL10AUX00'
             train(m, ld_train, fl_rate = 1.0, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL20AUX00'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL50AUX00'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
 
-def run_explore_FL_AUX01():
+def run_explore_FL_AUX01(seed):
     PATH = 'run_explore_FL_AUX01.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
     # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
-    epochs = 3
+    epochs = 2
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL05AUX01'
             train(m, ld_train, fl_rate = 0.5, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL10AUX01'
             train(m, ld_train, fl_rate = 1.0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL20AUX01'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL50AUX01'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
 
-def run_explore_FL_AUX02():
+def run_explore_FL_AUX02(seed):
     PATH = 'run_explore_FL_AUX02.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
     # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
-    epochs = 3
+    epochs = 2
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL05AUX02'
             train(m, ld_train, fl_rate = 0.5, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL10AUX02'
             train(m, ld_train, fl_rate = 1.0, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL20AUX02'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0.2)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL50AUX02'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.2)
@@ -311,79 +318,79 @@ def run_explore_FL_AUX02():
         save_dic(PATH)
 
 
-def run_explore_FL_AUX03():
+def run_explore_FL_AUX03(seed):
     PATH = 'run_explore_FL_AUX03.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev() # grid search
     # 25 * 3 * 1 * 4 = 300 (mins) = 5 (hours)
     times = 1
-    epochs = 3
+    epochs = 2
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL05AUX03'
             train(m, ld_train, fl_rate = 0.5, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL10AUX03'
             train(m, ld_train, fl_rate = 1.0, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL20AUX03'
             train(m, ld_train, fl_rate = 2.0, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL50AUX03'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.3)
             dic[key].append(test_chain(m, ld_test))
         save_dic(PATH)
 
-def run_explore_FL():
+def run_explore_FL(seed):
     PATH = 'run_explore_FL.txt'
     ld_train = read_ld_train()
     ld_test = read_ld_dev()
     # 25 * 1 * 5 * 3 = 375 (mins) = 6.25 (hours)
     times = 1
-    epochs = 3
+    epochs = 2
     for _ in range(times): # Baseline BCE loss
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL00'
             train_baseline(m, ld_train, fl_rate = 0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL05'
             train_baseline(m, ld_train, fl_rate = 0.5)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL10'
             train_baseline(m, ld_train, fl_rate = 1.0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL20'
             train_baseline(m, ld_train, fl_rate = 2.0)
             dic[key].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
     for _ in range(times):
-        m = Sector_2022()
+        m = create_model_with_seed(seed)
         for i in range(epochs):
             key = f'E{i+1}FL50'
             train_baseline(m, ld_train, fl_rate = 5.0)
@@ -391,16 +398,16 @@ def run_explore_FL():
         save_dic(PATH)
 
 
-def run1(): # 16小时
-    run_explore_FL() # 6.25 hours
-    run_explore_AUX() # 5 hours
-    run_explore_FL_AUX00() # 5 hours
+def run1(): # 16小时 -> 10小时 (改了epoch)
+    run_explore_FL(GRID_SEARCH_SEED) # 6.25 hours
+    run_explore_AUX(GRID_SEARCH_SEED) # 5 hours
+    run_explore_FL_AUX00(GRID_SEARCH_SEED) # 5 hours
 
 
-def run2(): # 15小时
-    run_explore_FL_AUX01() # 5 
-    run_explore_FL_AUX02() # 5
-    run_explore_FL_AUX03() # 5 
+def run2(): # 15小时 -> 10小时
+    run_explore_FL_AUX01(GRID_SEARCH_SEED) # 5 
+    run_explore_FL_AUX02(GRID_SEARCH_SEED) # 5
+    run_explore_FL_AUX03(GRID_SEARCH_SEED) # 5 
 
 def save_model(m, name):
     t.save(m, f'/usr01/taku/sector_models/{name}.tch')

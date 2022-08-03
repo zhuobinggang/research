@@ -136,4 +136,20 @@ def labels():
         normal.append(start + i * 100)
     return itensive + normal
 
+def labels2(intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
+    res = []
+    for i in range(1, 5201):
+        if i < intensive_log_until:
+            if i % intensively_log_interval == 0:
+                res.append(i)
+        else:
+            if i % normal_log_interval == 0:
+                res.append(i)
+    return res
+
+
+
+
+
+
 
