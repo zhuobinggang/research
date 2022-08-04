@@ -141,25 +141,25 @@ def train_left_aux(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0
     train_shell(m, ds_train, ablation_loss_left_aux, epoch, batch, fl_rate, aux_rate, iteration_callback, random_seed)
 
 
-def test_left_aux(ds_test, m):
+def test_left_aux(m, ds_test):
     return test_shell(ds_test, m, [True, True, False, False], 1)
 
 def train_right_aux(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, random_seed = True):
     train_shell(m, ds_train, ablation_loss_right_aux, epoch, batch, fl_rate, aux_rate, iteration_callback, random_seed)
 
-def test_right_aux(ds_test, m):
+def test_right_aux(m, ds_test):
     return test_shell(ds_test, m, [False, True, True, False], 0)
 
 def train_no_aux(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, random_seed = True):
     train_shell(m, ds_train, ablation_loss_no_aux, epoch, batch, fl_rate, aux_rate, iteration_callback, random_seed)
 
-def test_no_aux(ds_test, m):
+def test_no_aux(m, ds_test):
     return test_shell(ds_test, m, [False, True, False, False], 0)
 
 def train_counter_aux(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, random_seed = True):
     train_shell(m, ds_train, ablation_loss_counter_aux, epoch, batch, fl_rate, aux_rate, iteration_callback, random_seed)
 
-def test_counter_aux(ds_test, m):
+def test_counter_aux(m, ds_test):
     y_true = []
     y_pred = []
     toker = m.toker
