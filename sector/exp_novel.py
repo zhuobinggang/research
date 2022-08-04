@@ -1,4 +1,5 @@
 from sector import *
+from datetime import datetime
 from dataset_for_sector import read_ld_train_from_chapters, read_ld_test_from_chapters, read_ld_dev_from_chapters, read_lds_test_from_chapters
 
 read_ld_train = read_ld_train_from_chapters
@@ -12,6 +13,8 @@ SEEDS_FOR_TRAIN = [20, 22, 8, 4, 13, 3, 19, 97, 10, 666]
 def create_model_with_seed(seed):
     t.manual_seed(seed)
     m = Sector_2022()
+    time_string = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f'created model with seed {seed} at time {time_string}')
     return m
 
 dic = {
