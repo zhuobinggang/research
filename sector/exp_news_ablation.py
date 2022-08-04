@@ -21,7 +21,7 @@ dic = {
 def create_model_with_seed(seed):
     t.manual_seed(seed)
     m = Sector_2022()
-    time_string = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    time_string = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print(f'created model with seed {seed} at time {time_string}')
     return m
 
