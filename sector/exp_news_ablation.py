@@ -1,7 +1,7 @@
 from sector import *
 from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_test, read_ld_dev
-
-RANDOM_SEEDs = [2022, 2023, 2024]
+from novel_learning_curve import RANDOM_SEEDs, save_dic, create_iteration_callback_shell
+from exp_novel import create_model_with_seed
 
 dic = {
     'LEFT_AUX0': [],
