@@ -7,6 +7,8 @@ read_ld_dev = read_ld_dev_from_chapters
 
 GRID_SEARCH_SEED = 777 # totally random
 
+SEEDS_FOR_TRAIN = [20, 22, 8, 4, 13, 3, 19, 97, 10, 666]
+
 def create_model_with_seed(seed):
     t.manual_seed(seed)
     m = Sector_2022()
@@ -417,43 +419,37 @@ def load_model(name):
     return t.load(f'/usr01/taku/sector_models/{name}.tch')
 
 def run_comparison_and_save():
-    PATH = 'comparison.txt'
-    times = 5
+    # PATH = 'comparison.txt'
+    times = 10
     ld_train = read_ld_train()
     ld_test = read_ld_test() # NOTE: 必须是test
-    # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
+    # 10 * 25 * 2 * 4 = 2000 (min) = 33 (hours)
     for model_idx in range(times):
-        m = Sector_2022()
+        SEED = SEEDS_FOR_TRAIN[model_idx]
+        m = create_model_with_seed(SEED)
         for i in range(2):
             key = f'E{i+1}AUX_FL'
             train(m, ld_train, fl_rate = 5.0, aux_rate = 0.1)
             # dic[key].append(test_chain(m, ld_test))
-        save_dic(PATH)
-        save_model(m, f'AUX01FL50E2_{model_idx + 5}')
-    for model_idx in range(times):
-        m = Sector_2022()
-        for i in range(1):
+        save_model(m, f'SEED_{SEED}_AUX01FL50E2_{model_idx}')
+        m = create_model_with_seed(SEED)
+        for i in range(2):
             key = f'E{i+1}AUX'
             train(m, ld_train, fl_rate = 0, aux_rate = 0.3)
             # dic[key].append(test_chain(m, ld_test))
-        save_dic(PATH)
-        save_model(m, f'AUX03E1_{model_idx + 5}')
-    for model_idx in range(times):
-        m = Sector_2022()
-        for i in range(3):
+        save_model(m, f'SEED_{SEED}_AUX03E2_{model_idx}')
+        m = create_model_with_seed(SEED)
+        for i in range(2):
             key = f'E{i+1}FL'
             train_baseline(m, ld_train, fl_rate = 5.0)
             # dic[key].append(test_chain_baseline(m, ld_test))
-        save_dic(PATH)
-        save_model(m, f'FL50E3_{model_idx + 5}')
-    for model_idx in range(times):
-        m = Sector_2022()
+        save_model(m, f'SEED_{SEED}_FL50E2_{model_idx}')
+        m = create_model_with_seed(SEED)
         for i in range(2):
             key = f'E{i+1}STANDARD'
             train_baseline(m, ld_train, fl_rate = 0)
             # dic[key].append(test_chain_baseline(m, ld_test))
-        save_dic(PATH)
-        save_model(m, f'STANDARDE2_{model_idx + 5}')
+        save_model(m, f'SEED_{SEED}_STANDARDE2_{model_idx}')
 
 def run_comparison_by_trained():
     PATH = 'comparisoned.txt'
