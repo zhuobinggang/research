@@ -1,4 +1,22 @@
 from sector import *
+from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_test, read_ld_dev
+
+RANDOM_SEEDs = [2022, 2023, 2024]
+
+dic = {
+    'LEFT_AUX0': [],
+    'LEFT_AUX1': [],
+    'LEFT_AUX2': [],
+    'RIGHT_AUX0': [],
+    'RIGHT_AUX1': [],
+    'RIGHT_AUX2': [],
+    'NO_AUX0': [],
+    'NO_AUX1': [],
+    'NO_AUX2': [],
+    'COUTER_AUX0': [],
+    'COUTER_AUX1': [],
+    'COUTER_AUX2': [],
+}
 
 def ablation_loss_left_aux(m, ss, labels, fl_rate, aux_rate):
     bert = m.bert
@@ -149,3 +167,39 @@ def test_counter_aux(ds_test, m):
         y_true.append(int(labels[2]))
     return y_true, y_pred
 
+#     'LEFT_AUX0': [],
+#     'LEFT_AUX1': [],
+#     'LEFT_AUX2': [],
+#     'RIGHT_AUX0': [],
+#     'RIGHT_AUX1': [],
+#     'RIGHT_AUX2': [],
+#     'NO_AUX0': [],
+#     'NO_AUX1': [],
+#     'NO_AUX2': [],
+#     'COUTER_AUX0': [],
+#     'COUTER_AUX1': [],
+#     'COUTER_AUX2': [],
+
+def train_and_plot(times = 3, start = 0):
+    epochs = 3
+    ld_train = read_ld_train()
+    ld_dev = read_ld_dev() 
+    for model_idx_org in range(times):
+        model_idx = model_idx_org + start
+        SEED = RANDOM_SEEDs[model_idx]
+        m = create_model_with_seed(SEED)
+        cb = create_iteration_callback_shell(f'LEFT_AUX{model_idx}', m, ld_dev, test_left_aux, intensively_log_interval = 20)
+        for i in range(epochs):
+            train_left_aux(m, ld_train, fl_rate = 5.0, aux_rate = 0.1, iteration_callback = cb)
+        m = create_model_with_seed(SEED)
+        cb = create_iteration_callback_shell(f'RIGHT_AUX{model_idx}', m, ld_dev, test_right_aux, intensively_log_interval = 20)
+        for i in range(epochs):
+            train_right_aux(m, ld_train, fl_rate = 0, aux_rate = 0.2, iteration_callback = cb)
+        m = create_model_with_seed(SEED)
+        cb = create_iteration_callback_shell(f'NO_AUX{model_idx}', m, ld_dev, test_no_aux, intensively_log_interval = 20)
+        for i in range(epochs):
+            train_no_aux(m, ld_train, fl_rate = 2.0, iteration_callback = cb)
+        m = create_model_with_seed(SEED)
+        cb = create_iteration_callback_shell(f'COUTER_AUX{model_idx}', m, ld_dev, test_counter_aux, intensively_log_interval = 20)
+        for i in range(epochs):
+            train_counter_aux(m, ld_train, fl_rate = 0, iteration_callback = cb)

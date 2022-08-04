@@ -39,12 +39,11 @@ def save_dic(name = 'exp_novel.txt'):
     f.write(str(dic))
     f.close()
 
-
-def create_iteration_callback_baseline(key, m, ld_dev, intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
+def create_iteration_callback_shell(key, m, ld_dev, test_function, intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
     count = 0
     def record():
         print('record')
-        prec, rec, f, _ = test_chain_baseline(m, ld_dev)
+        prec, rec, f, _ = test_function(m, ld_dev)
         dic[key].append(f)
         save_dic()
     def cb():
@@ -57,25 +56,14 @@ def create_iteration_callback_baseline(key, m, ld_dev, intensively_log_interval 
             if count % normal_log_interval == 0:
                 record()
     return cb
+
+def create_iteration_callback_baseline(key, m, ld_dev, intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
+    return create_iteration_callback_shell(key, m, ld_dev, test_chain_baseline, intensively_log_interval, intensive_log_until, normal_log_interval)
 
 
 def create_iteration_callback(key, m, ld_dev, intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
-    count = 0
-    def record():
-        print('record')
-        prec, rec, f, _ = test_chain(m, ld_dev)
-        dic[key].append(f)
-        save_dic()
-    def cb():
-        nonlocal count
-        count += 1
-        if count < intensive_log_until:
-            if count % intensively_log_interval == 0:
-                record()
-        else:
-            if count % normal_log_interval == 0:
-                record()
-    return cb
+    return create_iteration_callback_shell(key, m, ld_dev, test_chain, intensively_log_interval, intensive_log_until, normal_log_interval)
+
 
 def labels(intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
     res = []
