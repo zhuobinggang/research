@@ -143,31 +143,16 @@ def train_baseline(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, iteration_ca
     print(delta.seconds)
     return delta.seconds
 
-# 复数个SEP
-# NOTE: 处理NONE
-def encode(ss, toker):
-    PART_LEN_MAX = int(500 / len(ss)) # 默认是512上限，考虑到特殊字符使用500作为分子
-    idss = []
-    for s in ss:
-        ids = [] if s is None else toker.encode(s, add_special_tokens = False) # NOTE: 处理None
-        if len(ids) > PART_LEN_MAX:
-            # print(f'WARN: len(ids) > PART_LEN_MAX! ===\n{s}')
-            idss.append(ids[:PART_LEN_MAX])
-        else:
-            idss.append(ids)
-    combined_ids = [toker.cls_token_id]
-    sep_idxs = []
-    idx_counter = 1
-    for ids in idss:
-        ids.append(toker.sep_token_id)
-        idx_counter += len(ids)
-        sep_idxs.append(idx_counter - 1)
-        combined_ids += ids
-    return t.LongTensor(combined_ids), sep_idxs
-
 # 单个SEP
 # NOTE: 处理None
 def encode_standard(ss, toker):
+    return encode(ss, toker, [False, True, False, False])
+
+
+# 复数个SEP
+# NOTE: 处理NONE
+# NOTE: 用一个函数处理所有encode
+def encode(ss, toker, seps = [True, True, True, True]):
     PART_LEN_MAX = int(500 / len(ss)) # 默认是512上限，考虑到特殊字符使用500作为分子
     idss = []
     for s in ss:
@@ -179,17 +164,13 @@ def encode_standard(ss, toker):
             idss.append(ids)
     combined_ids = [toker.cls_token_id]
     sep_idxs = []
-    assert len(idss) == 4
-    # left
-    for i in range(0, 2):
-        ids = idss[i]
-        combined_ids += ids
-    sep_idxs.append(len(combined_ids))
-    combined_ids.append(toker.sep_token_id)
-    # right
-    for i in range(2, 4):
-        ids = idss[i]
-        combined_ids += ids
+    for index, ids in enumerate(idss):
+        if seps[index]:
+            ids.append(toker.sep_token_id)
+            combined_ids += ids
+            sep_idxs.append(len(combined_ids) - 1)
+        else:
+            combined_ids += ids
     return t.LongTensor(combined_ids), sep_idxs
 
 # NOTE: 已处理None的情况
