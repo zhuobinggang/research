@@ -18,6 +18,13 @@ dic = {
     'COUTER_AUX2': [],
 }
 
+def create_model_with_seed(seed):
+    t.manual_seed(seed)
+    m = Sector_2022()
+    time_string = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f'created model with seed {seed} at time {time_string}')
+    return m
+
 def ablation_loss_left_aux(m, ss, labels, fl_rate, aux_rate):
     bert = m.bert
     toker = m.toker
