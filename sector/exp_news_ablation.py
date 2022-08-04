@@ -134,7 +134,8 @@ def test_shell(ds_test, m, seps, main_sep_idx_relative):
         assert out_mlp.shape == (1,1)
         y_pred.append(out_mlp.item())
         y_true.append(int(labels[2]))
-    return y_true, y_pred
+    y_pred_rounded = [(1 if y > 0.5 else 0) for y in y_pred]
+    return cal_prec_rec_f1_v2(y_pred_rounded, y_true)
 
 
 def train_left_aux(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, random_seed = True):
