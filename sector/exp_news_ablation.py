@@ -1,6 +1,6 @@
 from sector import *
 from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_test, read_ld_dev
-from novel_learning_curve import RANDOM_SEEDs, save_dic, create_iteration_callback_shell
+from novel_learning_curve import RANDOM_SEEDs
 from exp_novel import create_model_with_seed
 
 dic = {
@@ -17,6 +17,29 @@ dic = {
     'COUTER_AUX1': [],
     'COUTER_AUX2': [],
 }
+
+def save_dic(name = 'exp_news.txt'):
+    f = open(name, 'w')
+    f.write(str(dic))
+    f.close()
+
+def create_iteration_callback_shell(key, m, ld_dev, test_function, intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
+    count = 0
+    def record():
+        print('record')
+        prec, rec, f, _ = test_function(m, ld_dev)
+        dic[key].append(f)
+        save_dic()
+    def cb():
+        nonlocal count
+        count += 1
+        if count < intensive_log_until:
+            if count % intensively_log_interval == 0:
+                record()
+        else:
+            if count % normal_log_interval == 0:
+                record()
+    return cb
 
 def create_model_with_seed(seed):
     t.manual_seed(seed)
