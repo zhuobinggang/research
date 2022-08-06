@@ -155,7 +155,7 @@ def test_shell(ds_test, m, seps, main_sep_idx_relative, use_cls = False):
         ss, labels = row
         combined_ids, sep_idxs = encode(ss, toker, seps)
         if use_cls:
-            CLS_POS = [0]
+            CLS_POS = 0
             out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, CLS_POS, :] # (1, 1, 768)
         else:
             main_sep_idx = sep_idxs[main_sep_idx_relative] # (1)
