@@ -219,24 +219,27 @@ def train_and_plot(times = 3, start = 0):
     for model_idx_org in range(times):
         model_idx = model_idx_org + start
         SEED = RANDOM_SEEDs[model_idx]
-        # Baseline:
-        m = create_model_with_seed(SEED)
-        cb = create_iteration_callback_shell(f'STAND{model_idx}', m, ld_dev, test_chain_baseline, intensively_log_interval = 20)
-        for i in range(epochs):
-            train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb)
         # COUNTER AUX
         m = create_model_with_seed(SEED)
         cb = create_iteration_callback_shell(f'COUTER_AUX{model_idx}', m, ld_dev, test_counter_aux, intensively_log_interval = 20)
         for i in range(epochs):
             train_counter_aux(m, ld_train, fl_rate = 0, iteration_callback = cb)
+        # Baseline:
+        m = create_model_with_seed(SEED)
+        cb = create_iteration_callback_shell(f'STAND{model_idx}', m, ld_dev, test_chain_baseline, intensively_log_interval = 20)
+        for i in range(epochs):
+            train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb)
+        # LEFT
         m = create_model_with_seed(SEED)
         cb = create_iteration_callback_shell(f'LEFT_AUX{model_idx}', m, ld_dev, test_left_aux, intensively_log_interval = 20)
         for i in range(epochs):
             train_left_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0, iteration_callback = cb)
+        # RIGHT
         m = create_model_with_seed(SEED)
         cb = create_iteration_callback_shell(f'RIGHT_AUX{model_idx}', m, ld_dev, test_right_aux, intensively_log_interval = 20)
         for i in range(epochs):
             train_right_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0, iteration_callback = cb)
+        # NO AUX
         m = create_model_with_seed(SEED)
         cb = create_iteration_callback_shell(f'NO_AUX{model_idx}', m, ld_dev, test_no_aux, intensively_log_interval = 20)
         for i in range(epochs):
