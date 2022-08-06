@@ -456,32 +456,26 @@ def run_comparison_and_save():
 
 def run_comparison_by_trained():
     PATH = 'comparisoned.txt'
-    times = 5
+    times = 10 
     ld_train = read_ld_train()
     ld_test = read_ld_test() # NOTE: 必须是test
     ld_dev = read_ld_dev_from_chapters() 
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
-    start_idx = 5
     for model_idx in range(times):
-        m = load_model(f'AUX01FL50E2_{model_idx + start_idx}')
+        SEED = SEEDS_FOR_TRAIN[model_idx]
+        m = load_model(f'SEED_{SEED}_AUX01FL50E2_{model_idx}')
         dic['E1AUX_FL'].append(test_chain(m, ld_test))
-        dic['E2AUX_FL'].append(test_chain(m, ld_dev))
         save_dic(PATH)
-    for model_idx in range(times):
-        m = load_model(f'AUX03E1_{model_idx + start_idx}')
+        m = load_model(f'SEED_{SEED}_AUX03E2_{model_idx}')
         dic['E1AUX'].append(test_chain(m, ld_test))
-        dic['E2AUX'].append(test_chain(m, ld_dev))
         save_dic(PATH)
-    for model_idx in range(times):
-        m = load_model(f'FL50E3_{model_idx + start_idx}')
+        m = load_model(f'SEED_{SEED}_FL50E2_{model_idx}')
         dic['E1FL'].append(test_chain_baseline(m, ld_test))
-        dic['E2FL'].append(test_chain_baseline(m, ld_dev))
         save_dic(PATH)
-    for model_idx in range(times):
-        m = load_model(f'STANDARDE2_{model_idx + start_idx}')
+        m = load_model(f'SEED_{SEED}_STANDARDE2_{model_idx}')
         dic['E1STANDARD'].append(test_chain_baseline(m, ld_test))
-        dic['E2STANDARD'].append(test_chain_baseline(m, ld_dev))
         save_dic(PATH)
+
 
 def get_f_by_188_chapters():
     PATH = 'get_f_by_188_chapters.txt'
