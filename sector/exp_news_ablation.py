@@ -2,7 +2,6 @@ from sector import *
 from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_test, read_ld_dev
 from novel_learning_curve import RANDOM_SEEDs
 from exp_novel import create_model_with_seed
-from novel_learning_curve import 
 
 dic = {
     'LEFT_AUX0': [],
