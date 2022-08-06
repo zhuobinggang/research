@@ -2,6 +2,7 @@ from sector import *
 from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_test, read_ld_dev
 from novel_learning_curve import RANDOM_SEEDs
 from exp_novel import create_model_with_seed
+from novel_learning_curve import 
 
 dic = {
     'LEFT_AUX0': [],
@@ -16,6 +17,9 @@ dic = {
     'COUTER_AUX0': [],
     'COUTER_AUX1': [],
     'COUTER_AUX2': [],
+    'STAND0': [],
+    'STAND1': [],
+    'STAND2': [],
 }
 
 def save_dic(name = 'exp_news.txt'):
@@ -143,7 +147,7 @@ def train_shell(m, ds_train, loss_function, epoch = 1, batch = 16, fl_rate = 0, 
     print(delta.seconds)
     return delta.seconds
 
-def test_shell(ds_test, m, seps, main_sep_idx_relative):
+def test_shell(ds_test, m, seps, main_sep_idx_relative, use_cls = False):
     y_true = []
     y_pred = []
     toker = m.toker
@@ -151,14 +155,19 @@ def test_shell(ds_test, m, seps, main_sep_idx_relative):
     for row_idx, row in enumerate(ds_test):
         ss, labels = row
         combined_ids, sep_idxs = encode(ss, toker, seps)
-        main_sep_idx = sep_idxs[main_sep_idx_relative] # (1)
-        out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, main_sep_idx, :] # (1, 768)
+        if use_cls:
+            CLS_POS = [0]
+            out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, CLS_POS, :] # (1, 1, 768)
+        else:
+            main_sep_idx = sep_idxs[main_sep_idx_relative] # (1)
+            out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, main_sep_idx, :] # (1, 768)
         out_mlp = m.classifier(out_bert) # (1, 1)
         assert out_mlp.shape == (1,1)
         y_pred.append(out_mlp.item())
         y_true.append(int(labels[2]))
     y_pred_rounded = [(1 if y > 0.5 else 0) for y in y_pred]
     return cal_prec_rec_f1_v2(y_pred_rounded, y_true)
+
 
 
 def train_left_aux(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, random_seed = True):
@@ -183,20 +192,9 @@ def test_no_aux(m, ds_test):
 def train_counter_aux(m, ds_train, epoch = 1, batch = 16, fl_rate = 0, aux_rate = 0, iteration_callback = None, random_seed = True):
     train_shell(m, ds_train, ablation_loss_counter_aux, epoch, batch, fl_rate, aux_rate, iteration_callback, random_seed)
 
+# NOTE: 这个比较特别因为是用CLS_POS来训练的
 def test_counter_aux(m, ds_test):
-    y_true = []
-    y_pred = []
-    toker = m.toker
-    bert = m.bert
-    CLS_POS = [0]
-    for row_idx, row in enumerate(ds_test):
-        ss, labels = row
-        combined_ids, _ = encode(ss, toker, [True, False, True, False])
-        out_bert = bert(combined_ids.unsqueeze(0).cuda()).last_hidden_state[:, CLS_POS, :] # (1, 1, 768)
-        out_mlp = m.classifier(out_bert) # (1, 1, 1)
-        y_pred.append(out_mlp.squeeze().item())
-        y_true.append(int(labels[2]))
-    return y_true, y_pred
+    return test_shell(ds_test, m, [True, False, True, False], None, use_cls = True)
 
 #     'LEFT_AUX0': [],
 #     'LEFT_AUX1': [],
@@ -211,6 +209,10 @@ def test_counter_aux(m, ds_test):
 #     'COUTER_AUX1': [],
 #     'COUTER_AUX2': [],
 
+def create_iteration_callback_baseline(key, m, ld_dev, intensively_log_interval = 10, intensive_log_until = 500, normal_log_interval = 100):
+    return create_iteration_callback_shell(key, m, ld_dev, test_chain_baseline, intensively_log_interval, intensive_log_until, normal_log_interval)
+
+# NOTE: 因为是sep消融实验，所以不使用aux rate
 def train_and_plot(times = 3, start = 0):
     epochs = 3
     ld_train = read_ld_train()
@@ -218,19 +220,32 @@ def train_and_plot(times = 3, start = 0):
     for model_idx_org in range(times):
         model_idx = model_idx_org + start
         SEED = RANDOM_SEEDs[model_idx]
+        # Baseline:
         m = create_model_with_seed(SEED)
-        cb = create_iteration_callback_shell(f'LEFT_AUX{model_idx}', m, ld_dev, test_left_aux, intensively_log_interval = 20)
+        cb = create_iteration_callback_shell(f'STAND{model_idx}', m, ld_dev, test_chain_baseline, intensively_log_interval = 20)
         for i in range(epochs):
-            train_left_aux(m, ld_train, fl_rate = 5.0, aux_rate = 0.1, iteration_callback = cb)
-        m = create_model_with_seed(SEED)
-        cb = create_iteration_callback_shell(f'RIGHT_AUX{model_idx}', m, ld_dev, test_right_aux, intensively_log_interval = 20)
-        for i in range(epochs):
-            train_right_aux(m, ld_train, fl_rate = 0, aux_rate = 0.2, iteration_callback = cb)
-        m = create_model_with_seed(SEED)
-        cb = create_iteration_callback_shell(f'NO_AUX{model_idx}', m, ld_dev, test_no_aux, intensively_log_interval = 20)
-        for i in range(epochs):
-            train_no_aux(m, ld_train, fl_rate = 2.0, iteration_callback = cb)
+            train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb)
+        # COUNTER AUX
         m = create_model_with_seed(SEED)
         cb = create_iteration_callback_shell(f'COUTER_AUX{model_idx}', m, ld_dev, test_counter_aux, intensively_log_interval = 20)
         for i in range(epochs):
             train_counter_aux(m, ld_train, fl_rate = 0, iteration_callback = cb)
+        m = create_model_with_seed(SEED)
+        cb = create_iteration_callback_shell(f'LEFT_AUX{model_idx}', m, ld_dev, test_left_aux, intensively_log_interval = 20)
+        for i in range(epochs):
+            train_left_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0, iteration_callback = cb)
+        m = create_model_with_seed(SEED)
+        cb = create_iteration_callback_shell(f'RIGHT_AUX{model_idx}', m, ld_dev, test_right_aux, intensively_log_interval = 20)
+        for i in range(epochs):
+            train_right_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0, iteration_callback = cb)
+        m = create_model_with_seed(SEED)
+        cb = create_iteration_callback_shell(f'NO_AUX{model_idx}', m, ld_dev, test_no_aux, intensively_log_interval = 20)
+        for i in range(epochs):
+            train_no_aux(m, ld_train, fl_rate = 0.0, iteration_callback = cb)
+
+
+
+
+
+
+
