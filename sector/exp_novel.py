@@ -477,6 +477,13 @@ def run_comparison_by_trained():
         save_dic(PATH)
 
 
+def get_fs_by_lds_and_model(lds, m, test_function):
+    fs = []
+    for ld in lds:
+        prec, rec, f, _ = test_function(m, ld)
+        fs.append(f)
+    return fs
+
 def get_f_by_188_chapters():
     PATH = 'get_f_by_188_chapters.txt'
     times = 10
@@ -484,34 +491,18 @@ def get_f_by_188_chapters():
     lds = read_lds_test_from_chapters() # NOTE: 必须是test
     start_idx = 0
     for model_idx in range(times):
-        m = load_model(f'AUX01FL50E2_{model_idx + start_idx}')
-        fs = []
-        for ld in lds:
-            prec, rec, f, _ = test_chain(m, ld)
-            fs.append(f)
-        dic['AUX_FL188'].append(fs)
+        SEED = SEEDS_FOR_TRAIN[model_idx]
+        m = load_model(f'SEED_{SEED}_AUX01FL50E2_{model_idx}')
+        dic['AUX_FL188'].append(get_fs_by_lds_and_model(lds, m, test_chain))
         save_dic(PATH)
-    for model_idx in range(times):
-        m = load_model(f'AUX03E1_{model_idx + start_idx}')
-        fs = []
-        for ld in lds:
-            prec, rec, f, _ = test_chain(m, ld)
-            fs.append(f)
-        dic['AUX188'].append(fs)
+        m = load_model(f'SEED_{SEED}_AUX03E2_{model_idx}')
+        dic['AUX188'].append(get_fs_by_lds_and_model(lds, m, test_chain))
         save_dic(PATH)
-    for model_idx in range(times):
-        m = load_model(f'FL50E3_{model_idx + start_idx}')
-        fs = []
-        for ld in lds:
-            prec, rec, f, _ = test_chain_baseline(m, ld)
-            fs.append(f)
-        dic['FL188'].append(fs)
+        m = load_model(f'SEED_{SEED}_FL50E2_{model_idx}')
+        dic['FL188'].append(get_fs_by_lds_and_model(lds, m, test_chain_baseline))
         save_dic(PATH)
-    for model_idx in range(times):
-        m = load_model(f'STANDARDE2_{model_idx + start_idx}')
-        fs = []
-        for ld in lds:
-            prec, rec, f, _ = test_chain_baseline(m, ld)
-            fs.append(f)
-        dic['STAND188'].append(fs)
+        m = load_model(f'SEED_{SEED}_STANDARDE2_{model_idx}')
+        dic['STAND188'].append(get_fs_by_lds_and_model(lds, m, test_chain_baseline))
         save_dic(PATH)
+
+
