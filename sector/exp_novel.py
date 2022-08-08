@@ -486,13 +486,12 @@ def get_fs_by_lds_and_model(lds, m, test_function):
         fs.append(f)
     return fs
 
-def get_f_by_188_chapters():
+def get_f_by_188_chapters(start = 0,times = 10 ):
     PATH = 'get_f_by_188_chapters.txt'
-    times = 10
     ld_train = read_ld_train()
     lds = read_lds_test_from_chapters() # NOTE: 必须是test
-    start_idx = 0
     for model_idx in range(times):
+        model_idx = model_idx + start
         SEED = SEEDS_FOR_TRAIN[model_idx]
         m = load_model(f'SEED_{SEED}_AUX01FL50E2_{model_idx}')
         dic['AUX_FL188'].append(get_fs_by_lds_and_model(lds, m, test_chain))

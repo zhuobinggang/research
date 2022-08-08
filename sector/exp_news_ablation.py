@@ -21,6 +21,9 @@ dic = {
     'STAND2': [],
 }
 
+# 已排除不能收束的种子
+SEEDS_FOR_TRAIN = [21, 22, 8, 4, 14, 3, 19, 97, 10, 666]
+
 def save_dic(name = 'exp_news.txt'):
     f = open(name, 'w')
     f.write(str(dic))
@@ -246,8 +249,39 @@ def train_and_plot(times = 3, start = 0):
             train_no_aux(m, ld_train, fl_rate = 0.0, iteration_callback = cb)
 
 
+def save_model(m, name):
+    t.save(m, f'/usr01/taku/sector_models/{name}.tch')
 
-
-
+def train_and_save(start = 0, times = 5):
+    epochs = 2
+    ld_train = read_ld_train()
+    for model_idx_org in range(times):
+        model_idx = model_idx_org + start
+        SEED = RANDOM_SEEDs[model_idx]
+        # COUNTER AUX
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_counter_aux(m, ld_train, fl_rate = 0)
+        save_model(m, f'SEED_{SEED}_COUNTERAUXE2')
+        # Baseline:
+        # m = create_model_with_seed(SEED)
+        # for i in range(epochs):
+        #     train_baseline(m, ld_train, fl_rate = 0)
+        # save_model(m, f'SEED_{SEED}_COUNTERAUXE2_{model_idx}')
+        # LEFT
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_left_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0)
+        save_model(m, f'SEED_{SEED}_LEFTAUXE2')
+        # RIGHT
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_right_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0)
+        save_model(m, f'SEED_{SEED}_RIGHTAUXE2')
+        # NO AUX
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_no_aux(m, ld_train, fl_rate = 0.0)
+        save_model(m, f'SEED_{SEED}_NOAUXE2')
 
 
