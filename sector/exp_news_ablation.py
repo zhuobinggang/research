@@ -23,6 +23,7 @@ dic = {
 
 # 已排除不能收束的种子
 SEEDS_FOR_TRAIN = [21, 22, 8, 4, 14, 3, 19, 97, 10, 666]
+SEEDS_FOR_TEST = [2022, 2023, 2024, 21, 22, 8, 4, 14, 3, 19, 97, 10, 666]
 
 def save_dic(name = 'exp_news.txt'):
     f = open(name, 'w')
@@ -257,7 +258,7 @@ def train_and_save(start = 0, times = 5):
     ld_train = read_ld_train()
     for model_idx_org in range(times):
         model_idx = model_idx_org + start
-        SEED = RANDOM_SEEDs[model_idx]
+        SEED = SEEDS_FOR_TRAIN[model_idx]
         # COUNTER AUX
         m = create_model_with_seed(SEED)
         for i in range(epochs):
