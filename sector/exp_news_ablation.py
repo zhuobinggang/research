@@ -1,7 +1,7 @@
 from sector import *
 from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_test, read_ld_dev
 from novel_learning_curve import RANDOM_SEEDs
-from exp_novel import create_model_with_seed
+from exp_novel import create_model_with_seed, load_model
 
 dic = {
     'LEFT_AUX0': [],
@@ -265,10 +265,15 @@ def train_and_save(start = 0, times = 5):
         #     train_counter_aux(m, ld_train, fl_rate = 0)
         # save_model(m, f'SEED_{SEED}_COUNTERAUXE2')
         # Baseline:
+        # m = create_model_with_seed(SEED)
+        # for i in range(epochs):
+        #     train_baseline(m, ld_train, fl_rate = 0)
+        # save_model(m, f'SEED_{SEED}_STAND')
+        # AUX00:
         m = create_model_with_seed(SEED)
         for i in range(epochs):
-            train_baseline(m, ld_train, fl_rate = 0)
-        save_model(m, f'SEED_{SEED}_STAND')
+            train(m, ld_train, fl_rate = 0, aux_rate = 0)
+        save_model(m, f'SEED_{SEED}_AUX00')
         # LEFT
         # m = create_model_with_seed(SEED)
         # for i in range(epochs):
@@ -284,6 +289,7 @@ def train_and_save(start = 0, times = 5):
         # for i in range(epochs):
         #     train_no_aux(m, ld_train, fl_rate = 0.0)
         # save_model(m, f'SEED_{SEED}_NOAUXE2')
+        
 
 
 def run_comparison_by_trained(start = 0,times = 5 ):
@@ -306,7 +312,7 @@ def run_comparison_by_trained(start = 0,times = 5 ):
         m = load_model(f'SEED_{SEED}_COUNTERAUXE2')
         dic['COUTER_AUX0'].append(test_counter_aux(m, ld_test))
         save_dic(PATH)
-        # m = load_model(f'SEED_{SEED}_COUNTERAUXE2')
-        # dic['COUTER_AUX0'].append(test_counter_aux(m, ld_test))
-        # save_dic(PATH)
+        m = load_model(f'SEED_{SEED}_STAND')
+        dic['STAND0'].append(test_chain_baseline(m, ld_test)) # NOTE: 参数顺序不同
+        save_dic(PATH)
 
