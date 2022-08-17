@@ -6,6 +6,10 @@ SEEDS_FOR_TRAIN = [21, 22, 8, 4, 14, 3, 19, 97, 10, 666]
 def save_model(m, name):
     t.save(m, f'./save/{name}.tch')
 
+def load_model(name):
+    print(f'load {name}')
+    return t.load(f'./save/{name}.tch')
+
 def create_model_with_seed(seed):
     t.manual_seed(seed)
     m = Sector_2022()
