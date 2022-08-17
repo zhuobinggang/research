@@ -8,7 +8,7 @@ def save_model(m, name):
 
 def load_model(name):
     print(f'load {name}')
-    return t.load(f'./save/{name}.tch')
+    return t.load(f'./save/{name}.tch.tch')
 
 def create_model_with_seed(seed):
     t.manual_seed(seed)
