@@ -33,8 +33,28 @@ def train_and_save(start = 0, times = 10):
         m = create_model_with_seed(SEED)
         for i in range(2): # STAND
             train_baseline(m, ld_train, fl_rate = 0)
-        save_model(m, f'SEED{SEED}_STDE3.tch')
+        save_model(m, f'SEED{SEED}_STDE3.tch') # NOTE: 名字错了，应该是E2的，但是将就用把
 
+def run_comparison_by_trained(start = 0,times = 10 ):
+    PATH = 'news_comparisoned.txt'
+    ld_train = read_ld_train()
+    ld_test = read_ld_test() # NOTE: 必须是test
+    # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
+    for model_idx in range(times):
+        model_idx = model_idx + start
+        SEED = SEEDS_FOR_TRAIN[model_idx]
+        m = load_model(f'SEED{SEED}_AUX01FL50E2')
+        dic['AUXFL_FS_TEST0'].append(test_chain(m, ld_test))
+        save_dic(PATH)
+        m = load_model(f'SEED{SEED}_AUX02E2')
+        dic['AUX_FS_TEST0'].append(test_chain(m, ld_test))
+        save_dic(PATH)
+        m = load_model(f'SEED{SEED}_FL20E3')
+        dic['FL_FS_TEST0'].append(test_chain_baseline(m, ld_test))
+        save_dic(PATH)
+        m = load_model(f'SEED{SEED}_STDE3.tch')
+        dic['STAND_FS_TEST0'].append(test_chain_baseline(m, ld_test))
+        save_dic(PATH)
 
 # NOTE: 新闻数据集的最佳参数和小说不一样！
 def train_and_plot(times = 3, start = 0):
@@ -64,5 +84,4 @@ def train_and_plot(times = 3, start = 0):
         cb = create_iteration_callback_baseline(f'STAND_FS_DEV{model_idx}', m, ld_dev, intensively_log_interval = 20)
         for i in range(epochs):
             train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb)
-
 

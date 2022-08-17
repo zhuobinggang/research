@@ -19,6 +19,9 @@ dic = {
     'STAND0': [],
     'STAND1': [],
     'STAND2': [],
+    'AUX000': [],
+    'AUX001': [],
+    'AUX002': [],
 }
 
 # 已排除不能收束的种子
@@ -300,19 +303,22 @@ def run_comparison_by_trained(start = 0,times = 5 ):
     for model_idx in range(times):
         model_idx = model_idx + start
         SEED = SEEDS_FOR_TEST[model_idx]
-        m = load_model(f'SEED_{SEED}_LEFTAUXE2')
-        dic['LEFT_AUX0'].append(test_left_aux(m, ld_test))
-        save_dic(PATH)
-        m = load_model(f'SEED_{SEED}_RIGHTAUXE2')
-        dic['RIGHT_AUX0'].append(test_right_aux(m, ld_test))
-        save_dic(PATH)
-        m = load_model(f'SEED_{SEED}_NOAUXE2')
-        dic['NO_AUX0'].append(test_no_aux(m, ld_test))
-        save_dic(PATH)
-        m = load_model(f'SEED_{SEED}_COUNTERAUXE2')
-        dic['COUTER_AUX0'].append(test_counter_aux(m, ld_test))
-        save_dic(PATH)
-        m = load_model(f'SEED_{SEED}_STAND')
-        dic['STAND0'].append(test_chain_baseline(m, ld_test)) # NOTE: 参数顺序不同
+        # m = load_model(f'SEED_{SEED}_LEFTAUXE2')
+        # dic['LEFT_AUX0'].append(test_left_aux(m, ld_test))
+        # save_dic(PATH)
+        # m = load_model(f'SEED_{SEED}_RIGHTAUXE2')
+        # dic['RIGHT_AUX0'].append(test_right_aux(m, ld_test))
+        # save_dic(PATH)
+        # m = load_model(f'SEED_{SEED}_NOAUXE2')
+        # dic['NO_AUX0'].append(test_no_aux(m, ld_test))
+        # save_dic(PATH)
+        # m = load_model(f'SEED_{SEED}_COUNTERAUXE2')
+        # dic['COUTER_AUX0'].append(test_counter_aux(m, ld_test))
+        # save_dic(PATH)
+        # m = load_model(f'SEED_{SEED}_STAND')
+        # dic['STAND0'].append(test_chain_baseline(m, ld_test)) # NOTE: 参数顺序不同
+        # save_dic(PATH)
+        m = load_model(f'SEED_{SEED}_AUX00')
+        dic['AUX000'].append(test_chain(m, ld_test)) # DD
         save_dic(PATH)
 
