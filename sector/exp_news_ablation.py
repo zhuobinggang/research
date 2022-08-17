@@ -26,7 +26,8 @@ dic = {
 
 # 已排除不能收束的种子
 SEEDS_FOR_TRAIN = [2022, 2023, 2024, 21, 22, 8, 4, 14, 3, 19, 97, 10, 666]
-SEEDS_FOR_TEST = [2022, 2023, 2024, 21, 22, 8, 4, 14, 3, 19, 97, 10, 666]
+SEEDS_FOR_TRAIN2 = [2022, 1923, 2024, 21, 22, 8, 4, 14, 3, 19, 97, 10, 666] # 将第二个换掉，模型不好收束
+SEEDS_FOR_TRAIN_PLUS = [1923, 1997] # 将第二个换掉，模型不好收束
 
 def save_dic(name = 'exp_news.txt'):
     f = open(name, 'w')
@@ -261,37 +262,37 @@ def train_and_save(start = 0, times = 5):
     ld_train = read_ld_train()
     for model_idx_org in range(times):
         model_idx = model_idx_org + start
-        SEED = SEEDS_FOR_TRAIN[model_idx]
+        SEED = SEEDS_FOR_TRAIN_PLUS[model_idx]
         # COUNTER AUX
-        # m = create_model_with_seed(SEED)
-        # for i in range(epochs):
-        #     train_counter_aux(m, ld_train, fl_rate = 0)
-        # save_model(m, f'SEED_{SEED}_COUNTERAUXE2')
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_counter_aux(m, ld_train, fl_rate = 0)
+        save_model(m, f'SEED_{SEED}_COUNTERAUXE2')
         # Baseline:
-        # m = create_model_with_seed(SEED)
-        # for i in range(epochs):
-        #     train_baseline(m, ld_train, fl_rate = 0)
-        # save_model(m, f'SEED_{SEED}_STAND')
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_baseline(m, ld_train, fl_rate = 0)
+        save_model(m, f'SEED_{SEED}_STAND')
         # AUX00:
         m = create_model_with_seed(SEED)
         for i in range(epochs):
             train(m, ld_train, fl_rate = 0, aux_rate = 0)
         save_model(m, f'SEED_{SEED}_AUX00')
         # LEFT
-        # m = create_model_with_seed(SEED)
-        # for i in range(epochs):
-        #     train_left_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0)
-        # save_model(m, f'SEED_{SEED}_LEFTAUXE2')
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_left_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0)
+        save_model(m, f'SEED_{SEED}_LEFTAUXE2')
         # # RIGHT
-        # m = create_model_with_seed(SEED)
-        # for i in range(epochs):
-        #     train_right_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0)
-        # save_model(m, f'SEED_{SEED}_RIGHTAUXE2')
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_right_aux(m, ld_train, fl_rate = 0, aux_rate = 0.0)
+        save_model(m, f'SEED_{SEED}_RIGHTAUXE2')
         # # NO AUX
-        # m = create_model_with_seed(SEED)
-        # for i in range(epochs):
-        #     train_no_aux(m, ld_train, fl_rate = 0.0)
-        # save_model(m, f'SEED_{SEED}_NOAUXE2')
+        m = create_model_with_seed(SEED)
+        for i in range(epochs):
+            train_no_aux(m, ld_train, fl_rate = 0.0)
+        save_model(m, f'SEED_{SEED}_NOAUXE2')
         
 
 
@@ -302,22 +303,22 @@ def run_comparison_by_trained(start = 0,times = 5 ):
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
     for model_idx in range(times):
         model_idx = model_idx + start
-        SEED = SEEDS_FOR_TEST[model_idx]
-        # m = load_model(f'SEED_{SEED}_LEFTAUXE2')
-        # dic['LEFT_AUX0'].append(test_left_aux(m, ld_test))
-        # save_dic(PATH)
-        # m = load_model(f'SEED_{SEED}_RIGHTAUXE2')
-        # dic['RIGHT_AUX0'].append(test_right_aux(m, ld_test))
-        # save_dic(PATH)
-        # m = load_model(f'SEED_{SEED}_NOAUXE2')
-        # dic['NO_AUX0'].append(test_no_aux(m, ld_test))
-        # save_dic(PATH)
-        # m = load_model(f'SEED_{SEED}_COUNTERAUXE2')
-        # dic['COUTER_AUX0'].append(test_counter_aux(m, ld_test))
-        # save_dic(PATH)
-        # m = load_model(f'SEED_{SEED}_STAND')
-        # dic['STAND0'].append(test_chain_baseline(m, ld_test)) # NOTE: 参数顺序不同
-        # save_dic(PATH)
+        SEED = SEEDS_FOR_TRAIN_PLUS[model_idx]
+        m = load_model(f'SEED_{SEED}_LEFTAUXE2')
+        dic['LEFT_AUX0'].append(test_left_aux(m, ld_test))
+        save_dic(PATH)
+        m = load_model(f'SEED_{SEED}_RIGHTAUXE2')
+        dic['RIGHT_AUX0'].append(test_right_aux(m, ld_test))
+        save_dic(PATH)
+        m = load_model(f'SEED_{SEED}_NOAUXE2')
+        dic['NO_AUX0'].append(test_no_aux(m, ld_test))
+        save_dic(PATH)
+        m = load_model(f'SEED_{SEED}_COUNTERAUXE2')
+        dic['COUTER_AUX0'].append(test_counter_aux(m, ld_test))
+        save_dic(PATH)
+        m = load_model(f'SEED_{SEED}_STAND')
+        dic['STAND0'].append(test_chain_baseline(m, ld_test)) # NOTE: 参数顺序不同
+        save_dic(PATH)
         m = load_model(f'SEED_{SEED}_AUX00')
         dic['AUX000'].append(test_chain(m, ld_test)) # DD
         save_dic(PATH)

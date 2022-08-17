@@ -1,5 +1,5 @@
 from novel_learning_curve import *
-from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_test, read_ld_dev
+from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_dev
 
 SEEDS_FOR_TRAIN = [21, 22, 8, 4, 14, 3, 19, 97, 10, 666]
 
@@ -16,6 +16,13 @@ def create_model_with_seed(seed):
     time_string = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print(f'created model with seed {seed} at time {time_string}')
     return m
+
+def read_combined_test():
+    tests = read_ld_tests()
+    res = []
+    for ds in tests:
+        res += ds
+    return res
 
 def train_and_save(start = 0, times = 10):
     ld_train = read_ld_train()
@@ -42,7 +49,7 @@ def train_and_save(start = 0, times = 10):
 def run_comparison_by_trained(start = 0,times = 10 ):
     PATH = 'news_comparisoned.txt'
     ld_train = read_ld_train()
-    ld_test = read_ld_test() # NOTE: 必须是test
+    ld_test = read_combined_test() # NOTE: 约7万个句子, 好像没有什么必要
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
     for model_idx in range(times):
         model_idx = model_idx + start
