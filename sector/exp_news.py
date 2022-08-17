@@ -56,7 +56,7 @@ def run_comparison_by_trained(start = 0,times = 10 ):
         m = load_model(f'SEED{SEED}_FL20E3')
         dic['FL_FS_TEST0'].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
-        m = load_model(f'SEED{SEED}_STDE3.tch')
+        m = load_model(f'SEED{SEED}_STDE3')
         dic['STAND_FS_TEST0'].append(test_chain_baseline(m, ld_test))
         save_dic(PATH)
 
