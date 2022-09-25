@@ -3,6 +3,13 @@ from mainichi_paragraph import read_ld_train, read_ld_tests, read_ld_test, read_
 from novel_learning_curve import RANDOM_SEEDs
 from exp_novel import create_model_with_seed, load_model
 
+def read_combined_test():
+    tests = read_ld_tests()
+    res = []
+    for ds in tests:
+        res += ds
+    return res
+
 dic = {
     'LEFT_AUX0': [],
     'LEFT_AUX1': [],
@@ -25,8 +32,9 @@ dic = {
 }
 
 # 已排除不能收束的种子
-SEEDS_FOR_TRAIN = [2022, 2023, 2024, 21, 22, 8, 4, 14, 3, 19, 97, 10, 666]
-SEEDS_FOR_TRAIN2 = [2022, 1923, 2024, 21, 22, 8, 4, 14, 3, 19, 97, 10, 666] # 将第二个换掉，模型不好收束
+# 2023不好收束
+SEEDS_FOR_TRAIN = [2022, 2023, 2024, 21, 22, 8, 4, 14, 3, 19, 97, 10, 666] 
+SEEDS_FOR_TRAIN2 = [2022, 1923, 2024, 21, 22, 1997, 8, 4, 14, 3, 19, 97, 10, 666] # 将第二个换掉，模型不好收束
 SEEDS_FOR_TRAIN_PLUS = [1923, 1997] # 将第二个换掉，模型不好收束
 
 def save_dic(name = 'exp_news.txt'):
@@ -303,7 +311,7 @@ def run_comparison_by_trained(start = 0,times = 5 ):
     # 5 * (2 + 2 + 2 + 1) * 25 = 875(min) = 14.58(hour)
     for model_idx in range(times):
         model_idx = model_idx + start
-        SEED = SEEDS_FOR_TRAIN_PLUS[model_idx]
+        SEED = SEEDS_FOR_TRAIN2[model_idx]
         m = load_model(f'SEED_{SEED}_LEFTAUXE2')
         dic['LEFT_AUX0'].append(test_left_aux(m, ld_test))
         save_dic(PATH)

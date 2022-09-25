@@ -108,5 +108,14 @@ def train_and_plot(times = 3, start = 0):
             train_baseline(m, ld_train, fl_rate = 0, iteration_callback = cb)
 
 
+def draw_image():
+    from exp_log.news_learning_curve_2022_2023 import dic2022
+    from exp_log.news_learning_curve_2022_2023 import dic2024
+    stand = np.array([dic2022['STAND_FS_DEV0'], dic2022['STAND_FS_DEV1'], dic2024['STAND_FS_DEV2']]).mean(0)
+    aux = np.array([dic2022['AUX_FS_DEV0'], dic2022['AUX_FS_DEV1'], dic2024['AUX_FS_DEV2']]).mean(0)
+    auxfl = np.array([dic2022['AUXFL_FS_DEV0'], dic2022['AUXFL_FS_DEV1'], dic2024['AUXFL_FS_DEV2']]).mean(0)
+    fl = np.array([dic2022['FL_FS_DEV0'], dic2022['FL_FS_DEV1'], dic2024['FL_FS_DEV2']]).mean(0)
+    from plot import draw_line_chart
+    draw_line_chart(labels, [stands, aux, auxfl, fl], ['vanilla', 'AUX' ,'AUX+FL', 'FL'], path= 'dd.svg', colors=['r','g', 'b', 'y'])
 
 
