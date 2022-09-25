@@ -8,7 +8,7 @@ import datetime
 from itertools import chain
 from reader import read_ld_train_from_chapters, read_ld_test_from_chapters, read_ld_dev_from_chapters
 from sklearn.metrics import precision_recall_fscore_support as score
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 ds_train = read_ld_train_from_chapters(2)
 ds_test = read_ld_test_from_chapters(2)
