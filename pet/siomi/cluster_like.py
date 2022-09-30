@@ -5,6 +5,8 @@ import datetime
 import torch
 from sklearn.metrics import f1_score, precision_score, recall_score
 
+PROMPT = 0
+
 def shuffle(array):
     res = array.copy()
     np.random.seed(0)
@@ -21,24 +23,28 @@ def customized_ds():
     return train_ds, test_ds
 
 def verbalize(label):
-    if label == 0:
-        # return 'いえ'
-        return '柔らかい'
-    elif label == 1:
-        # return 'はい'
-        return '硬い'
+    if PROMPT == 0:
+        return '柔らかい' if label == 0 else '硬い'
+    elif PROMPT == 1:
+        return 'いえ' if label == 0 else 'はい'
 
 def deverbalize(word):
-    # if word == 'いえ':
-    if word == '柔らかい':
-        return 0
-    # elif word == 'はい':
-    elif word == '硬い':
-        return 1
-    else:
-        print(f'Bad word: {word}')
-        return 0
-        # return word
+    if PROMPT == 0:
+        if word == '柔らかい':
+            return 0
+        elif word == '硬い':
+            return 1
+        else:
+            print(f'Bad word: {word}')
+            return 0
+    elif PROMPT == 1:
+        if word == 'いえ':
+            return 0
+        elif word == 'はい':
+            return 1
+        else:
+            print(f'Bad word: {word}')
+            return 0
 
 def step(x, y, m):
     tokenizer = m.toker
@@ -54,8 +60,10 @@ def step(x, y, m):
     loss.backward()
 
 def pattern(word):
-    # return f'「{word}」とは堅い表現ですか？[MASK]。'
-    return f'「{word}」とは[MASK]表現です。'
+    if PROMPT == 0:
+        return f'「{word}」とは[MASK]表現です。'
+    elif PROMPT == 1:
+        return f'「{word}」とは堅い表現ですか？[MASK]。'
 
 def ds_texted(ds_org, deverbalize_label = False):
     ds = []
@@ -101,8 +109,7 @@ def get_test_result(m, ds_org):
         true_ys.append(label)
     return pred_ys, true_ys
 
-def get_curve(batch_size = 1):
-    m = create_model()
+def get_curve(m, batch_size = 1):
     train_ds, test_ds = customized_ds()
     fs = []
     precs = []
@@ -116,6 +123,15 @@ def get_curve(batch_size = 1):
         precs.append(precision_score(targets, results, average='macro'))
         recs.append(recall_score(targets, results, average='macro'))
     return precs, recs, fs
+
+def batch_get_curve(epoch = 9):
+    m = create_model()
+    fss = []
+    for i in range(epoch):
+        _,_,fs = get_curve(m, 1)
+        fss += fs
+    return fss
+
 
 def stop_when_f_score_exceed(m, limit = 0.6, batch_size = 1):
     train_ds, test_ds = customized_ds()
