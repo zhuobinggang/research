@@ -9,23 +9,16 @@ from itertools import chain
 from reader import read_data
 from sklearn.metrics import precision_recall_fscore_support as score
 from sklearn.metrics import f1_score, precision_score, recall_score
+import types
 
-class Pet(nn.Module):
-  def __init__(self, learning_rate = 1e-5):
-    super().__init__()
-    self.learning_rate = learning_rate
-    self.bert_size = 768
-    self.init_bert()
-    self.opter = t.optim.AdamW(self.get_should_update(), self.learning_rate)
-    self.cuda()
-
-  def init_bert(self):
-    self.bert = BertForMaskedLM.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
-    self.bert.train()
-    self.toker = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
-
-  def get_should_update(self):
-    return self.bert.parameters()
+def create_model(learning_rate = 1e-5):
+    res = types.SimpleNamespace()
+    res.bert = BertForSequenceClassification.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+    res.toker = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+    res.opter = torch.optim.AdamW(res.bert.parameters(), learning_rate)
+    res.bert.cuda()
+    res.bert.train()
+    return res
 
 def verbalize(label):
     if label == 0:
@@ -39,11 +32,20 @@ def deverbalize(word):
     elif word == 'はい':
         return 1
     else:
-        return word
+        print(f'Bad word: {word}')
+        return 0
+        # return word
 
 
-def patterned(left, right):
-    return f'「{left}」は「{right}」より上品ですか？[MASK]。'
+def patterned(left, right, strategy = 0):
+    if strategy == 0:
+        return f'「{left}」は「{right}」より上品ですか？[MASK]。'
+    elif strategy == 1:
+        return f'{left}は{right}よりも上品ですか？[MASK]。'
+    elif strategy == 2:
+        return f'「{left}」は「{right}」よりも格調高いですか？[MASK]。'
+    elif strategy == 3:
+        return f'{left}は{right}よりも格調高いですか？[MASK]。'
 
 def pattern_verbalized(left, right, label):
     text = patterned(left, right)
@@ -59,9 +61,9 @@ def create_inputs_and_labels_from_fewshot_set(ds, should_deverbalize = True, shu
     ds_true = ds[:half]
     ds_false = ds[half:]
     for left, right in ds_true:
-        results.append((patterned(left, right), pattern_verbalized(left, right, 1) if should_deverbalize else 1))
+        results.append((patterned(left, right), pattern_verbalized(left, right, 0) if should_deverbalize else 0))
     for left, right in ds_false:
-        results.append((patterned(right, left), pattern_verbalized(right, left,  0) if should_deverbalize else 0))
+        results.append((patterned(right, left), pattern_verbalized(right, left, 1) if should_deverbalize else 1))
     if shuffle:
         np.random.shuffle(results)
     return results
@@ -132,7 +134,7 @@ def cal_prec_rec_f1_v2(results, targets):
     return f1_score(targets, results, average='macro')
 
 def get_curve():
-    m = Pet()
+    m = create_model()
     ds = read_data()
     train_ds = ds[:496]
     test_ds = ds[500:700]
@@ -148,11 +150,30 @@ def get_curve():
         precs.append(precision_score(targets, results, average='macro'))
         recs.append(recall_score(targets, results, average='macro'))
     return precs, recs, fs
+
+def stop_when_f_score_exceed(limit = 0.57):
+    m = create_model()
+    ds = read_data()
+    train_ds = ds[:496]
+    test_ds = ds[500:700]
+    fs = []
+    precs = []
+    recs = []
+    for start in range(0, 496, 16): # [0, 16, 32, ..., 480]
+        end = start + 16 # 16, 32, ..., 496
+        fewshot = train_ds[start: end]
+        run_full(m, fewshot, batch_size = 4)
+        results, targets = get_test_result(m, test_ds)
+        f = f1_score(targets, results, average='macro')
+        if f > limit:
+            print(f'End at {start}, f {f}.')
+            break
+    return m 
         
 # ========================================
 
 def train_model(data_points = 256, batch_size = 4):
-    m = Pet()
+    m = create_model()
     ds = read_data()
     assert data_points < 500
     train_ds = ds[:data_points]
@@ -164,11 +185,13 @@ def train_model(data_points = 256, batch_size = 4):
     f = f1_score(targets, results, average='macro')
     prec = precision_score(targets, results, average='macro')
     rec = recall_score(targets, results, average='macro')
-    print('Results: f {f}, precision {prec}, recall {rec}.')
+    print(f'Results: f {f}, precision {prec}, recall {rec}.')
     return m
 
 def get_predicted_word_by_word_pair(m, left, right):
     text = patterned(left, right)
     return get_predicted_word(m.toker, m.bert, text)
 
-
+def run_test(m, test_ds):
+    results, targets = get_test_result(m, test_ds)
+    print(f1_score(targets, results, average='macro'))
