@@ -82,7 +82,7 @@ def step(x, y, m):
     loss = outputs.loss
     loss.backward()
 
-def run_full(m, ds, batch_size = 4):
+def run_full(m, ds, batch_size = 1):
     input_labels = create_inputs_and_labels_from_fewshot_set(ds)
     length = len(input_labels)
     first_time = datetime.datetime.now()
@@ -145,25 +145,45 @@ def get_curve_regular():
     for start in range(0, 224, 16): # [0, 16, 32, ..., 480]
         end = start + 16 # 16, 32, ..., 496
         fewshot = train_ds[start: end]
-        run_full(m, fewshot, batch_size = 4)
+        run_full(m, fewshot, batch_size = 1)
         results, targets = get_test_result(m, test_ds)
         fs.append(f1_score(targets, results, average='macro'))
         precs.append(precision_score(targets, results, average='macro'))
         recs.append(recall_score(targets, results, average='macro'))
     return precs, recs, fs
 
-def get_curve():
-    m = create_model()
+def get_curve_regular(m, batch_size = 1):
+    ds = read_regular_ds_zip()
+    train_ds = ds[:227] # 227
+    test_ds = ds[227:277] # 50
+    # ds = read_data()
+    # train_ds = ds[:496]
+    # test_ds = ds[500:700]
+    fs = []
+    precs = []
+    recs = []
+    # for start in range(0, 496, 32): # [0, 16, 32, ..., 480]
+    for start in range(0, 227, 32): # [0, 16, 32, ..., 480]
+        end = start + 32 # 16, 32, ..., 496
+        fewshot = train_ds[start: end]
+        run_full(m, fewshot, batch_size = batch_size)
+        results, targets = get_test_result(m, test_ds)
+        fs.append(f1_score(targets, results, average='macro'))
+        precs.append(precision_score(targets, results, average='macro'))
+        recs.append(recall_score(targets, results, average='macro'))
+    return precs, recs, fs
+
+def get_curve(m, batch_size = 1):
     ds = read_data()
     train_ds = ds[:496]
     test_ds = ds[500:700]
     fs = []
     precs = []
     recs = []
-    for start in range(0, 496, 16): # [0, 16, 32, ..., 480]
-        end = start + 16 # 16, 32, ..., 496
+    for start in range(0, 496, 32): # [0, 16, 32, ..., 480]
+        end = start + 32 # 16, 32, ..., 496
         fewshot = train_ds[start: end]
-        run_full(m, fewshot, batch_size = 4)
+        run_full(m, fewshot, batch_size = batch_size)
         results, targets = get_test_result(m, test_ds)
         fs.append(f1_score(targets, results, average='macro'))
         precs.append(precision_score(targets, results, average='macro'))
@@ -181,7 +201,7 @@ def stop_when_f_score_exceed(limit = 0.57):
     for start in range(0, 496, 16): # [0, 16, 32, ..., 480]
         end = start + 16 # 16, 32, ..., 496
         fewshot = train_ds[start: end]
-        run_full(m, fewshot, batch_size = 4)
+        run_full(m, fewshot, batch_size = 1)
         results, targets = get_test_result(m, test_ds)
         f = f1_score(targets, results, average='macro')
         if f > limit:
@@ -191,7 +211,7 @@ def stop_when_f_score_exceed(limit = 0.57):
         
 # ========================================
 
-def train_model(data_points = 256, batch_size = 4):
+def train_model(data_points = 256, batch_size = 1):
     m = create_model()
     ds = read_data()
     assert data_points < 500

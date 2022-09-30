@@ -1,12 +1,148 @@
-from main import create_model
-from reader import read_data
+from main import create_model, get_predicted_word
+from reader import read_data, read_regular_ds
+import numpy as np
+import datetime
+import torch
+from sklearn.metrics import f1_score, precision_score, recall_score
 
-def train_model(data_points = 256, batch_size = 4):
+def shuffle(array):
+    res = array.copy()
+    np.random.seed(0)
+    np.random.shuffle(res)
+    return res
+    
+def customized_ds():
+    good_words, bad_words = read_regular_ds()
+    good_words = [(item, 1) for item in good_words]
+    bad_words = [(item, 0) for item in bad_words]
+    ds = shuffle([] + good_words + bad_words)
+    train_ds = ds[:448] # 
+    test_ds = ds[448:] # 100
+    return train_ds, test_ds
+
+def verbalize(label):
+    if label == 0:
+        # return 'いえ'
+        return '柔らかい'
+    elif label == 1:
+        # return 'はい'
+        return '硬い'
+
+def deverbalize(word):
+    # if word == 'いえ':
+    if word == '柔らかい':
+        return 0
+    # elif word == 'はい':
+    elif word == '硬い':
+        return 1
+    else:
+        print(f'Bad word: {word}')
+        return 0
+        # return word
+
+def step(x, y, m):
+    tokenizer = m.toker
+    model = m
+    opter = m.opter
+    inputs = tokenizer(x, return_tensors="pt", truncation=True)["input_ids"]
+    labels = tokenizer(y, return_tensors="pt", truncation=True)["input_ids"]
+    labels = torch.where(inputs == tokenizer.mask_token_id, labels, -100)
+    inputs = inputs.cuda()
+    labels = labels.cuda()
+    outputs = model.bert(inputs, labels=labels)
+    loss = outputs.loss
+    loss.backward()
+
+def pattern(word):
+    # return f'「{word}」とは堅い表現ですか？[MASK]。'
+    return f'「{word}」とは[MASK]表現です。'
+
+def ds_texted(ds_org, deverbalize_label = False):
+    ds = []
+    for word, label in ds_org:
+        # x_text = f'「{word}」は上品な言葉ですか？[MASK]。'
+        # x_text = f'「{word}」とはよく使われている言葉ですか？[MASK]。'
+        x_text = pattern(word)
+        y = x_text.replace('[MASK]', verbalize(label)) if deverbalize_label else label
+        ds.append((x_text, y))
+    return ds
+
+def run_full(m, ds_org, batch_size = 4):
+    ds = ds_texted(ds_org, deverbalize_label = True)
+    length = len(ds)
+    first_time = datetime.datetime.now()
+    for index, (x,y) in enumerate(ds):
+        step(x, y, m)
+        if (index + 1) % 32 == 0:
+            print(f'{index + 1} / {length}')
+        if (index + 1) % batch_size == 0:
+            m.opter.step()
+            m.opter.zero_grad()
+    m.opter.step()
+    m.opter.zero_grad()
+    last_time = datetime.datetime.now()
+    delta = last_time - first_time
+    print(delta.seconds)
+
+def get_test_result(m, ds_org):
+    toker = m.toker
+    bert = m.bert
+    pred_ys = []
+    true_ys = []
+    length = len(ds_org)
+    ds = ds_texted(ds_org, deverbalize_label = False)
+    # for index, item in enumerate(test):
+    for index, (x_text, label) in enumerate(ds):
+        if index % 100 == 0:
+            print(f'{index}/{length}')
+        word = get_predicted_word(toker, bert, x_text)
+        pred_y = deverbalize(word)
+        pred_ys.append(pred_y)
+        true_ys.append(label)
+    return pred_ys, true_ys
+
+def get_curve(batch_size = 1):
     m = create_model()
-    ds = read_data()
-    assert data_points < 500
-    train_ds = ds[:data_points]
-    test_ds = ds[500:700]
+    train_ds, test_ds = customized_ds()
+    fs = []
+    precs = []
+    recs = []
+    for start in range(0, len(train_ds), 32): 
+        end = start + 32 
+        fewshot = train_ds[start: end]
+        run_full(m, fewshot, batch_size = batch_size)
+        results, targets = get_test_result(m, test_ds)
+        fs.append(f1_score(targets, results, average='macro'))
+        precs.append(precision_score(targets, results, average='macro'))
+        recs.append(recall_score(targets, results, average='macro'))
+    return precs, recs, fs
+
+def stop_when_f_score_exceed(m, limit = 0.6, batch_size = 1):
+    train_ds, test_ds = customized_ds()
+    fs = []
+    precs = []
+    recs = []
+    for start in range(0, len(train_ds), 32): 
+        end = start + 32 
+        fewshot = train_ds[start: end]
+        run_full(m, fewshot, batch_size = batch_size)
+        results, targets = get_test_result(m, test_ds)
+        f = f1_score(targets, results, average='macro')
+        prec = precision_score(targets, results, average='macro')
+        rec = recall_score(targets, results, average='macro')
+        fs.append(f)
+        precs.append(prec)
+        recs.append(rec)
+        if f > limit:
+            print(f'End at {start}, f {f}, prec {prec}, rec {rec}.')
+            break
+    return precs, recs, fs
+
+
+def train_model(data_points = 500, batch_size = 4):
+    m = create_model()
+    train_ds, test_ds = customized_ds()
+    train_ds = train_ds[:data_points]
     print('Training...')
     run_full(m, train_ds, batch_size = batch_size)
     print('Testing...')
