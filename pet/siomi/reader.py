@@ -30,3 +30,7 @@ def read_regular_ds():
     del bad_words[-1]
     return good_words, bad_words
 
+def read_regular_ds_zip():
+    good_words, bad_words = read_regular_ds()
+    return list(zip(bad_words, good_words))
+

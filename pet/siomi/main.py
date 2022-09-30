@@ -6,14 +6,15 @@ F = t.nn.functional
 from transformers import BertJapaneseTokenizer, BertForMaskedLM
 import datetime
 from itertools import chain
-from reader import read_data
+from reader import read_data, read_regular_ds_zip
 from sklearn.metrics import precision_recall_fscore_support as score
 from sklearn.metrics import f1_score, precision_score, recall_score
 import types
 
 def create_model(learning_rate = 1e-5):
     res = types.SimpleNamespace()
-    res.bert = BertForSequenceClassification.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+    # NOTE
+    res.bert = BertForMaskedLM.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
     res.toker = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
     res.opter = torch.optim.AdamW(res.bert.parameters(), learning_rate)
     res.bert.cuda()
@@ -132,6 +133,24 @@ def cal_scores(pred_ys, true_ys):
 
 def cal_prec_rec_f1_v2(results, targets):
     return f1_score(targets, results, average='macro')
+
+def get_curve_regular():
+    m = create_model()
+    ds = read_regular_ds_zip()
+    train_ds = ds[:227] # 227
+    test_ds = ds[227:277] # 50
+    fs = []
+    precs = []
+    recs = []
+    for start in range(0, 224, 16): # [0, 16, 32, ..., 480]
+        end = start + 16 # 16, 32, ..., 496
+        fewshot = train_ds[start: end]
+        run_full(m, fewshot, batch_size = 4)
+        results, targets = get_test_result(m, test_ds)
+        fs.append(f1_score(targets, results, average='macro'))
+        precs.append(precision_score(targets, results, average='macro'))
+        recs.append(recall_score(targets, results, average='macro'))
+    return precs, recs, fs
 
 def get_curve():
     m = create_model()
