@@ -1,4 +1,6 @@
 import itertools
+import numpy as np
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 def read_data():
     f_i = open('text_bassui.txt', 'r', encoding='UTF-8')
@@ -33,4 +35,30 @@ def read_regular_ds():
 def read_regular_ds_zip():
     good_words, bad_words = read_regular_ds()
     return list(zip(bad_words, good_words))
+
+
+def shuffle(array):
+    res = array.copy()
+    np.random.seed(0)
+    np.random.shuffle(res)
+    return res
+    
+def customized_ds():
+    good_words, bad_words = read_regular_ds()
+    good_words = [(item, 1) for item in good_words]
+    bad_words = [(item, 0) for item in bad_words]
+    ds = shuffle([] + good_words + bad_words)
+    train_ds = ds[:448] # 448
+    test_ds = ds[448:] # 106
+    return train_ds, test_ds
+
+def calculate_result(pred_y, true_y = None):
+    if true_y is None:
+        _, test_ds = customized_ds()
+        true_y = [label for text, label in test_ds]
+    f = f1_score(true_y, pred_y, average='macro')
+    prec = precision_score(true_y, pred_y, average='macro')
+    rec = recall_score(true_y, pred_y, average='macro')
+    print(f'F: {f}, PRECISION: {prec}, RECALL: {rec}')
+
 

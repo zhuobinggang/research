@@ -1,26 +1,11 @@
 from main import create_model, get_predicted_word
-from reader import read_data, read_regular_ds
+from reader import read_data, read_regular_ds, customized_ds
 import numpy as np
 import datetime
 import torch
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 PROMPT = 0
-
-def shuffle(array):
-    res = array.copy()
-    np.random.seed(0)
-    np.random.shuffle(res)
-    return res
-    
-def customized_ds():
-    good_words, bad_words = read_regular_ds()
-    good_words = [(item, 1) for item in good_words]
-    bad_words = [(item, 0) for item in bad_words]
-    ds = shuffle([] + good_words + bad_words)
-    train_ds = ds[:448] # 
-    test_ds = ds[448:] # 100
-    return train_ds, test_ds
 
 def verbalize(label):
     if PROMPT == 0:
