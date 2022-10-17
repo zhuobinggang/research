@@ -3,6 +3,7 @@
 __pycache__
 **/__pycache__/**
 *.tch
+*.png
 *.ds.json
 log.txt
 *temp.png

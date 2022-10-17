@@ -109,11 +109,11 @@ def get_curve(m, batch_size = 1):
         recs.append(recall_score(targets, results, average='macro'))
     return precs, recs, fs
 
-def batch_get_curve(epoch = 9):
+def batch_get_curve(epoch = 9, batch = 1):
     m = create_model()
     fss = []
     for i in range(epoch):
-        _,_,fs = get_curve(m, 1)
+        _,_,fs = get_curve(m, batch)
         fss += fs
     return fss
 
