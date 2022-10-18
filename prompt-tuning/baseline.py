@@ -1,49 +1,48 @@
+from transformers import BertJapaneseTokenizer, BertForSequenceClassification
 from trainable_prefix_abstract import *
 from reader import read_ld_train_from_chapters, read_ld_test_from_chapters, read_ld_dev_from_chapters
-import numpy as np
 import torch
+import datetime
+import numpy as np
+import types
 
-def get_inputs_emb_without_pos_info(m, ss):
-    before_mask = get_emb_without_position_info_for_concat(m, f'[CLS]{ss[0]}[SEP]（新しい段落ですか？') # (1, 1, 768)
-    after_mask = get_emb_without_position_info_for_concat(m, f'[MASK]）{ss[1]}[SEP]')
-    inputs_emb_without_pos_info = torch.cat([before_mask, after_mask], dim = 1)
-    # after concat
-    mask_index = before_mask.shape[1]
-    return inputs_emb_without_pos_info, mask_index
+def create_model(learning_rate = 1e-5):
+    res = types.SimpleNamespace()
+    # NOTE
+    res.bert = BertForSequenceClassification.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+    res.toker = BertJapaneseTokenizer.from_pretrained('cl-tohoku/bert-base-japanese-whole-word-masking')
+    res.opter = torch.optim.AdamW(res.bert.parameters(), learning_rate)
+    res.bert.cuda()
+    res.bert.train()
+    return res
 
 def cal_loss(m, item):
     ss, ls = item
-    inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, ss)
-    return loss_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index, ls[1])
+    ids = m.toker.encode(f'[CLS]{ss[0]}[SEP]{ss[1]}[SEP]', add_special_tokens = False)
+    ids = torch.LongTensor([ids])
+    loss = m.bert(ids.cuda(), labels = torch.LongTensor([ls[1]]).cuda()).loss
+    return loss
 
 def dry_run(m, item):
     ss, ls = item
     true_y = ls[1]
-    inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, ss)
-    word = predict_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index)
-    word = word.replace(' ', '')
-    if word == 'はい':
-        return 1, true_y
-    elif word == 'いえ':
-        return 0, true_y
-    else:
-        print(f'Turned word {word} to zero!')
-        return 0, true_y
+    ids = m.toker.encode(f'[CLS]{ss[0]}[SEP]{ss[1]}[SEP]', add_special_tokens = False)
+    ids = torch.LongTensor([ids])
+    with torch.no_grad():
+        logits = m.bert(ids.cuda()).logits
+    pred = logits.argmax().item()
+    return pred, true_y
 
-def get_predicted_word(m, item):
-    ss, _ = item
-    inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, ss)
-    word = predict_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index)
-    return word
 
 def learning_curve(epochs = 12, batch = 16):
     m = create_model()
     m.bert.requires_grad_(True)
     train_ds_org = read_ld_train_from_chapters(2)
+    np.random.shuffle(train_ds_org) # NOTE: 注意是否shuffle
     train_ds_4_splits = [train_ds_org[:7000], train_ds_org[7000:14000], train_ds_org[14000: 21000], train_ds_org[21000: 28000]]
     test_ds = read_ld_test_from_chapters(2)
     opter = m.opter
-    path = 'manual_prompt_curve.png'
+    path = 'baseline_curve.png'
     batch_losses = []
     precs = []
     recs = []
@@ -74,9 +73,3 @@ def early_stop_n_times(restart = 5, epoch = 1):
             _ = train_one_epoch(m, train_ds, cal_loss, opter, batch = 16, log_inteval = 1000)
         ress.append(test(m, test_ds, dry_run))
     return ress
-
-def dd():
-    _, res_curve = learning_curve(epochs = 5, batch = 16)
-    res_list = early_stop_n_times(10, 1)
-    return res_curve, res_list
-

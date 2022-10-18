@@ -51,20 +51,22 @@ def verbalize(label):
         return 'はい'
 
 def deverbalize(word):
+    word = word.replace(' ','')
     if word == 'いえ':
         return 0
     elif word == 'はい':
         return 1
     else:
-        return word
+        print(f'Turned {word} to 0')
+        return 0
 
 def patterned(ss):
-    return f'{ss[0]}（新しい段落なのか？[MASK]。）{ss[1]}'
+    return f'{ss[0]}（新しい段落ですか？[MASK]。）{ss[1]}'
 
 def case_to_xy(case):
     ss, labels = case
     assert len(ss) == 2
-    pattern = f'{ss[0]}（新しい段落なのか？[MASK]。）{ss[1]}'
+    pattern = f'{ss[0]}（新しい段落ですか？[MASK]。）{ss[1]}'
     pattern_verbalized = pattern.replace('[MASK]', verbalize(labels[1]))
     return pattern, pattern_verbalized
 
