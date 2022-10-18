@@ -126,6 +126,7 @@ def calculate_result(results, targets):
   balanced_acc_factor1 = TP / (TP + FN) if (TP + FN) > 0 else 0
   balanced_acc_factor2 = TN / (FP + TN) if (FP + TN) > 0 else 0
   balanced_acc = (balanced_acc_factor1 + balanced_acc_factor2) / 2
+  print(f'F: {f1}, PRECISION: {prec}, RECALL: {rec}')
   return prec, rec, f1
 
 
