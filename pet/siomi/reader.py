@@ -1,6 +1,24 @@
 import itertools
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
+from five_split_data import goods, bads
+
+def flatten(lists):
+  return [item for lst in lists for item in lst]
+
+def read_five_splits():
+    res = []
+    for i in range(5):
+        test_goods = goods[i]
+        test_bads = bads[i]
+        test_pairs = [(goodword, badword) for (goodword, _), (badword, _) in zip(test_goods, test_bads)]
+        other_goods = [item for index, item in enumerate(goods) if index != i]
+        other_goods = flatten(other_goods)
+        other_bads = [item for index, item in enumerate(bads) if index != i]
+        other_bads = flatten(other_bads)
+        train_pairs = [(goodword, badword) for (goodword, _), (badword, _) in zip(other_goods, other_bads)]
+        res.append((train_pairs, test_pairs))
+    return res
 
 def read_data():
     f_i = open('text_bassui.txt', 'r', encoding='UTF-8')
