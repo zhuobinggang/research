@@ -29,13 +29,17 @@ def cal_loss(m, item):
     loss = loss_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index, label = true_y)
     return loss
 
-def dry_run(m, item):
+def dry_run(m, item, random_left_right = True):
     good, bad = item
-    true_y = random.randint(0, 1)
-    if true_y == 1:
+    if random_left_right:
+        true_y = random.randint(0, 1)
+        if true_y == 1:
+            inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, good, bad)
+        else:
+            inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, bad, good)
+    else: 
+        true_y = 1
         inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, good, bad)
-    else:
-        inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, bad, good)
     word = predict_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index)
     word = word.replace(' ', '')
     if word == 'はい':
@@ -101,3 +105,33 @@ def grid_search(epochs = 10, batch = 8):
             per_ds.append(per_model)
         res.append(per_ds)
     return np.array(res)
+
+def show_grid_search_result():
+    dd = np.load('grid_search.npy')
+    print(dd.shape) # 5,5,10 = (dataset, model, epoch)
+    print(dd.mean(1).argmax(1))
+
+def dry_run_no_shuffle(m, item):
+    return dry_run(m, item, random_left_right = False)
+
+def test_by_parameters(epochs = [4, 6, 5, 3, 1], batch = 8, shuffle = False):
+    np.random.seed(1)
+    dss = read_five_splits()
+    res = []
+    for dataset_index, (train_ds, test_ds, _) in enumerate(dss):
+        per_ds = []
+        for model_index in range(5):
+            m = create_model()
+            m.bert.requires_grad_(True)
+            opter = m.opter
+            for e in range(epochs[dataset_index] + 1):
+                _ = train_one_epoch(m, train_ds, cal_loss, opter, batch = batch)
+            print(f'dataset index: {dataset_index}, model index: {model_index}, trained epochs: {epochs[dataset_index] + 1}')
+            if shuffle:
+                prec, rec, f = test(m, test_ds, dry_run, need_random_baseline = False)
+            else:
+                prec, rec, f = test(m, test_ds, dry_run_no_shuffle, need_random_baseline = False)
+            per_ds.append((prec, rec, f))
+        res.append(per_ds)
+    return np.array(res)
+
