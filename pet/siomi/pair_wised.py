@@ -1,15 +1,15 @@
-from rainable_prefix_abstract import *
+from trainable_prefix_abstract import *
 from reader import read_five_splits
+import random
+import numpy as np
 
 
-def cal_loss(m, item):
-    good, bad = item
-    pass
-
-m = create_model()
-dss = read_five_splits()
-for train_ds, test_ds in dss:
-    train_one_epoch(m, train_ds, cal_loss, opter, batch = 4, log_inteval = 4)
+def run():
+    m = create_model()
+    dss = read_five_splits()
+    for train_ds, test_ds, dev_ds in dss:
+        _ = train_one_epoch(m, train_ds, cal_loss, m.opter, batch = 4, log_inteval = 4)
+        prec, rec, f, fake_f = test(m, test_ds, dry_run, need_random_baseline = True)
 
 
 def get_inputs_emb_without_pos_info(m, left, right):
@@ -21,15 +21,21 @@ def get_inputs_emb_without_pos_info(m, left, right):
 
 def cal_loss(m, item):
     good, bad = item
-    inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, good, bad)
-    loss1 = loss_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index, label = 1)
-    inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, bad, good)
-    loss2 = loss_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index, label = 0)
-    return loss1 + loss2
+    true_y = random.randint(0, 1)
+    if true_y == 1:
+        inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, good, bad)
+    else:
+        inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, bad, good)
+    loss = loss_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index, label = true_y)
+    return loss
 
 def dry_run(m, item):
     good, bad = item
-    inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, good, bad)
+    true_y = random.randint(0, 1)
+    if true_y == 1:
+        inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, good, bad)
+    else:
+        inputs_emb_without_pos_info, mask_index = get_inputs_emb_without_pos_info(m, bad, good)
     word = predict_by_emb_without_position_info(m, inputs_emb_without_pos_info, mask_index)
     word = word.replace(' ', '')
     if word == 'はい':
@@ -46,10 +52,18 @@ def get_predicted_word(m, good, bad):
     return word
 
 
+
+#     m = create_model()
+#     dss = read_five_splits()
+#     for train_ds, test_ds, dev_ds in dss:
+#         _ = train_one_epoch(m, train_ds, cal_loss, m.opter, batch = 4, log_inteval = 4)
+#         prec, rec, f, fake_f = test(m, test_ds, dry_run, need_random_baseline = True)
+
 def learning_curve(epochs = 12, batch = 4):
     m = create_model()
     m.bert.requires_grad_(True)
-    train_ds, test_ds = customized_ds()
+    dss = read_five_splits()
+    train_ds, test_ds, dev_ds = dss[0]
     opter = m.opter
     path = 'learning_curve_manual.png'
     batch_losses = []
@@ -65,6 +79,25 @@ def learning_curve(epochs = 12, batch = 4):
         fs.append(f)
         fake_fs.append(fake_f)
     x = list(range(epochs))
-    scale_down_batch_losses = [loss / 10 for loss in batch_losses]
+    # scale_down_batch_losses = [loss / 10 for loss in batch_losses]
+    scale_down_batch_losses = batch_losses
     draw_line_chart(x, [scale_down_batch_losses, precs, recs, fs, fake_fs], ['batch loss', 'precs', 'recs', 'fs', 'random fs'], path = path, colors = ['r','g','b','y', 'k'])
     return m, [scale_down_batch_losses, precs, recs, fs, fake_fs]
+
+def grid_search(epochs = 10, batch = 8):
+    dss = read_five_splits()
+    res = []
+    for train_ds, test_ds, dev_ds in dss:
+        per_ds = []
+        for _ in range(5):
+            m = create_model()
+            m.bert.requires_grad_(True)
+            opter = m.opter
+            per_model = []
+            for e in range(epochs):
+                _ = train_one_epoch(m, train_ds, cal_loss, opter, batch = batch)
+                prec, rec, f = test(m, dev_ds, dry_run, need_random_baseline = False)
+                per_model.append(f)
+            per_ds.append(per_model)
+        res.append(per_ds)
+    return np.array(res)

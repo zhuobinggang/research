@@ -9,15 +9,25 @@ def flatten(lists):
 def read_five_splits():
     res = []
     for i in range(5):
-        test_goods = goods[i]
-        test_bads = bads[i]
+        # Test
+        index_test = i
+        test_goods = goods[index_test]
+        test_bads = bads[index_test]
         test_pairs = [(goodword, badword) for (goodword, _), (badword, _) in zip(test_goods, test_bads)]
-        other_goods = [item for index, item in enumerate(goods) if index != i]
-        other_goods = flatten(other_goods)
-        other_bads = [item for index, item in enumerate(bads) if index != i]
-        other_bads = flatten(other_bads)
-        train_pairs = [(goodword, badword) for (goodword, _), (badword, _) in zip(other_goods, other_bads)]
-        res.append((train_pairs, test_pairs))
+        # Dev: the one next to test
+        index_dev = (i + 1) % 5
+        dev_goods = goods[index_dev]
+        dev_bads = bads[index_dev]
+        dev_pairs = [(goodword, badword) for (goodword, _), (badword, _) in zip(dev_goods, dev_bads)]
+        # Train
+        train_goods = [item for index, item in enumerate(goods) if index not in [index_test, index_dev]]
+        train_bads = [item for index, item in enumerate(bads) if index not in [index_test, index_dev]]
+        # Train: expect the last one
+        train_goods = flatten(train_goods)
+        train_bads = flatten(train_bads)
+        train_pairs = [(goodword, badword) for (goodword, _), (badword, _) in zip(train_goods, train_bads)]
+        # (train, test, dev)
+        res.append((train_pairs, test_pairs, dev_pairs))
     return res
 
 def read_data():
