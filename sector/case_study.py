@@ -1,10 +1,11 @@
 from exp_news import *
+from case_study_novel import view_att, rank
 
 # tests = read_ld_tests()
 # news_test = tests[3]
 testds = read_combined_test()
 
-# SEED = 97
+# seed = 97
 def get_results(testset, seed):
     m = load_model(f'SEED{seed}_AUX01FL50E2')
     y_true1, y_pred1 = test(testset, m)

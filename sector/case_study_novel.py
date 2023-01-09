@@ -4,7 +4,6 @@ from exp_novel import *
 
 novel_test = read_ld_test_from_chapters()
 
-# SEED = 19
 # SEED = 666
 def get_results(testset, seed, index):
     m = load_model(f'SEED_{seed}_AUX01FL50E2_{index}')
@@ -31,6 +30,7 @@ def get_case2(labels, y1, y2, testset):
 
 
 ### 可视化注意力 ###
+@t.no_grad()
 def view_att(m, ss, stand = False):
   # ss, labels = row
   toker = m.toker
@@ -60,4 +60,20 @@ def run():
     view_att_my(m, ss)
 
 
+def rank(m, stand = False):
+    wordcloud = []
+    for ss, labels in novel_test:
+        tokens, atts = view_att(m, ss, stand)
+        dd = list(reversed(sorted(zip(tokens, atts), key = lambda x: x[1])))
+        best10 = [token for token, att in dd[:10]]
+        wordcloud += best10
+    return wordcloud
+
+# script
+def generate_word_cloud():       
+    from wordcloud import WordCloud
+    dd = [word for word in aux_words if word not in ['[SEP]','[CLS]']]
+    wordcloud = WordCloud(font_path = '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc', collocations = False)
+    wordcloud.generate(' '.join(dd))
+    wordcloud.to_file('./aux.jpg')
 
