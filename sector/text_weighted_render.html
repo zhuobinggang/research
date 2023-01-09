@@ -18,7 +18,8 @@
 
 
 <script>
-k = 0.3
+// k = 0.3
+k = 0.1
 
 function generate_v2(tokens, atts, labels = [-1, -1, -1, -1], desc_text = ''){
         console.assert(tokens.length == atts.length)
@@ -37,6 +38,9 @@ function generate_v2(tokens, atts, labels = [-1, -1, -1, -1], desc_text = ''){
                 }
                 // opacity = degree * 0.17 + 0.34
                 opacity = degree * k
+                if (opacity < 0.1){
+                    opacity = 0
+                }
                 // create div
                 let div = document.createElement('div');
                 div.innerHTML = text;

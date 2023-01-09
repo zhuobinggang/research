@@ -34,3 +34,6 @@ wordcloud*
 exp_novel.txt
 comparisoned.txt
 ablation_comparisoned.txt
+
+.ipynb_checkpoints/
+*\.ipynb

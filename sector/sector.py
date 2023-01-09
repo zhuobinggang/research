@@ -241,3 +241,29 @@ def cal_prec_rec_f1_v2(results, targets):
   balanced_acc_factor2 = TN / (FP + TN) if (FP + TN) > 0 else 0
   balanced_acc = (balanced_acc_factor1 + balanced_acc_factor2) / 2
   return prec, rec, f1, balanced_acc
+
+
+#################### ADD AT 2023.1.8 ########################
+# 为了获取模型的attention以完成修士论文
+def view_att_baseline(m, ss):
+  # ss, labels = row
+  CLS_POS = [0]
+  toker = m.toker
+  bert = m.bert
+  combined_ids, _ = encode_standard(ss, toker)
+  attention = bert(combined_ids.unsqueeze(0).cuda(), output_attentions = True).attentions 
+  # tuple of (layers = 12, batch = 1, heads = 12, seq_len = 138, seq_len = 138)
+  tokens = toker.convert_ids_to_tokens(combined_ids)
+  model_view(attention, tokens)
+
+def view_att_my(m, ss):
+  # ss, labels = row
+  toker = m.toker
+  bert = m.bert
+  combined_ids, sep_idx = encode(ss, toker)
+  attention = bert(combined_ids.unsqueeze(0).cuda(), output_attentions = True).attentions 
+  # tuple of (layers = 12, batch = 1, heads = 12, seq_len = 138, seq_len = 138)
+  tokens = toker.convert_ids_to_tokens(combined_ids)
+  model_view(attention, tokens)
+
+
