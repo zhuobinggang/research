@@ -86,8 +86,8 @@ def rank_by_p(m, test_ds, stand = False):
     ps_tokens_atts = []
     for ss, labels in test_ds:
         ps_tokens_atts.append(view_att(m, ss, stand, need_p = True))
-    wc1 = filter_tokens_and_pick10(ps_tokens_atts, split = True)
-    wc0 = filter_tokens_and_pick10(ps_tokens_atts, split = False)
+    wc1 = filter_special_tokens(filter_tokens_and_pick10(ps_tokens_atts, split = True))
+    wc0 = filter_special_tokens(filter_tokens_and_pick10(ps_tokens_atts, split = False))
     return wc1, wc0
 
 # script
@@ -102,4 +102,6 @@ def run():
     seed = 97
     m_aux = load_model(f'SEED_19_AUX01FL50E2_6')
     m_fl = load_model(f'SEED_19_FL50E2_6')
-    return rank(m_aux, novel_test, stand = False), rank(m_fl, novel_test, stand = True)
+    wc1_aux, wc0_aux = rank_by_p(m_aux, novel_test, stand = False)
+    wc1_fl, wc0_fl = rank_by_p(m_fl, novel_test, stand = True)
+    return wc1_aux, wc0_aux, wc1_fl, wc0_fl
