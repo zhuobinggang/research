@@ -34,5 +34,7 @@ def run():
     seed = 97
     m_aux = load_model(f'SEED{seed}_AUX01FL50E2')
     m_fl = load_model(f'SEED{seed}_FL20E3')
-    return rank(m_aux, testds, stand = False), rank(m_fl, testds, stand = True)
+    wc1_aux, wc0_aux = rank_by_p(m_aux, testds, stand = False)
+    wc1_fl, wc0_fl = rank_by_p(m_fl, testds, stand = True)
+    return wc1_aux, wc0_aux, wc1_fl, wc0_fl
 
