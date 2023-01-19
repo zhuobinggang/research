@@ -1,6 +1,7 @@
 from exp_novel import *
 # 从朱庇特notebook启动
 # from bertviz import head_view
+import collections
 
 novel_test = read_ld_test_from_chapters()
 
@@ -105,3 +106,21 @@ def run():
     wc1_aux, wc0_aux = rank_by_p(m_aux, novel_test, stand = False)
     wc1_fl, wc0_fl = rank_by_p(m_fl, novel_test, stand = True)
     return wc1_aux, wc0_aux, wc1_fl, wc0_fl
+
+def run2(wc1_aux, wc0_aux, wc1_fl, wc0_fl):
+    get_word = lambda lst: [word for word, count in lst]
+    wc1_fl_best100 = get_word(rank_wc(wc1_fl)[:100])
+    wc0_fl_best100 = get_word(rank_wc(wc0_fl)[:100])
+    wc1_aux_best100 = get_word(rank_wc(wc1_aux)[:100])
+    wc0_aux_best100 = get_word(rank_wc(wc0_aux)[:100])
+    common_aux = set(wc1_aux_best100) & set(wc0_aux_best100)
+    common_fl = set(wc1_fl_best100) & set(wc0_fl_best100)
+    wc1_aux_special = [item for item in wc1_aux_best100 if item not in common_aux]
+    wc0_aux_special = [item for item in wc0_aux_best100 if item not in common_aux]
+    wc1_fl_special = [item for item in wc1_fl_best100 if item not in common_fl]
+    wc0_fl_special = [item for item in wc0_fl_best100 if item not in common_fl]
+
+
+def rank_wc(wc):
+    c = collections.Counter(wc)
+    return c.most_common()
