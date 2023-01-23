@@ -43,14 +43,14 @@ function cal_prec_rec_f1(results, targets){
 
 
 datas = datas.map(data => {
-        data = data[0]
         ss = data[0]
+        console.log(ss)
         labels = data[1]
-        pos = data[2]
+        console.log(labels)
         return {
-                text: ss.slice(0, pos).join('') + '🔪' + ss.slice(pos).join(''),
+                text: ss.slice(0, 2).join('') + '🔪' + ss.slice(2).join(''),
                 picked: null,
-                result: labels[pos]
+                result: labels[2]
         }
 })
 
