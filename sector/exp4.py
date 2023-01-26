@@ -32,16 +32,7 @@ def run():
         res.append(test_chain(m, ld))
     return res
 
-# 获取100个随机下标，范围 = (0, 11098)
-def random_100_index():
-    np.random.seed(seed=32)
-    res = np.random.choice(range(11098), 100, replace=False)
-    np.random.seed()
-    return res
 
-def select_from_dstest(dstest, idxs):
-    mld = [dstest[idx] for idx in idxs]
-    return mld
         
 def save_to_json(mld):
     text = json.dumps(mld)

@@ -9,7 +9,8 @@ read_ld_dev = read_ld_dev_from_chapters
 GRID_SEARCH_SEED = 777 # totally random
 
 # NOTE: 20跟13导致AUX收束失败输出，将这两个替换掉 
-SEEDS_FOR_TRAIN = [20, 22, 8, 4, 13, 3, 19, 97, 10, 666, 21, 14, 555]
+# SEEDS_FOR_TRAIN = [20, 22, 8, 4, 13, 3, 19, 97, 10, 666, 21, 14, 555]
+SEEDS_FOR_TRAIN = [None, 22, 8, 4, None, 3, 19, 97, 10, 666, 21, 14, 555]
 
 def create_model_with_seed(seed):
     t.manual_seed(seed)
