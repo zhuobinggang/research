@@ -1,11 +1,12 @@
 from exp_novel import *
 
 SEEDS_FOR_TRAIN = [20, 22, 8, 4, 13, 3, 19, 97, 10, 666, 21, 14, 555]
+SEED_FOR_RANDOM = 31
 
 # 获取100个随机下标，范围 = (0, 11098)
 def random_100_index():
     # np.random.seed(seed=32)
-    np.random.seed(seed=31)
+    np.random.seed(seed=SEED_FOR_RANDOM)
     res = np.random.choice(range(11098), 100, replace=False)
     np.random.seed()
     return res
@@ -27,5 +28,20 @@ def run(times = 10, start = 0):
         res = test_chain(m, mld)
         ress.append(res)
     return ress
+
+
+# one_of_all = 3625 / 28178 (小説トレーニングセットの割合)
+def random_one_by_trainset(size = 100, one_of_all = 0.5):
+    res = []
+    np.random.seed(seed=SEED_FOR_RANDOM)
+    for i in range(size):
+        if np.random.rand() < one_of_all:
+            res.append(1)
+        else:
+            res.append(0)
+    return res
+
+
+
 
 

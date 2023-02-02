@@ -10,7 +10,8 @@ GRID_SEARCH_SEED = 777 # totally random
 
 # NOTE: 20跟13导致AUX收束失败输出，将这两个替换掉 
 # SEEDS_FOR_TRAIN = [20, 22, 8, 4, 13, 3, 19, 97, 10, 666, 21, 14, 555]
-SEEDS_FOR_TRAIN = [None, 22, 8, 4, None, 3, 19, 97, 10, 666, 21, 14, 555]
+# SEEDS_FOR_TRAIN = [None, 22, 8, 4, None, 3, 19, 97, 10, 666, 21, 14, 555]
+SEEDS_FOR_TRAIN = [22, 8, 4, 3, 19, 97, 10, 666, 21, 14]
 
 def create_model_with_seed(seed):
     t.manual_seed(seed)
@@ -484,7 +485,7 @@ def get_fs_by_lds_and_model(lds, m, test_function):
     fs = []
     for ld in lds:
         prec, rec, f, _ = test_function(m, ld)
-        fs.append(f)
+        fs.append((prec, rec, f))
     return fs
 
 def get_f_by_188_chapters(start = 0,times = 10 ):
