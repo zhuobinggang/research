@@ -81,9 +81,15 @@ def run():
 
 def dd():
     # from get_f_by_188_chapters import dic
-    auxfl = dic['AUX_FL188'] # (10, 188, (prec, rec, f))
-    aux = dic['AUX188']
-    fl = dic['FL188']
-    stand = dic['STAND188']
+    auxfl = np.array(dic['AUX_FL188']) # (10, 188, (prec, rec, f))
+    aux = np.array(dic['AUX188'])
+    fl = np.array(dic['FL188'])
+    stand = np.array(dic['STAND188'])
     fl.mean(0).mean(0) # array([0.86234496, 0.81707165, 0.82691926])
+    # std
+    auxfl.mean(1)[:, 2].std()
+    # 正规性检测
+    stats.normaltest(auxfl.mean(0)[:, 2])
+    # wilcoxon检测
+    stats.wilcoxon(aux.mean(0)[:, 2], stand.mean(0)[:, 2])
 

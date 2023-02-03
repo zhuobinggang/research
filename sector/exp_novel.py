@@ -489,6 +489,8 @@ def get_fs_by_lds_and_model(lds, m, test_function):
     return fs
 
 def get_f_by_188_chapters(start = 0,times = 10 ):
+    t.manual_seed(2023)
+    np.random.seed(2023)
     PATH = 'get_f_by_188_chapters.txt'
     ld_train = read_ld_train()
     lds = read_lds_test_from_chapters() # NOTE: 必须是test
