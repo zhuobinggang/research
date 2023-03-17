@@ -2,7 +2,7 @@
 # from sec_paragraph import *
 from exp_news import *
 # from manual_exp.mld2 import datas as mld
-from manual_exp.mld import mld
+from manual_exp.mld import mld # 同人手实验
 import numpy as np
 import json
 
@@ -40,10 +40,5 @@ def save_to_json(mld):
     f.write(text)
     f.close()
     return text
-
-
-
-
-
 
 

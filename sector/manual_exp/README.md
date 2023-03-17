@@ -1,3 +1,11 @@
+## 新闻和小说跑机器实验的代码
+
+```py
+from manual_exp_novel import *
+from manual_exp_news import *
+```
+
+
 ## 使用说明
 
 1. 首先将ld文件就那样复制过来，参考`mld.py`

@@ -1,7 +1,9 @@
 from exp_novel import *
 
 SEEDS_FOR_TRAIN = [20, 22, 8, 4, 13, 3, 19, 97, 10, 666, 21, 14, 555]
-SEED_FOR_RANDOM = 31
+# SEEDS_FOR_TRAIN2 = [22, 8, 4, 3, 19, 97, 10, 666, 21, 14]
+# SEED_FOR_RANDOM = 31 
+SEED_FOR_RANDOM = 32 # 人手实验
 
 # 获取100个随机下标，范围 = (0, 11098)
 def random_100_index():

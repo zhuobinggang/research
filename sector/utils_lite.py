@@ -93,3 +93,28 @@ def fit_sigmoided_to_label(out):
     else:
       results.append(1) 
   return t.LongTensor(results)
+
+
+def cal_prec_rec_f1_v2(results, targets):
+  TP = 0
+  FP = 0
+  FN = 0
+  TN = 0
+  for guess, target in zip(results, targets):
+    if guess == 1:
+      if target == 1:
+        TP += 1
+      elif target == 0:
+        FP += 1
+    elif guess == 0:
+      if target == 1:
+        FN += 1
+      elif target == 0:
+        TN += 1
+  prec = TP / (TP + FP) if (TP + FP) > 0 else 0
+  rec = TP / (TP + FN) if (TP + FN) > 0 else 0
+  f1 = (2 * prec * rec) / (prec + rec) if (prec + rec) != 0 else 0
+  balanced_acc_factor1 = TP / (TP + FN) if (TP + FN) > 0 else 0
+  balanced_acc_factor2 = TN / (FP + TN) if (FP + TN) > 0 else 0
+  balanced_acc = (balanced_acc_factor1 + balanced_acc_factor2) / 2
+  return prec, rec, f1, balanced_acc
